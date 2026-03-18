@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Static Analysis: dotnet format](https://img.shields.io/badge/Lint-dotnet%20format-blue.svg)](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-format)
 
-A modern .NET client library for KEYENCE KV series PLCs using the **HOST LINK COMMUNICATION** protocol. Designed for performance and reliability on .NET 9.0.
+A modern .NET client library for KEYENCE KV series PLCs using the **Host Link Communication** protocol. Designed for performance and reliability on .NET 9.0.
 
 ## Key Features
 

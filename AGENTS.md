@@ -1,9 +1,9 @@
-# Agent Guide: HOST LINK COMMUNICATION .NET
+# Agent Guide: Host Link Communication .NET
 
 This repository is part of the PLC Communication Workspace and follows the global standards defined in `D:\PLC_COMM_PROJ\AGENTS.md`.
 
 ## 1. Project-Specific Context
-- **Protocol**: HOST LINK COMMUNICATION
+- **Protocol**: Host Link Communication
 - **Target Hardware**: KEYENCE KV series (KV-8000, KV-7500, etc.)
 - **Language**: .NET 9.0 (C#)
 - **Role**: Core Communication Library for KEYENCE Upper Link protocol.
@@ -28,3 +28,22 @@ This repository is part of the PLC Communication Workspace and follows the globa
 - **Issue Tracking**: Log remaining tasks in `TODO.md`.
 - **Change Tracking**: Update `CHANGELOG.md` for every fix or feature.
 - **QA Requirement**: Every hardware-related fix must include an evidence report in `docs/validation/reports/`.
+
+## 5. API Naming Policy
+
+Detailed naming policy lives in `docs/maintainer/API_UNIFICATION_POLICY.md`.
+
+Public API rules:
+
+- Reserve `KvHostLinkClient` for the low-level protocol client.
+- Reserve `KvHostLinkDeviceClient` for the future high-level string-device client.
+- Reserve `AsyncKvHostLinkClient` and `AsyncKvHostLinkDeviceClient` for future async parity.
+- Do not use plain `HostLinkClient` or `HostLinkHighLevelClient` as canonical public names because `Host Link` is ambiguous across PLC vendors.
+- High-level operations should follow `Read`, `Write`, `ReadMany`, `WriteMany`, and async `*Async` naming.
+- 32-bit helpers should use `ReadDWord`, `WriteDWord`, `ReadDWords`, `WriteDWords`, `ReadFloat32`, and `WriteFloat32` style names.
+
+Private or helper naming rules:
+
+- Avoid vague names like `ReadOne`, `WriteOne`, `DoRead`, or `Offset`.
+- Prefer names that describe the resolved device or batch role, such as `ReadResolvedDevice`, `WriteResolvedBatch`, or `NormalizeResolvedWriteItems`.
+- 32-bit codec helpers should include both type and word order, for example `PackUInt32LowWordFirst` or `UnpackFloat32LowWordFirst`.
