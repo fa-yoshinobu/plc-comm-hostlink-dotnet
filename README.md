@@ -1,4 +1,4 @@
-﻿# (KEYENCE KV) Host Link Communication .NET
+# (KEYENCE KV) Host Link Communication .NET
 
 [![.NET 9.0](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download/dotnet/9.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -6,7 +6,7 @@
 
 A modern .NET client library for KEYENCE KV series PLCs using the **HOST LINK COMMUNICATION** protocol. Designed for performance and reliability on .NET 9.0.
 
-## 噫 Key Features
+## Key Features
 
 - **Keyence Focused**: Specialized for KV-8000, KV-7500, and other KV series Upper Link communication.
 - **Async Native**: Built using modern C# asynchronous patterns (TAP).
@@ -14,7 +14,7 @@ A modern .NET client library for KEYENCE KV series PLCs using the **HOST LINK CO
 - **Zero Mojibake**: English-only documentation and strict UTF-8 standards.
 - **CI-Ready**: Built-in quality checks and publishing via `run_ci.bat`.
 
-## 逃 Quick Start
+## Quick Start
 
 ### Basic Usage
 ```csharp
@@ -28,7 +28,7 @@ int val = await client.ReadWordAsync("D100");
 Console.WriteLine($"Value: {val}");
 ```
 
-## 当 Documentation
+## Documentation
 
 Follows the workspace-wide hierarchical documentation policy:
 
@@ -36,7 +36,7 @@ Follows the workspace-wide hierarchical documentation policy:
 - [**QA Reports**](docs/validation/reports/): Verified results with real Keyence hardware.
 - [**Developer Notes**](docs/maintainer/PROTOCOL_SPEC.md): Internal implementation of the Host Link protocol.
 
-## 屏 Development & CI
+## Development & CI
 
 Quality is managed via `run_ci.bat`.
 
@@ -46,7 +46,7 @@ run_ci.bat
 ```
 Validates the code and publishes a self-contained Single-File EXE to the `publish/` directory.
 
-## 塘 License
+## License
 
 Distributed under the [MIT License](LICENSE).
 
