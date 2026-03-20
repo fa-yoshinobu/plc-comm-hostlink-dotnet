@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Modern Host Link (Upper Link) client library for KEYENCE KV series PLCs.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+81a0f129b453aaaf5685efe2e231887964200075")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+153da0e8fec5b44df3d4fd4ccda7c423014817b7")]
 [assembly: System.Reflection.AssemblyProductAttribute("PlcComm.KvHostLink")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PlcComm.KvHostLink")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
