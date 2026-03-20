@@ -4,4 +4,5 @@ Client library for KEYENCE Host Link (Upper Link) protocol.
 
 ## Documentation
 - [User Guide](docsrc/user/USER_GUIDE.md)
-- [API Reference](api/toc.html)
+- [API Reference](api/index.html)
+
