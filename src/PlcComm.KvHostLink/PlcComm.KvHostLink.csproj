@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <PackageId>PlcComm.KvHostLink</PackageId>
+    <Title>PLC Communication KEYENCE Host Link .NET</Title>
+    <Description>Modern Host Link (Upper Link) client library for KEYENCE KV series PLCs.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet</RepositoryUrl>
+    <Authors>fa-yoshinobu</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Exclude repository-only files from NuGet package distribution [REPO] -->
+    <None Update="..\..\docs\maintainer\**" Pack="false" />
+    <None Update="..\..\docs\validation\**" Pack="false" />
+    <None Update="..\..\tests\**" Pack="false" />
+    <None Update="..\..\TODO.md" Pack="false" />
+    <None Update="..\..\local_folder\**" Pack="false" />
+  </ItemGroup>
+</Project>

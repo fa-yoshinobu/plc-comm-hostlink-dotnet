@@ -1,0 +1,114 @@
+### YamlMime:ManagedReference
+items:
+- uid: PlcComm.KvHostLink.HostLinkTransportMode
+  commentId: T:PlcComm.KvHostLink.HostLinkTransportMode
+  id: HostLinkTransportMode
+  parent: PlcComm.KvHostLink
+  children:
+  - PlcComm.KvHostLink.HostLinkTransportMode.Tcp
+  - PlcComm.KvHostLink.HostLinkTransportMode.Udp
+  langs:
+  - csharp
+  - vb
+  name: HostLinkTransportMode
+  nameWithType: HostLinkTransportMode
+  fullName: PlcComm.KvHostLink.HostLinkTransportMode
+  type: Enum
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: HostLinkTransportMode
+    path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+    startLine: 5
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Transport protocol for Host Link communication.
+  example: []
+  syntax:
+    content: public enum HostLinkTransportMode
+    content.vb: Public Enum HostLinkTransportMode
+- uid: PlcComm.KvHostLink.HostLinkTransportMode.Tcp
+  commentId: F:PlcComm.KvHostLink.HostLinkTransportMode.Tcp
+  id: Tcp
+  parent: PlcComm.KvHostLink.HostLinkTransportMode
+  langs:
+  - csharp
+  - vb
+  name: Tcp
+  nameWithType: HostLinkTransportMode.Tcp
+  fullName: PlcComm.KvHostLink.HostLinkTransportMode.Tcp
+  type: Field
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: Tcp
+    path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+    startLine: 7
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: Tcp = 0
+    return:
+      type: PlcComm.KvHostLink.HostLinkTransportMode
+- uid: PlcComm.KvHostLink.HostLinkTransportMode.Udp
+  commentId: F:PlcComm.KvHostLink.HostLinkTransportMode.Udp
+  id: Udp
+  parent: PlcComm.KvHostLink.HostLinkTransportMode
+  langs:
+  - csharp
+  - vb
+  name: Udp
+  nameWithType: HostLinkTransportMode.Udp
+  fullName: PlcComm.KvHostLink.HostLinkTransportMode.Udp
+  type: Field
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: Udp
+    path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+    startLine: 8
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: Udp = 1
+    return:
+      type: PlcComm.KvHostLink.HostLinkTransportMode
+references:
+- uid: PlcComm.KvHostLink
+  commentId: N:PlcComm.KvHostLink
+  href: PlcComm.html
+  name: PlcComm.KvHostLink
+  nameWithType: PlcComm.KvHostLink
+  fullName: PlcComm.KvHostLink
+  spec.csharp:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html
+  spec.vb:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html
+- uid: PlcComm.KvHostLink.HostLinkTransportMode
+  commentId: T:PlcComm.KvHostLink.HostLinkTransportMode
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.HostLinkTransportMode.html
+  name: HostLinkTransportMode
+  nameWithType: HostLinkTransportMode
+  fullName: PlcComm.KvHostLink.HostLinkTransportMode

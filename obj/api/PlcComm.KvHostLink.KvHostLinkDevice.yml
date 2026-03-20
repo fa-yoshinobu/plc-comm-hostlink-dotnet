@@ -1,0 +1,694 @@
+### YamlMime:ManagedReference
+items:
+- uid: PlcComm.KvHostLink.KvHostLinkDevice
+  commentId: T:PlcComm.KvHostLink.KvHostLinkDevice
+  id: KvHostLinkDevice
+  parent: PlcComm.KvHostLink
+  children:
+  - PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix(System.String)
+  - PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice(System.String,System.Boolean)
+  - PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText(System.String,System.String)
+  - PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat(System.String,System.String)
+  - PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount(System.String,System.String,System.Int32)
+  - PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(System.String,System.String,System.Collections.Generic.HashSet{System.String})
+  langs:
+  - csharp
+  - vb
+  name: KvHostLinkDevice
+  nameWithType: KvHostLinkDevice
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice
+  type: Class
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: KvHostLinkDevice
+    path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+    startLine: 16
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: public static class KvHostLinkDevice
+    content.vb: Public Module KvHostLinkDevice
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix(System.String)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix(System.String)
+  id: NormalizeSuffix(System.String)
+  parent: PlcComm.KvHostLink.KvHostLinkDevice
+  langs:
+  - csharp
+  - vb
+  name: NormalizeSuffix(string?)
+  nameWithType: KvHostLinkDevice.NormalizeSuffix(string?)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix(string?)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: NormalizeSuffix
+    path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+    startLine: 28
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: public static string NormalizeSuffix(string? suffix)
+    parameters:
+    - id: suffix
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Public Shared Function NormalizeSuffix(suffix As String) As String
+  overload: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix*
+  nameWithType.vb: KvHostLinkDevice.NormalizeSuffix(String)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix(String)
+  name.vb: NormalizeSuffix(String)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice(System.String,System.Boolean)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice(System.String,System.Boolean)
+  id: ParseDevice(System.String,System.Boolean)
+  parent: PlcComm.KvHostLink.KvHostLinkDevice
+  langs:
+  - csharp
+  - vb
+  name: ParseDevice(string, bool)
+  nameWithType: KvHostLinkDevice.ParseDevice(string, bool)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice(string, bool)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ParseDevice
+    path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+    startLine: 38
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: public static KvDeviceAddress ParseDevice(string text, bool allowOmittedType = true)
+    parameters:
+    - id: text
+      type: System.String
+    - id: allowOmittedType
+      type: System.Boolean
+    return:
+      type: PlcComm.KvHostLink.KvDeviceAddress
+    content.vb: Public Shared Function ParseDevice(text As String, allowOmittedType As Boolean = True) As KvDeviceAddress
+  overload: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice*
+  nameWithType.vb: KvHostLinkDevice.ParseDevice(String, Boolean)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice(String, Boolean)
+  name.vb: ParseDevice(String, Boolean)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText(System.String,System.String)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText(System.String,System.String)
+  id: ParseDeviceText(System.String,System.String)
+  parent: PlcComm.KvHostLink.KvHostLinkDevice
+  langs:
+  - csharp
+  - vb
+  name: ParseDeviceText(string, string)
+  nameWithType: KvHostLinkDevice.ParseDeviceText(string, string)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText(string, string)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ParseDeviceText
+    path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+    startLine: 73
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: public static string ParseDeviceText(string text, string defaultSuffix = "")
+    parameters:
+    - id: text
+      type: System.String
+    - id: defaultSuffix
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Public Shared Function ParseDeviceText(text As String, defaultSuffix As String = "") As String
+  overload: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText*
+  nameWithType.vb: KvHostLinkDevice.ParseDeviceText(String, String)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText(String, String)
+  name.vb: ParseDeviceText(String, String)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat(System.String,System.String)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat(System.String,System.String)
+  id: ResolveEffectiveFormat(System.String,System.String)
+  parent: PlcComm.KvHostLink.KvHostLinkDevice
+  langs:
+  - csharp
+  - vb
+  name: ResolveEffectiveFormat(string, string)
+  nameWithType: KvHostLinkDevice.ResolveEffectiveFormat(string, string)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat(string, string)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ResolveEffectiveFormat
+    path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+    startLine: 82
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: public static string ResolveEffectiveFormat(string deviceType, string suffix)
+    parameters:
+    - id: deviceType
+      type: System.String
+    - id: suffix
+      type: System.String
+    return:
+      type: System.String
+    content.vb: Public Shared Function ResolveEffectiveFormat(deviceType As String, suffix As String) As String
+  overload: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat*
+  nameWithType.vb: KvHostLinkDevice.ResolveEffectiveFormat(String, String)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat(String, String)
+  name.vb: ResolveEffectiveFormat(String, String)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(System.String,System.String,System.Collections.Generic.HashSet{System.String})
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(System.String,System.String,System.Collections.Generic.HashSet{System.String})
+  id: ValidateDeviceType(System.String,System.String,System.Collections.Generic.HashSet{System.String})
+  parent: PlcComm.KvHostLink.KvHostLinkDevice
+  langs:
+  - csharp
+  - vb
+  name: ValidateDeviceType(string, string, HashSet<string>)
+  nameWithType: KvHostLinkDevice.ValidateDeviceType(string, string, HashSet<string>)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(string, string, System.Collections.Generic.HashSet<string>)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ValidateDeviceType
+    path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+    startLine: 88
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: public static void ValidateDeviceType(string name, string deviceType, HashSet<string> allowedTypes)
+    parameters:
+    - id: name
+      type: System.String
+    - id: deviceType
+      type: System.String
+    - id: allowedTypes
+      type: System.Collections.Generic.HashSet{System.String}
+    content.vb: Public Shared Sub ValidateDeviceType(name As String, deviceType As String, allowedTypes As HashSet(Of String))
+  overload: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType*
+  nameWithType.vb: KvHostLinkDevice.ValidateDeviceType(String, String, HashSet(Of String))
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(String, String, System.Collections.Generic.HashSet(Of String))
+  name.vb: ValidateDeviceType(String, String, HashSet(Of String))
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount(System.String,System.String,System.Int32)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount(System.String,System.String,System.Int32)
+  id: ValidateDeviceCount(System.String,System.String,System.Int32)
+  parent: PlcComm.KvHostLink.KvHostLinkDevice
+  langs:
+  - csharp
+  - vb
+  name: ValidateDeviceCount(string, string, int)
+  nameWithType: KvHostLinkDevice.ValidateDeviceCount(string, string, int)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount(string, string, int)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ValidateDeviceCount
+    path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
+    startLine: 97
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: public static void ValidateDeviceCount(string deviceType, string effectiveFormat, int count)
+    parameters:
+    - id: deviceType
+      type: System.String
+    - id: effectiveFormat
+      type: System.String
+    - id: count
+      type: System.Int32
+    content.vb: Public Shared Sub ValidateDeviceCount(deviceType As String, effectiveFormat As String, count As Integer)
+  overload: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount*
+  nameWithType.vb: KvHostLinkDevice.ValidateDeviceCount(String, String, Integer)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount(String, String, Integer)
+  name.vb: ValidateDeviceCount(String, String, Integer)
+references:
+- uid: PlcComm.KvHostLink
+  commentId: N:PlcComm.KvHostLink
+  href: PlcComm.html
+  name: PlcComm.KvHostLink
+  nameWithType: PlcComm.KvHostLink
+  fullName: PlcComm.KvHostLink
+  spec.csharp:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html
+  spec.vb:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix
+  href: PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_NormalizeSuffix_System_String_
+  name: NormalizeSuffix
+  nameWithType: KvHostLinkDevice.NormalizeSuffix
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice
+  href: PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ParseDevice_System_String_System_Boolean_
+  name: ParseDevice
+  nameWithType: KvHostLinkDevice.ParseDevice
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: PlcComm.KvHostLink.KvDeviceAddress
+  commentId: T:PlcComm.KvHostLink.KvDeviceAddress
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.KvDeviceAddress.html
+  name: KvDeviceAddress
+  nameWithType: KvDeviceAddress
+  fullName: PlcComm.KvHostLink.KvDeviceAddress
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText
+  href: PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ParseDeviceText_System_String_System_String_
+  name: ParseDeviceText
+  nameWithType: KvHostLinkDevice.ParseDeviceText
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat
+  href: PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ResolveEffectiveFormat_System_String_System_String_
+  name: ResolveEffectiveFormat
+  nameWithType: KvHostLinkDevice.ResolveEffectiveFormat
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType
+  href: PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateDeviceType_System_String_System_String_System_Collections_Generic_HashSet_System_String__
+  name: ValidateDeviceType
+  nameWithType: KvHostLinkDevice.ValidateDeviceType
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType
+- uid: System.Collections.Generic.HashSet{System.String}
+  commentId: T:System.Collections.Generic.HashSet{System.String}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.HashSet`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1
+  name: HashSet<string>
+  nameWithType: HashSet<string>
+  fullName: System.Collections.Generic.HashSet<string>
+  nameWithType.vb: HashSet(Of String)
+  fullName.vb: System.Collections.Generic.HashSet(Of String)
+  name.vb: HashSet(Of String)
+  spec.csharp:
+  - uid: System.Collections.Generic.HashSet`1
+    name: HashSet
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.HashSet`1
+    name: HashSet
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.Collections.Generic.HashSet`1
+  commentId: T:System.Collections.Generic.HashSet`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1
+  name: HashSet<T>
+  nameWithType: HashSet<T>
+  fullName: System.Collections.Generic.HashSet<T>
+  nameWithType.vb: HashSet(Of T)
+  fullName.vb: System.Collections.Generic.HashSet(Of T)
+  name.vb: HashSet(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.HashSet`1
+    name: HashSet
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.HashSet`1
+    name: HashSet
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount
+  href: PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateDeviceCount_System_String_System_String_System_Int32_
+  name: ValidateDeviceCount
+  nameWithType: KvHostLinkDevice.ValidateDeviceCount
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer

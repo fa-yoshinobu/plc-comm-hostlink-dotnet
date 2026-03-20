@@ -1,8 +1,55 @@
 {
-  "metadata": [{"src": [{"files": ["src/**/*.csproj"]}], "dest": "api"}],
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": ["src/**/*.csproj"],
+          "exclude": ["**/bin/**", "**/obj/**"]
+        }
+      ],
+      "dest": "obj/api"
+    }
+  ],
   "build": {
-    "content": [{"files": ["docs/**/*.md", "api/*.yml"]}, {"files": ["README.md", "CHANGELOG.md"]}],
-    "dest": "publish/docs",
-    "template": ["default", "modern"]
+    "content": [
+      {
+        "files": ["**/*.yml"],
+        "src": "obj/api",
+        "dest": "api"
+      },
+      {
+        "files": ["docs/**/*.md", "docs/**/toc.yml"]
+      },
+      {
+        "files": ["index.md", "toc.yml"]
+      }
+    ],
+    "resource": [
+      {
+        "files": ["docs/user/assets/**", "docs/maintainer/assets/**", "docs/maintainer/*.csv", "src/**/*.cs", "tests/**/*.cs", "README.md"]
+      }
+    ],
+    "overwrite": [
+      {
+        "files": ["apidoc/**.md"],
+        "exclude": ["obj/**"]
+      }
+    ],
+    "dest": "_site",
+    "globalMetadata": {
+      "_appTitle": "KEYENCE Host Link .NET Documentation",
+      "_enableSearch": true,
+      "_enableNewTab": true,
+      "_appFooter": "PLC Communication Workspace - fa-yoshinobu",
+      "_gitContribute": {
+        "repo": "https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet",
+        "branch": "main"
+      }
+    },
+    "template": [
+      "default",
+      "modern"
+    ],
+    "postProcessors": []
   }
 }

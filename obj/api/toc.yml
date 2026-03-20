@@ -1,0 +1,34 @@
+### YamlMime:TableOfContent
+items:
+- uid: PlcComm.KvHostLink
+  name: PlcComm.KvHostLink
+  type: Namespace
+  items:
+  - uid: PlcComm.KvHostLink.HostLinkConnectionException
+    name: HostLinkConnectionException
+    type: Class
+  - uid: PlcComm.KvHostLink.HostLinkException
+    name: HostLinkException
+    type: Class
+  - uid: PlcComm.KvHostLink.HostLinkProtocolException
+    name: HostLinkProtocolException
+    type: Class
+  - uid: PlcComm.KvHostLink.HostLinkTransportMode
+    name: HostLinkTransportMode
+    type: Enum
+  - uid: PlcComm.KvHostLink.KvDeviceAddress
+    name: KvDeviceAddress
+    type: Class
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    type: Class
+  - uid: PlcComm.KvHostLink.KvHostLinkDevice
+    name: KvHostLinkDevice
+    type: Class
+  - uid: PlcComm.KvHostLink.KvModelInfo
+    name: KvModelInfo
+    type: Class
+  - uid: PlcComm.KvHostLink.KvPlcMode
+    name: KvPlcMode
+    type: Enum
+memberLayout: SamePage

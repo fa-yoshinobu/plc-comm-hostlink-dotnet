@@ -1,0 +1,105 @@
+### YamlMime:ManagedReference
+items:
+- uid: PlcComm.KvHostLink
+  commentId: N:PlcComm.KvHostLink
+  id: PlcComm.KvHostLink
+  children:
+  - PlcComm.KvHostLink.HostLinkConnectionException
+  - PlcComm.KvHostLink.HostLinkException
+  - PlcComm.KvHostLink.HostLinkProtocolException
+  - PlcComm.KvHostLink.HostLinkTransportMode
+  - PlcComm.KvHostLink.KvDeviceAddress
+  - PlcComm.KvHostLink.KvHostLinkClient
+  - PlcComm.KvHostLink.KvHostLinkDevice
+  - PlcComm.KvHostLink.KvModelInfo
+  - PlcComm.KvHostLink.KvPlcMode
+  langs:
+  - csharp
+  - vb
+  name: PlcComm.KvHostLink
+  nameWithType: PlcComm.KvHostLink
+  fullName: PlcComm.KvHostLink
+  type: Namespace
+  assemblies:
+  - PlcComm.KvHostLink
+references:
+- uid: PlcComm.KvHostLink.KvHostLinkClient
+  commentId: T:PlcComm.KvHostLink.KvHostLinkClient
+  href: PlcComm.KvHostLink.KvHostLinkClient.html
+  name: KvHostLinkClient
+  nameWithType: KvHostLinkClient
+  fullName: PlcComm.KvHostLink.KvHostLinkClient
+- uid: PlcComm.KvHostLink.KvDeviceAddress
+  commentId: T:PlcComm.KvHostLink.KvDeviceAddress
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.KvDeviceAddress.html
+  name: KvDeviceAddress
+  nameWithType: KvDeviceAddress
+  fullName: PlcComm.KvHostLink.KvDeviceAddress
+- uid: PlcComm.KvHostLink.KvHostLinkDevice
+  commentId: T:PlcComm.KvHostLink.KvHostLinkDevice
+  href: PlcComm.KvHostLink.KvHostLinkDevice.html
+  name: KvHostLinkDevice
+  nameWithType: KvHostLinkDevice
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice
+- uid: PlcComm.KvHostLink.HostLinkTransportMode
+  commentId: T:PlcComm.KvHostLink.HostLinkTransportMode
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.HostLinkTransportMode.html
+  name: HostLinkTransportMode
+  nameWithType: HostLinkTransportMode
+  fullName: PlcComm.KvHostLink.HostLinkTransportMode
+- uid: PlcComm.KvHostLink.KvPlcMode
+  commentId: T:PlcComm.KvHostLink.KvPlcMode
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.KvPlcMode.html
+  name: KvPlcMode
+  nameWithType: KvPlcMode
+  fullName: PlcComm.KvHostLink.KvPlcMode
+- uid: PlcComm.KvHostLink.HostLinkException
+  commentId: T:PlcComm.KvHostLink.HostLinkException
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.HostLinkException.html
+  name: HostLinkException
+  nameWithType: HostLinkException
+  fullName: PlcComm.KvHostLink.HostLinkException
+- uid: PlcComm.KvHostLink.HostLinkProtocolException
+  commentId: T:PlcComm.KvHostLink.HostLinkProtocolException
+  href: PlcComm.KvHostLink.HostLinkProtocolException.html
+  name: HostLinkProtocolException
+  nameWithType: HostLinkProtocolException
+  fullName: PlcComm.KvHostLink.HostLinkProtocolException
+- uid: PlcComm.KvHostLink.HostLinkConnectionException
+  commentId: T:PlcComm.KvHostLink.HostLinkConnectionException
+  href: PlcComm.KvHostLink.HostLinkConnectionException.html
+  name: HostLinkConnectionException
+  nameWithType: HostLinkConnectionException
+  fullName: PlcComm.KvHostLink.HostLinkConnectionException
+- uid: PlcComm.KvHostLink.KvModelInfo
+  commentId: T:PlcComm.KvHostLink.KvModelInfo
+  href: PlcComm.KvHostLink.KvModelInfo.html
+  name: KvModelInfo
+  nameWithType: KvModelInfo
+  fullName: PlcComm.KvHostLink.KvModelInfo
+- uid: PlcComm.KvHostLink
+  commentId: N:PlcComm.KvHostLink
+  href: PlcComm.html
+  name: PlcComm.KvHostLink
+  nameWithType: PlcComm.KvHostLink
+  fullName: PlcComm.KvHostLink
+  spec.csharp:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html
+  spec.vb:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html

@@ -1,0 +1,114 @@
+### YamlMime:ManagedReference
+items:
+- uid: PlcComm.KvHostLink.KvPlcMode
+  commentId: T:PlcComm.KvHostLink.KvPlcMode
+  id: KvPlcMode
+  parent: PlcComm.KvHostLink
+  children:
+  - PlcComm.KvHostLink.KvPlcMode.Program
+  - PlcComm.KvHostLink.KvPlcMode.Run
+  langs:
+  - csharp
+  - vb
+  name: KvPlcMode
+  nameWithType: KvPlcMode
+  fullName: PlcComm.KvHostLink.KvPlcMode
+  type: Enum
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: KvPlcMode
+    path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+    startLine: 14
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: PLC operating mode.
+  example: []
+  syntax:
+    content: public enum KvPlcMode
+    content.vb: Public Enum KvPlcMode
+- uid: PlcComm.KvHostLink.KvPlcMode.Program
+  commentId: F:PlcComm.KvHostLink.KvPlcMode.Program
+  id: Program
+  parent: PlcComm.KvHostLink.KvPlcMode
+  langs:
+  - csharp
+  - vb
+  name: Program
+  nameWithType: KvPlcMode.Program
+  fullName: PlcComm.KvHostLink.KvPlcMode.Program
+  type: Field
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: Program
+    path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+    startLine: 16
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: Program = 0
+    return:
+      type: PlcComm.KvHostLink.KvPlcMode
+- uid: PlcComm.KvHostLink.KvPlcMode.Run
+  commentId: F:PlcComm.KvHostLink.KvPlcMode.Run
+  id: Run
+  parent: PlcComm.KvHostLink.KvPlcMode
+  langs:
+  - csharp
+  - vb
+  name: Run
+  nameWithType: KvPlcMode.Run
+  fullName: PlcComm.KvHostLink.KvPlcMode.Run
+  type: Field
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: Run
+    path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+    startLine: 17
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: Run = 1
+    return:
+      type: PlcComm.KvHostLink.KvPlcMode
+references:
+- uid: PlcComm.KvHostLink
+  commentId: N:PlcComm.KvHostLink
+  href: PlcComm.html
+  name: PlcComm.KvHostLink
+  nameWithType: PlcComm.KvHostLink
+  fullName: PlcComm.KvHostLink
+  spec.csharp:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html
+  spec.vb:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html
+- uid: PlcComm.KvHostLink.KvPlcMode
+  commentId: T:PlcComm.KvHostLink.KvPlcMode
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.KvPlcMode.html
+  name: KvPlcMode
+  nameWithType: KvPlcMode
+  fullName: PlcComm.KvHostLink.KvPlcMode

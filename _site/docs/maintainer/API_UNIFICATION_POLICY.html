@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API Unification Policy | KEYENCE Host Link .NET Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API Unification Policy | KEYENCE Host Link .NET Documentation ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docs/maintainer/API_UNIFICATION_POLICY.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-unification-policy">API Unification Policy</h1>
+
+<p>This document defines the planned public API rules for the Host Link .NET library.
+It is a design policy document for later implementation.</p>
+<h2 id="purpose">Purpose</h2>
+<ul>
+<li>Keep the Host Link API aligned with the TOYOPUC .NET library where the usage model is comparable.</li>
+<li>Reserve low-level and high-level layers from the beginning instead of mixing them later.</li>
+<li>Define the async naming contract before implementation starts.</li>
+<li>Avoid a canonical class name that is ambiguous with non-KEYENCE Host Link protocols.</li>
+</ul>
+<h2 id="planned-public-api-layers">Planned Public API Layers</h2>
+<p>The library should expose two explicit layers.</p>
+<ol>
+<li><code>KvHostLinkClient</code>
+Low-level API for transport control, raw frames, numeric device operations, and protocol-oriented commands.</li>
+<li><code>KvHostLinkDeviceClient</code>
+High-level API for string device addresses and application-facing read and write operations.</li>
+</ol>
+<p>Planned async class names:</p>
+<ol>
+<li><code>AsyncKvHostLinkClient</code></li>
+<li><code>AsyncKvHostLinkDeviceClient</code></li>
+</ol>
+<p>Quick-start documentation should prefer <code>KvHostLinkDeviceClient</code>.</p>
+<h2 id="naming-rules">Naming Rules</h2>
+<p>High-level generic device access must use these names.</p>
+<ul>
+<li><code>Read</code></li>
+<li><code>Write</code></li>
+<li><code>ReadMany</code></li>
+<li><code>WriteMany</code></li>
+<li><code>ReadDWord</code></li>
+<li><code>WriteDWord</code></li>
+<li><code>ReadDWords</code></li>
+<li><code>WriteDWords</code></li>
+<li><code>ReadFloat32</code></li>
+<li><code>WriteFloat32</code></li>
+<li><code>ReadFloat32s</code></li>
+<li><code>WriteFloat32s</code></li>
+<li><code>ResolveDevice</code></li>
+<li><code>ReadClock</code></li>
+<li><code>WriteClock</code></li>
+<li><code>ReadCpuStatus</code></li>
+</ul>
+<p>If the protocol later exposes special operation groups, keep them explicit and domain-named.</p>
+<p>Examples:</p>
+<ul>
+<li><code>ReadTimer</code></li>
+<li><code>WriteTimer</code></li>
+<li><code>ReadCounter</code></li>
+<li><code>WriteCounter</code></li>
+</ul>
+<p>Low-level typed access must keep explicit names rather than overloading the generic layer.</p>
+<ul>
+<li><code>ReadWords</code></li>
+<li><code>WriteWords</code></li>
+<li><code>ReadBits</code></li>
+<li><code>WriteBits</code></li>
+<li><code>ReadDWords</code></li>
+<li><code>WriteDWords</code></li>
+<li><code>ReadFloat32s</code></li>
+<li><code>WriteFloat32s</code></li>
+<li><code>SendRaw</code></li>
+</ul>
+<p>Do not use <code>HostLinkClient</code> or <code>HostLinkHighLevelClient</code> as canonical public names.
+Those names are too ambiguous once multiple PLC vendor protocols are considered.</p>
+<p>Do not use <code>KvHostLinkClient</code> as the permanent high-level class name if a low-level client also exists.
+That would break naming consistency with the other PLC libraries in this workspace.</p>
+<h2 id="32-bit-value-rules">32-Bit Value Rules</h2>
+<p>The library should distinguish raw 32-bit integers from IEEE 754 floating-point values.</p>
+<ul>
+<li><code>DWord</code> means a raw 32-bit unsigned value stored across two PLC words.</li>
+<li>Signed 32-bit helpers, if added later, should be named <code>ReadInt32</code> and <code>WriteInt32</code>.</li>
+<li>Floating-point helpers should use <code>Float32</code> in the public name, not plain <code>Float</code>.</li>
+</ul>
+<p>Default 32-bit word-pair interpretation:</p>
+<ul>
+<li>The default contract is low-word-first ordering unless the protocol requires a different native order.</li>
+<li>If alternate word order must be supported, expose it as an explicit option such as <code>wordOrder</code>.</li>
+</ul>
+<h2 id="async-rules">Async Rules</h2>
+<p>Async methods must use the same base names as sync methods with the .NET <code>Async</code> suffix.</p>
+<p>Examples:</p>
+<ul>
+<li><code>ConnectAsync</code></li>
+<li><code>SendRawAsync</code></li>
+<li><code>ReadWordsAsync</code></li>
+<li><code>WriteWordsAsync</code></li>
+<li><code>ReadAsync</code></li>
+<li><code>WriteAsync</code></li>
+<li><code>ReadManyAsync</code></li>
+<li><code>WriteManyAsync</code></li>
+<li><code>ReadClockAsync</code></li>
+<li><code>ReadCpuStatusAsync</code></li>
+</ul>
+<p>Async methods must follow these rules.</p>
+<ul>
+<li>Keep parameter order aligned with the sync method.</li>
+<li>Return the same logical result shape as the sync method.</li>
+<li>Accept <code>CancellationToken</code> on new async methods.</li>
+<li>Avoid creating a different user vocabulary only for async.</li>
+</ul>
+<h2 id="internal-naming-rules">Internal Naming Rules</h2>
+<p>Private helpers must describe their real subject.
+Do not rely on vague names that only make sense while the file is fresh in memory.</p>
+<p>Preferred patterns:</p>
+<ul>
+<li><code>ReadResolvedDevice</code></li>
+<li><code>WriteResolvedDevice</code></li>
+<li><code>ReadResolvedBatch</code></li>
+<li><code>WriteResolvedBatch</code></li>
+<li><code>NormalizeResolvedDeviceInput</code></li>
+<li><code>NormalizeResolvedWriteItems</code></li>
+<li><code>PackUInt32LowWordFirst</code></li>
+<li><code>UnpackUInt32LowWordFirst</code></li>
+<li><code>PackFloat32LowWordFirst</code></li>
+<li><code>UnpackFloat32LowWordFirst</code></li>
+</ul>
+<p>Avoid names such as:</p>
+<ul>
+<li><code>ReadOne</code></li>
+<li><code>WriteOne</code></li>
+<li><code>DoRead</code></li>
+<li><code>HandleWrite</code></li>
+<li><code>Offset</code></li>
+</ul>
+<h2 id="documentation-rules">Documentation Rules</h2>
+<p>README and future samples must use the planned canonical names above.
+Provisional names may exist during development, but they must not become the long-term public contract unless this document is updated.</p>
+<p>Compatibility aliases may exist during migration, but primary samples and README quick starts must use:</p>
+<ul>
+<li><code>KvHostLinkClient</code></li>
+<li><code>KvHostLinkDeviceClient</code></li>
+<li><code>AsyncKvHostLinkClient</code></li>
+<li><code>AsyncKvHostLinkDeviceClient</code></li>
+</ul>
+<h2 id="implementation-constraint">Implementation Constraint</h2>
+<p>This document is intentionally written before source implementation so that later code, samples, and tests target one stable naming plan instead of converging after the API spreads.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docs/maintainer/API_UNIFICATION_POLICY.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PLC Communication Workspace - fa-yoshinobu
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

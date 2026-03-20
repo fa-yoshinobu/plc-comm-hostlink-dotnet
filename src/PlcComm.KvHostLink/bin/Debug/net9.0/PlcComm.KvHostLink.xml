@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PlcComm.KvHostLink</name>
+    </assembly>
+    <members>
+        <member name="T:PlcComm.KvHostLink.KvHostLinkClient">
+            <summary>
+            A low-level Host Link (Upper Link) client for KEYENCE KV series PLCs.
+            </summary>
+        </member>
+        <member name="T:PlcComm.KvHostLink.HostLinkTransportMode">
+            <summary>
+            Transport protocol for Host Link communication.
+            </summary>
+        </member>
+        <member name="T:PlcComm.KvHostLink.KvPlcMode">
+            <summary>
+            PLC operating mode.
+            </summary>
+        </member>
+        <member name="T:PlcComm.KvHostLink.HostLinkException">
+            <summary>
+            Base exception for Host Link communication.
+            </summary>
+        </member>
+        <member name="T:PlcComm.KvHostLink.HostLinkProtocolException">
+            <summary>
+            Thrown when there is an error in the protocol or unexpected response.
+            </summary>
+        </member>
+        <member name="T:PlcComm.KvHostLink.HostLinkConnectionException">
+            <summary>
+            Thrown when a connection error occurs.
+            </summary>
+        </member>
+        <member name="T:PlcComm.KvHostLink.KvModelInfo">
+            <summary>
+            Information about a PLC model.
+            </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvModelInfo.#ctor(System.String,System.String)">
+            <summary>
+            Information about a PLC model.
+            </summary>
+        </member>
+    </members>
+</doc>
