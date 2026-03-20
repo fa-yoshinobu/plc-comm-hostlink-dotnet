@@ -36,7 +36,7 @@
       }
     ],
     "dest": "docs",
-    "globalMetadata": {
+    "globalMetadata": {`n      "_disablePdf": true,
       "_appTitle": "KEYENCE Host Link .NET Documentation",
       "_enableSearch": true,
       "_enableNewTab": true,
@@ -53,6 +53,7 @@
     "postProcessors": []
   }
 }
+
 
 
 

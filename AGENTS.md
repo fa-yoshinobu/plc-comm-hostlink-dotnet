@@ -21,7 +21,7 @@ This repository is part of the PLC Communication Workspace and follows the globa
 - **Distribution Control**: Ensure `.csproj` excludes `docsrc/maintainer/`, `docsrc/validation/`, `tests/`, and `TODO.md` from NuGet packages (`.nupkg`).
 
 ## 3. Reference Materials
-- **Official Specs**: Refer to `local_folder/kv/HOST LINK.pdf` for the authoritative English manual (Local only).
+- **Official Specs**: Refer to `local_folder/kv/HOST LINK.Technical Manual` for the authoritative English manual (Local only).
 - **Evidence**: Check `docsrc/validation/reports/` for verified communication results with KEYENCE KV-series PLCs.
 
 ## 4. Development Workflow
@@ -47,4 +47,5 @@ Private or helper naming rules:
 - Avoid vague names like `ReadOne`, `WriteOne`, `DoRead`, or `Offset`.
 - Prefer names that describe the resolved device or batch role, such as `ReadResolvedDevice`, `WriteResolvedBatch`, or `NormalizeResolvedWriteItems`.
 - 32-bit codec helpers should include both type and word order, for example `PackUInt32LowWordFirst` or `UnpackFloat32LowWordFirst`.
+
 
