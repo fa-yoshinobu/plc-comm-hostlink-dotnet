@@ -1,12 +1,9 @@
-# PLC Communication Workspace - Documentation
+# KEYENCE Host Link .NET Documentation
 
-This documentation hub covers multiple PLC communication protocol libraries for .NET and Python.
+High-performance KEYENCE Host Link (Upper Link) client library for .NET.
 
-## Protocols
-- [KEYENCE Host Link (Upper Link)](docsrc/user/USER_GUIDE.md)
-- [TOYOPUC Computer Link (JTEKT)](docsrc/user/USER_GUIDE.md) (When applicable)
-- [SLMP (Mitsubishi)](docsrc/user/USER_GUIDE.md) (When applicable)
+## Features
+- **KvHostLinkClient**: Supports both ASCII and Binary modes.
+- **Async Support**: Fully task-based asynchronous API.
 
-Please navigate using the table of contents.
-
-
+Refer to the [User Guide](docsrc/user/USER_GUIDE.md) for more information.
