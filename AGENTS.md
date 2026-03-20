@@ -15,23 +15,23 @@ This repository is part of the PLC Communication Workspace and follows the globa
   - All changes must pass `dotnet format` and Roslyn analyzers (StyleCop/SonarAnalyzer).
   - Use `dotnet build` to verify compliance.
 - **Documentation Structure**: Follow the Modern Documentation Policy:
-  - `docs/user/`: User manuals and API guides. [DIST]
-  - `docs/maintainer/`: Protocol specs and internal logic. [REPO]
-  - `docs/validation/`: Hardware QA reports and bug analysis. [REPO]
-- **Distribution Control**: Ensure `.csproj` excludes `docs/maintainer/`, `docs/validation/`, `tests/`, and `TODO.md` from NuGet packages (`.nupkg`).
+  - `docsrc/user/`: User manuals and API guides. [DIST]
+  - `docsrc/maintainer/`: Protocol specs and internal logic. [REPO]
+  - `docsrc/validation/`: Hardware QA reports and bug analysis. [REPO]
+- **Distribution Control**: Ensure `.csproj` excludes `docsrc/maintainer/`, `docsrc/validation/`, `tests/`, and `TODO.md` from NuGet packages (`.nupkg`).
 
 ## 3. Reference Materials
 - **Official Specs**: Refer to `local_folder/kv/HOST LINK.pdf` for the authoritative English manual (Local only).
-- **Evidence**: Check `docs/validation/reports/` for verified communication results with KEYENCE KV-series PLCs.
+- **Evidence**: Check `docsrc/validation/reports/` for verified communication results with KEYENCE KV-series PLCs.
 
 ## 4. Development Workflow
 - **Issue Tracking**: Log remaining tasks in `TODO.md`.
 - **Change Tracking**: Update `CHANGELOG.md` for every fix or feature.
-- **QA Requirement**: Every hardware-related fix must include an evidence report in `docs/validation/reports/`.
+- **QA Requirement**: Every hardware-related fix must include an evidence report in `docsrc/validation/reports/`.
 
 ## 5. API Naming Policy
 
-Detailed naming policy lives in `docs/maintainer/API_UNIFICATION_POLICY.md`.
+Detailed naming policy lives in `docsrc/maintainer/API_UNIFICATION_POLICY.md`.
 
 Public API rules:
 
@@ -47,3 +47,4 @@ Private or helper naming rules:
 - Avoid vague names like `ReadOne`, `WriteOne`, `DoRead`, or `Offset`.
 - Prefer names that describe the resolved device or batch role, such as `ReadResolvedDevice`, `WriteResolvedBatch`, or `NormalizeResolvedWriteItems`.
 - 32-bit codec helpers should include both type and word order, for example `PackUInt32LowWordFirst` or `UnpackFloat32LowWordFirst`.
+

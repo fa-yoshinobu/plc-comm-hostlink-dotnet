@@ -18,7 +18,7 @@
         "dest": "api"
       },
       {
-        "files": ["docs/**/*.md", "docs/**/toc.yml"]
+        "files": ["**/*.md", "**/toc.yml"]
       },
       {
         "files": ["index.md", "toc.yml"]
@@ -26,7 +26,7 @@
     ],
     "resource": [
       {
-        "files": ["docs/user/assets/**", "docs/maintainer/assets/**", "docs/maintainer/*.csv", "src/**/*.cs", "tests/**/*.cs", "README.md"]
+        "files": ["docsrc/user/assets/**", "docsrc/maintainer/assets/**", "docsrc/maintainer/*.csv", "README.md"]
       }
     ],
     "overwrite": [
@@ -35,7 +35,7 @@
         "exclude": ["obj/**"]
       }
     ],
-    "dest": "_site",
+    "dest": "docs",
     "globalMetadata": {
       "_appTitle": "KEYENCE Host Link .NET Documentation",
       "_enableSearch": true,
@@ -53,3 +53,7 @@
     "postProcessors": []
   }
 }
+
+
+
+

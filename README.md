@@ -32,9 +32,9 @@ Console.WriteLine($"Value: {val}");
 
 Follows the workspace-wide hierarchical documentation policy:
 
-- [**User Guide**](docs/user/USER_GUIDE.md): Setup procedures and API examples.
-- [**QA Reports**](docs/validation/reports/): Verified results with real Keyence hardware.
-- [**Developer Notes**](docs/maintainer/PROTOCOL_SPEC.md): Internal implementation of the Host Link protocol.
+- [**User Guide**](docsrc/user/USER_GUIDE.md): Setup procedures and API examples.
+- [**QA Reports**](docsrc/validation/reports/): Verified results with real Keyence hardware.
+- [**Developer Notes**](docsrc/maintainer/PROTOCOL_SPEC.md): Internal implementation of the Host Link protocol.
 
 ## Development & CI
 
@@ -49,4 +49,5 @@ Validates the code and publishes a self-contained Single-File EXE to the `publis
 ## License
 
 Distributed under the [MIT License](LICENSE).
+
 

@@ -13,8 +13,9 @@ This file tracks the remaining tasks and issues for the Host Link Communication 
 
 ## 3. Testing and Validation
 - [x] **Unit Test Base**: Added `PlcComm.KvHostLink.Tests` for device parsing and validation.
-- [ ] **Hardware Evidence**: Validate against a real KV-8000 / KV-7500 class target and write reports in `docs/validation/reports/`.
+- [ ] **Hardware Evidence**: Validate against a real KV-8000 / KV-7500 class target and write reports in `docsrc/validation/reports/`.
 
 ## 4. Documentation and Packaging
-- [x] **User Guide**: Created `docs/user/USER_GUIDE.md`.
-- [x] **NuGet Packaging Rules**: Applied strict distribution exclusions in `.csproj` (docs/maintainer, docs/validation, tests, etc.).
+- [x] **User Guide**: Created `docsrc/user/USER_GUIDE.md`.
+- [x] **NuGet Packaging Rules**: Applied strict distribution exclusions in `.csproj` (docsrc/maintainer, docsrc/validation, tests, etc.).
+
