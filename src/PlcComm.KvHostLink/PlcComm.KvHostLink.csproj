@@ -17,12 +17,13 @@
 
   <ItemGroup>
     <!-- Exclude repository-only files from NuGet package distribution [REPO] -->
-    <None Update="..\..\docs\maintainer\**" Pack="false" />
-    <None Update="..\..\docs\validation\**" Pack="false" />
+    <None Update="..\..\docsrc\maintainer\**" Pack="false" />
+    <None Update="..\..\docsrc\validation\**" Pack="false" />
     <None Update="..\..\tests\**" Pack="false" />
     <None Update="..\..\TODO.md" Pack="false" />
     <None Update="..\..\local_folder\**" Pack="false" />
   </ItemGroup>
 </Project>
+
 
 
