@@ -31,16 +31,6 @@
       "version": ""
     },
     {
-      "type": "Conceptual",
-      "source_relative_path": "README.md",
-      "output": {
-        ".html": {
-          "relative_path": "README.html"
-        }
-      },
-      "version": ""
-    },
-    {
       "type": "Resource",
       "source_relative_path": "README.md",
       "output": {
@@ -52,20 +42,20 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "TODO.md",
+      "source_relative_path": "README.md",
       "output": {
         ".html": {
-          "relative_path": "TODO.html"
+          "relative_path": "README.html"
         }
       },
       "version": ""
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "docs/README.md",
+      "source_relative_path": "TODO.md",
       "output": {
         ".html": {
-          "relative_path": "docs/README.html"
+          "relative_path": "TODO.html"
         }
       },
       "version": ""
