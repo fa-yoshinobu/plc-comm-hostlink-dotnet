@@ -69,11 +69,6 @@
     "title": "Namespace PlcComm.KvHostLink | KEYENCE Host Link .NET Documentation",
     "keywords": "Namespace PlcComm.KvHostLink Classes HostLinkConnectionException Thrown when a connection error occurs. HostLinkException Base exception for Host Link communication. HostLinkProtocolException Thrown when there is an error in the protocol or unexpected response. KvDeviceAddress KvHostLinkClient A low-level Host Link (Upper Link) client for KEYENCE KV series PLCs. KvHostLinkDevice KvModelInfo Information about a PLC model. Enums HostLinkTransportMode Transport protocol for Host Link communication. KvPlcMode PLC operating mode."
   },
-  "docs/README.html": {
-    "href": "docs/README.html",
-    "title": "(KEYENCE KV) Host Link Communication .NET | KEYENCE Host Link .NET Documentation",
-    "keywords": "(KEYENCE KV) Host Link Communication .NET A modern .NET client library for KEYENCE KV series PLCs using the Host Link Communication protocol. Designed for performance and reliability on .NET 9.0. Key Features Keyence Focused: Specialized for KV-8000, KV-7500, and other KV series Upper Link communication. Async Native: Built using modern C# asynchronous patterns (TAP). Single-File Distribution: Supports self-contained publishing. Zero Mojibake: English-only documentation and strict UTF-8 standards. CI-Ready: Built-in quality checks and publishing via run_ci.bat. Quick Start Basic Usage using HostLink; // Connect to a KEYENCE KV PLC using var client = new HostLinkClient(\"192.168.1.10\", 8501); // Read D100 (Word) int val = await client.ReadWordAsync(\"D100\"); Console.WriteLine($\"Value: {val}\"); Documentation Follows the workspace-wide hierarchical documentation policy: User Guide: Setup procedures and API examples. QA Reports: Verified results with real Keyence hardware. Developer Notes: Internal implementation of the Host Link protocol. Development & CI Quality is managed via run_ci.bat. Local CI & Publish run_ci.bat Validates the code and publishes a self-contained Single-File EXE to the publish/ directory. License Distributed under the MIT License."
-  },
   "docsrc/maintainer/API_UNIFICATION_POLICY.html": {
     "href": "docsrc/maintainer/API_UNIFICATION_POLICY.html",
     "title": "API Unification Policy | KEYENCE Host Link .NET Documentation",

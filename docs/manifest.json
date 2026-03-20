@@ -62,16 +62,6 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "docs/README.md",
-      "output": {
-        ".html": {
-          "relative_path": "docs/README.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Conceptual",
       "source_relative_path": "docsrc/maintainer/API_UNIFICATION_POLICY.md",
       "output": {
         ".html": {

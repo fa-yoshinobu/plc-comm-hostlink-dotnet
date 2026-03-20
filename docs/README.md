@@ -1,4 +1,5 @@
-# (KEYENCE KV) Host Link Communication .NET
+
+[![Documentation](https://img.shields.io/badge/docs-GitHub_Pages-blue.svg)](https://fa-yoshinobu.github.io/docs/)
 
 [![.NET 9.0](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download/dotnet/9.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -49,5 +50,7 @@ Validates the code and publishes a self-contained Single-File EXE to the `publis
 ## License
 
 Distributed under the [MIT License](LICENSE).
+
+
 
 
