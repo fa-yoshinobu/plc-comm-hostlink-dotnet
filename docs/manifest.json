@@ -12,60 +12,10 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "AGENTS.md",
-      "output": {
-        ".html": {
-          "relative_path": "AGENTS.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Conceptual",
-      "source_relative_path": "CHANGELOG.md",
-      "output": {
-        ".html": {
-          "relative_path": "CHANGELOG.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "README.md",
-      "output": {
-        "resource": {
-          "relative_path": "README.md"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Conceptual",
-      "source_relative_path": "README.md",
-      "output": {
-        ".html": {
-          "relative_path": "README.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Conceptual",
-      "source_relative_path": "TODO.md",
-      "output": {
-        ".html": {
-          "relative_path": "TODO.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Conceptual",
       "source_relative_path": "docsrc/maintainer/API_UNIFICATION_POLICY.md",
       "output": {
         ".html": {
-          "relative_path": "docsrc/maintainer/API_UNIFICATION_POLICY.html"
+          "relative_path": "maintainer/API_UNIFICATION_POLICY.html"
         }
       },
       "version": ""
@@ -75,7 +25,7 @@
       "source_relative_path": "docsrc/maintainer/ARCHITECTURE.md",
       "output": {
         ".html": {
-          "relative_path": "docsrc/maintainer/ARCHITECTURE.html"
+          "relative_path": "maintainer/ARCHITECTURE.html"
         }
       },
       "version": ""
@@ -85,10 +35,10 @@
       "source_relative_path": "docsrc/maintainer/toc.yml",
       "output": {
         ".html": {
-          "relative_path": "docsrc/maintainer/toc.html"
+          "relative_path": "maintainer/toc.html"
         },
         ".json": {
-          "relative_path": "docsrc/maintainer/toc.json"
+          "relative_path": "maintainer/toc.json"
         }
       },
       "version": ""
@@ -98,7 +48,7 @@
       "source_relative_path": "docsrc/user/DEVICE_HANDLING.md",
       "output": {
         ".html": {
-          "relative_path": "docsrc/user/DEVICE_HANDLING.html"
+          "relative_path": "user/DEVICE_HANDLING.html"
         }
       },
       "version": ""
@@ -108,7 +58,7 @@
       "source_relative_path": "docsrc/user/USER_GUIDE.md",
       "output": {
         ".html": {
-          "relative_path": "docsrc/user/USER_GUIDE.html"
+          "relative_path": "user/USER_GUIDE.html"
         }
       },
       "version": ""
@@ -118,10 +68,10 @@
       "source_relative_path": "docsrc/user/toc.yml",
       "output": {
         ".html": {
-          "relative_path": "docsrc/user/toc.html"
+          "relative_path": "user/toc.html"
         },
         ".json": {
-          "relative_path": "docsrc/user/toc.json"
+          "relative_path": "user/toc.json"
         }
       },
       "version": ""
@@ -132,119 +82,6 @@
       "output": {
         ".html": {
           "relative_path": "index.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkConnectionException.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.HostLinkConnectionException.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkException.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.HostLinkException.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkProtocolException.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.HostLinkProtocolException.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkTransportMode.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.HostLinkTransportMode.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvDeviceAddress.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.KvDeviceAddress.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkClient.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.KvHostLinkClient.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkDevice.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.KvHostLinkDevice.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvModelInfo.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.KvModelInfo.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvPlcMode.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.KvPlcMode.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/api/PlcComm.KvHostLink.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PlcComm.KvHostLink.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Toc",
-      "source_relative_path": "obj/api/toc.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/toc.html"
-        },
-        ".json": {
-          "relative_path": "api/toc.json"
         }
       },
       "version": ""

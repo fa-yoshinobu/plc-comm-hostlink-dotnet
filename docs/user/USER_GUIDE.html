@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>User Guide: Host Link Communication .NET | KEYENCE Host Link .NET Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="User Guide: Host Link Communication .NET | KEYENCE Host Link .NET Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/USER_GUIDE.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="user-guide-host-link-communication-net">User Guide: Host Link Communication .NET</h1>
+
+<p>This guide provides instructions for using the <code>PlcComm.KvHostLink</code> library to communicate with KEYENCE KV series PLCs using the Host Link (Upper Link) protocol.</p>
+<h2 id="1-getting-started">1. Getting Started</h2>
+<h3 id="installation">Installation</h3>
+<p>Reference the project or add the compiled <code>PlcComm.KvHostLink.dll</code> to your .NET 9.0 project.</p>
+<h3 id="basic-usage">Basic Usage</h3>
+<p>The primary class for communication is <code>KvHostLinkClient</code>.</p>
+<pre><code class="lang-csharp">using PlcComm.KvHostLink;
+
+// Initialize the client (Default: TCP, Port 8501)
+using var client = new KvHostLinkClient(&quot;192.168.1.10&quot;);
+
+// Open the connection
+await client.OpenAsync();
+
+// Read a single word from DM100
+var values = await client.ReadAsync(&quot;DM100&quot;);
+Console.WriteLine($&quot;DM100: {values[0]}&quot;);
+
+// Write a value to DM100
+await client.WriteAsync(&quot;DM100&quot;, 1234);
+</code></pre>
+<h2 id="2-advanced-features">2. Advanced Features</h2>
+<h3 id="device-addressing">Device Addressing</h3>
+<p>The library supports various KEYENCE device types and data formats:</p>
+<ul>
+<li><strong>Bit devices</strong>: R, B, MR, LR, CR, etc.</li>
+<li><strong>Word devices</strong>: DM, EM, FM, W, TM, Z, etc.</li>
+<li><strong>Data Formats</strong>: <code>.U</code> (Unsigned 16-bit), <code>.S</code> (Signed 16-bit), <code>.D</code> (Unsigned 32-bit), <code>.L</code> (Signed 32-bit), <code>.H</code> (Hexadecimal).</li>
+</ul>
+<pre><code class="lang-csharp">// Read 32-bit signed integer from DM200
+var dword = await client.ReadAsync(&quot;DM200.L&quot;);
+
+// Read 10 consecutive words from DM300
+var batch = await client.ReadConsecutiveAsync(&quot;DM300&quot;, 10);
+</code></pre>
+<h3 id="monitoring">Monitoring</h3>
+<p>You can register devices for monitoring and read them efficiently.</p>
+<pre><code class="lang-csharp">// Register devices
+await client.RegisterMonitorWordsAsync(new[] { &quot;DM0&quot;, &quot;DM1&quot;, &quot;DM2&quot; });
+
+// Read registered devices
+var monitorData = await client.ReadMonitorWordsAsync();
+</code></pre>
+<h2 id="3-error-handling">3. Error Handling</h2>
+<p>The library uses custom exceptions for protocol and connection errors.</p>
+<ul>
+<li><code>HostLinkConnectionException</code>: Network or connection issues.</li>
+<li><code>HostLinkProtocolException</code>: Invalid device formats or protocol violations.</li>
+<li><code>HostLinkException</code>: Generic errors returned by the PLC (e.g., E0, E1).</li>
+</ul>
+<pre><code class="lang-csharp">try {
+    await client.ReadAsync(&quot;INVALID_DEVICE&quot;);
+} catch (HostLinkProtocolException ex) {
+    Console.WriteLine($&quot;Protocol error: {ex.Message}&quot;);
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/USER_GUIDE.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PLC Communication Workspace - fa-yoshinobu
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
