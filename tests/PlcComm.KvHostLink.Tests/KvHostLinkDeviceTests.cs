@@ -23,7 +23,7 @@ public class KvHostLinkDeviceTests
     [InlineData("INVALID123")]
     public void ParseDevice_InvalidInput_ThrowsException(string input)
     {
-        Assert.Throws<HostLinkProtocolException>(() => KvHostLinkDevice.ParseDevice(input));
+        Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ParseDevice(input));
     }
 
     [Theory]

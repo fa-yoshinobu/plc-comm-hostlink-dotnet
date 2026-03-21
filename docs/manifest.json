@@ -31,6 +31,36 @@
       "version": ""
     },
     {
+      "type": "Conceptual",
+      "source_relative_path": "docsrc/maintainer/PROTOCOL_SPEC.md",
+      "output": {
+        ".html": {
+          "relative_path": "maintainer/PROTOCOL_SPEC.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docsrc/maintainer/RELEASE_PROCESS.md",
+      "output": {
+        ".html": {
+          "relative_path": "maintainer/RELEASE_PROCESS.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docsrc/maintainer/TESTING_GUIDE.md",
+      "output": {
+        ".html": {
+          "relative_path": "maintainer/TESTING_GUIDE.html"
+        }
+      },
+      "version": ""
+    },
+    {
       "type": "Toc",
       "source_relative_path": "docsrc/maintainer/toc.yml",
       "output": {
@@ -72,6 +102,16 @@
         },
         ".json": {
           "relative_path": "user/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docsrc/validation/reports/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "validation/reports/README.html"
         }
       },
       "version": ""

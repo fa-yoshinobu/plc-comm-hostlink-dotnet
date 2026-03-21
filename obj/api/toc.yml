@@ -4,14 +4,14 @@ items:
   name: PlcComm.KvHostLink
   type: Namespace
   items:
-  - uid: PlcComm.KvHostLink.HostLinkConnectionException
-    name: HostLinkConnectionException
+  - uid: PlcComm.KvHostLink.HostLinkConnectionError
+    name: HostLinkConnectionError
     type: Class
-  - uid: PlcComm.KvHostLink.HostLinkException
-    name: HostLinkException
+  - uid: PlcComm.KvHostLink.HostLinkError
+    name: HostLinkError
     type: Class
-  - uid: PlcComm.KvHostLink.HostLinkProtocolException
-    name: HostLinkProtocolException
+  - uid: PlcComm.KvHostLink.HostLinkProtocolError
+    name: HostLinkProtocolError
     type: Class
   - uid: PlcComm.KvHostLink.HostLinkTraceDirection
     name: HostLinkTraceDirection

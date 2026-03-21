@@ -22,7 +22,7 @@ internal static class KvHostLinkProtocol
     public static string DecodeResponse(byte[] raw)
     {
         if (raw == null || raw.Length == 0)
-            throw new HostLinkProtocolException("Empty response");
+            throw new HostLinkProtocolError("Empty response");
 
         string text;
         try
@@ -31,12 +31,12 @@ internal static class KvHostLinkProtocol
         }
         catch (DecoderFallbackException ex)
         {
-            throw new HostLinkProtocolException("Response is not ASCII", ex);
+            throw new HostLinkProtocolError("Response is not ASCII", ex);
         }
 
         text = text.TrimEnd('\r', '\n');
         if (string.IsNullOrEmpty(text))
-            throw new HostLinkProtocolException("Malformed response frame");
+            throw new HostLinkProtocolError("Malformed response frame");
 
         return text;
     }
@@ -45,7 +45,7 @@ internal static class KvHostLinkProtocol
     {
         if (ErrorRegex.IsMatch(responseText))
         {
-            throw new HostLinkException($"PLC returned error: {responseText}", responseText, responseText);
+            throw new HostLinkError($"PLC returned error: {responseText}", responseText, responseText);
         }
         return responseText;
     }

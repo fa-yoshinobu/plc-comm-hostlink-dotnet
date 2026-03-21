@@ -7,7 +7,7 @@ public record KvDeviceAddress(string DeviceType, int Number, string Suffix = "")
     public string ToText()
     {
         if (!KvHostLinkModels.DeviceRanges.TryGetValue(DeviceType, out var range))
-            throw new HostLinkProtocolException($"Unsupported device type: {DeviceType}");
+            throw new HostLinkProtocolError($"Unsupported device type: {DeviceType}");
 
         string numberStr = range.Base == 16 ? Number.ToString("X") : Number.ToString();
         return $"{DeviceType}{numberStr}{Suffix}";
@@ -32,7 +32,7 @@ public static class KvHostLinkDevice
         var s = suffix.ToUpperInvariant();
         if (!s.StartsWith('.')) s = "." + s;
         if (!SupportedFormats.Contains(s))
-            throw new HostLinkProtocolException($"Unsupported data format suffix: {suffix}");
+            throw new HostLinkProtocolError($"Unsupported data format suffix: {suffix}");
         return s;
     }
 
@@ -46,7 +46,7 @@ public static class KvHostLinkDevice
             if (allowOmittedType && int.TryParse(raw, out _))
                 return ParseDevice("R" + raw, false);
             var validTypes = string.Join(", ", KvHostLinkModels.DeviceRanges.Keys.OrderBy(k => k));
-            throw new HostLinkProtocolException(
+            throw new HostLinkProtocolError(
                 $"Invalid device string '{text}'. " +
                 $"Valid device types: {validTypes}.");
         }
@@ -60,7 +60,7 @@ public static class KvHostLinkDevice
         if (!KvHostLinkModels.DeviceRanges.TryGetValue(deviceType, out var range))
         {
             var validTypes = string.Join(", ", KvHostLinkModels.DeviceRanges.Keys.OrderBy(k => k));
-            throw new HostLinkProtocolException(
+            throw new HostLinkProtocolError(
                 $"Unknown device type '{deviceType}' in '{text}'. " +
                 $"Valid types: {validTypes}.");
         }
@@ -69,13 +69,13 @@ public static class KvHostLinkDevice
         {
             int number = Convert.ToInt32(numberText, range.Base);
             if (number < range.Lo || number > range.Hi)
-                throw new HostLinkProtocolException($"Device number out of range: {deviceType}{numberText} (allowed: {range.Lo}..{range.Hi})");
+                throw new HostLinkProtocolError($"Device number out of range: {deviceType}{numberText} (allowed: {range.Lo}..{range.Hi})");
 
             return new KvDeviceAddress(deviceType, number, suffix);
         }
         catch (Exception ex) when (ex is FormatException or OverflowException)
         {
-            throw new HostLinkProtocolException($"Invalid device number for {deviceType}: {numberText}", ex);
+            throw new HostLinkProtocolError($"Invalid device number for {deviceType}: {numberText}", ex);
         }
     }
 
@@ -99,7 +99,7 @@ public static class KvHostLinkDevice
         if (!allowedTypes.Contains(deviceType))
         {
             var supported = string.Join(", ", allowedTypes.OrderBy(x => x));
-            throw new HostLinkProtocolException(
+            throw new HostLinkProtocolError(
                 $"Command '{command}' does not support device type '{deviceType}'. " +
                 $"Supported types: {supported}.");
         }
@@ -135,7 +135,7 @@ public static class KvHostLinkDevice
         }
 
         if (count < lo || count > hi)
-            throw new HostLinkProtocolException(
+            throw new HostLinkProtocolError(
                 $"Count {count} is out of range for device type '{deviceType}' with format '{effectiveFormat}' " +
                 $"(allowed: {lo}..{hi}).");
     }

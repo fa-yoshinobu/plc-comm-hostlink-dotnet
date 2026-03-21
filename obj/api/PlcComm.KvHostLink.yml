@@ -4,9 +4,9 @@ items:
   commentId: N:PlcComm.KvHostLink
   id: PlcComm.KvHostLink
   children:
-  - PlcComm.KvHostLink.HostLinkConnectionException
-  - PlcComm.KvHostLink.HostLinkException
-  - PlcComm.KvHostLink.HostLinkProtocolException
+  - PlcComm.KvHostLink.HostLinkConnectionError
+  - PlcComm.KvHostLink.HostLinkError
+  - PlcComm.KvHostLink.HostLinkProtocolError
   - PlcComm.KvHostLink.HostLinkTraceDirection
   - PlcComm.KvHostLink.HostLinkTraceFrame
   - PlcComm.KvHostLink.HostLinkTransportMode
@@ -80,25 +80,25 @@ references:
   name: HostLinkTraceFrame
   nameWithType: HostLinkTraceFrame
   fullName: PlcComm.KvHostLink.HostLinkTraceFrame
-- uid: PlcComm.KvHostLink.HostLinkException
-  commentId: T:PlcComm.KvHostLink.HostLinkException
+- uid: PlcComm.KvHostLink.HostLinkError
+  commentId: T:PlcComm.KvHostLink.HostLinkError
   parent: PlcComm.KvHostLink
-  href: PlcComm.KvHostLink.HostLinkException.html
-  name: HostLinkException
-  nameWithType: HostLinkException
-  fullName: PlcComm.KvHostLink.HostLinkException
-- uid: PlcComm.KvHostLink.HostLinkProtocolException
-  commentId: T:PlcComm.KvHostLink.HostLinkProtocolException
-  href: PlcComm.KvHostLink.HostLinkProtocolException.html
-  name: HostLinkProtocolException
-  nameWithType: HostLinkProtocolException
-  fullName: PlcComm.KvHostLink.HostLinkProtocolException
-- uid: PlcComm.KvHostLink.HostLinkConnectionException
-  commentId: T:PlcComm.KvHostLink.HostLinkConnectionException
-  href: PlcComm.KvHostLink.HostLinkConnectionException.html
-  name: HostLinkConnectionException
-  nameWithType: HostLinkConnectionException
-  fullName: PlcComm.KvHostLink.HostLinkConnectionException
+  href: PlcComm.KvHostLink.HostLinkError.html
+  name: HostLinkError
+  nameWithType: HostLinkError
+  fullName: PlcComm.KvHostLink.HostLinkError
+- uid: PlcComm.KvHostLink.HostLinkProtocolError
+  commentId: T:PlcComm.KvHostLink.HostLinkProtocolError
+  href: PlcComm.KvHostLink.HostLinkProtocolError.html
+  name: HostLinkProtocolError
+  nameWithType: HostLinkProtocolError
+  fullName: PlcComm.KvHostLink.HostLinkProtocolError
+- uid: PlcComm.KvHostLink.HostLinkConnectionError
+  commentId: T:PlcComm.KvHostLink.HostLinkConnectionError
+  href: PlcComm.KvHostLink.HostLinkConnectionError.html
+  name: HostLinkConnectionError
+  nameWithType: HostLinkConnectionError
+  fullName: PlcComm.KvHostLink.HostLinkConnectionError
 - uid: PlcComm.KvHostLink.KvModelInfo
   commentId: T:PlcComm.KvHostLink.KvModelInfo
   href: PlcComm.KvHostLink.KvModelInfo.html

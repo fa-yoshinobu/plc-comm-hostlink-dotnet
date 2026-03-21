@@ -3,14 +3,14 @@ namespace PlcComm.KvHostLink;
 /// <summary>
 /// Base exception for Host Link communication.
 /// </summary>
-public class HostLinkException : Exception
+public class HostLinkError : Exception
 {
     public string? Code { get; }
     public string? Response { get; }
 
-    public HostLinkException(string message) : base(message) { }
-    public HostLinkException(string message, Exception inner) : base(message, inner) { }
-    public HostLinkException(string message, string code, string response) : base(message)
+    public HostLinkError(string message) : base(message) { }
+    public HostLinkError(string message, Exception inner) : base(message, inner) { }
+    public HostLinkError(string message, string code, string response) : base(message)
     {
         Code = code;
         Response = response;
@@ -20,17 +20,17 @@ public class HostLinkException : Exception
 /// <summary>
 /// Thrown when there is an error in the protocol or unexpected response.
 /// </summary>
-public class HostLinkProtocolException : HostLinkException
+public class HostLinkProtocolError : HostLinkError
 {
-    public HostLinkProtocolException(string message) : base(message) { }
-    public HostLinkProtocolException(string message, Exception inner) : base(message, inner) { }
+    public HostLinkProtocolError(string message) : base(message) { }
+    public HostLinkProtocolError(string message, Exception inner) : base(message, inner) { }
 }
 
 /// <summary>
 /// Thrown when a connection error occurs.
 /// </summary>
-public class HostLinkConnectionException : HostLinkException
+public class HostLinkConnectionError : HostLinkError
 {
-    public HostLinkConnectionException(string message) : base(message) { }
-    public HostLinkConnectionException(string message, Exception inner) : base(message, inner) { }
+    public HostLinkConnectionError(string message) : base(message) { }
+    public HostLinkConnectionError(string message, Exception inner) : base(message, inner) { }
 }

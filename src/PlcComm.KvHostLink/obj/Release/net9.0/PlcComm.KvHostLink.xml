@@ -70,7 +70,8 @@
         </member>
         <member name="T:PlcComm.KvHostLink.KvHostLinkClientExtensions">
             <summary>
-            Typed read/write helpers for <see cref="T:PlcComm.KvHostLink.KvHostLinkClient"/>.
+            Extension methods for <see cref="T:PlcComm.KvHostLink.KvHostLinkClient"/> providing typed read/write helpers,
+            bit-in-word access, named-device reads, and polling.
             </summary>
         </member>
         <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)">
@@ -95,6 +96,58 @@
             </param>
             <param name="value">Value to write.</param>
             <param name="ct">Cancellation token.</param>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Performs a read-modify-write to set a single bit within a word device.
+            </summary>
+            <param name="client">The client to use.</param>
+            <param name="device">Word device address string, e.g. "DM100".</param>
+            <param name="bitIndex">Bit position within the word (0–15).</param>
+            <param name="value">New bit value.</param>
+            <param name="ct">Cancellation token.</param>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)">
+            <summary>
+            Reads multiple devices by address string and returns results in a dictionary.
+            </summary>
+            <remarks>
+            Address format examples:
+            <list type="bullet">
+              <item><description>"DM100" — unsigned 16-bit (ushort)</description></item>
+              <item><description>"DM100:F" — float</description></item>
+              <item><description>"DM100:S" — signed 16-bit (short)</description></item>
+              <item><description>"DM100:D" — unsigned 32-bit</description></item>
+              <item><description>"DM100:L" — signed 32-bit</description></item>
+              <item><description>"DM100.3" — bit 3 within word (bool)</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            Continuously polls the specified devices at the given interval, yielding a snapshot each cycle.
+            </summary>
+            <param name="client">The client to use.</param>
+            <param name="addresses">Device addresses to poll (same format as <see cref="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)"/>).</param>
+            <param name="interval">Time between polls.</param>
+            <param name="ct">Cancellation token to stop polling.</param>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Creates a <see cref="T:PlcComm.KvHostLink.KvHostLinkClient"/> and opens the connection.
+            </summary>
+            <param name="host">PLC IP address or hostname.</param>
+            <param name="port">KV HostLink TCP port. Defaults to 8501.</param>
+            <param name="ct">Cancellation token.</param>
+            <summary>
+            Reads <paramref name="count"/> contiguous word values starting at <paramref name="device"/>.
+            </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Reads <paramref name="count"/> contiguous DWord (32-bit unsigned) values starting at <paramref name="device"/>.
+            Combines adjacent word pairs (lo, hi).
+            </summary>
         </member>
         <member name="T:PlcComm.KvHostLink.HostLinkTransportMode">
             <summary>
@@ -121,17 +174,17 @@
             A raw frame captured by <see cref="P:PlcComm.KvHostLink.KvHostLinkClient.TraceHook"/>.
             </summary>
         </member>
-        <member name="T:PlcComm.KvHostLink.HostLinkException">
+        <member name="T:PlcComm.KvHostLink.HostLinkError">
             <summary>
             Base exception for Host Link communication.
             </summary>
         </member>
-        <member name="T:PlcComm.KvHostLink.HostLinkProtocolException">
+        <member name="T:PlcComm.KvHostLink.HostLinkProtocolError">
             <summary>
             Thrown when there is an error in the protocol or unexpected response.
             </summary>
         </member>
-        <member name="T:PlcComm.KvHostLink.HostLinkConnectionException">
+        <member name="T:PlcComm.KvHostLink.HostLinkConnectionError">
             <summary>
             Thrown when a connection error occurs.
             </summary>

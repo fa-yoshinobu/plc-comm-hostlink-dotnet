@@ -5,7 +5,13 @@ items:
   id: KvHostLinkClientExtensions
   parent: PlcComm.KvHostLink
   children:
+  - PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)
   langs:
   - csharp
@@ -21,11 +27,14 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: KvHostLinkClientExtensions
     path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
-    startLine: 7
+    startLine: 9
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
-  summary: Typed read/write helpers for <xref href="PlcComm.KvHostLink.KvHostLinkClient" data-throw-if-not-resolved="false"></xref>.
+  summary: >-
+    Extension methods for <xref href="PlcComm.KvHostLink.KvHostLinkClient" data-throw-if-not-resolved="false"></xref> providing typed read/write helpers,
+
+    bit-in-word access, named-device reads, and polling.
   example: []
   syntax:
     content: public static class KvHostLinkClientExtensions
@@ -59,7 +68,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ReadTypedAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
-    startLine: 18
+    startLine: 20
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -106,7 +115,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: WriteTypedAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
-    startLine: 47
+    startLine: 49
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -137,6 +146,276 @@ items:
   nameWithType.vb: KvHostLinkClientExtensions.WriteTypedAsync(KvHostLinkClient, String, String, Object, CancellationToken)
   fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, String, String, Object, System.Threading.CancellationToken)
   name.vb: WriteTypedAsync(KvHostLinkClient, String, String, Object, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)
+  id: WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)
+  isExtensionMethod: true
+  parent: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  langs:
+  - csharp
+  - vb
+  name: WriteBitInWordAsync(KvHostLinkClient, string, int, bool, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.WriteBitInWordAsync(KvHostLinkClient, string, int, bool, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient, string, int, bool, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: WriteBitInWordAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+    startLine: 72
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Performs a read-modify-write to set a single bit within a word device.
+  example: []
+  syntax:
+    content: public static Task WriteBitInWordAsync(this KvHostLinkClient client, string device, int bitIndex, bool value, CancellationToken ct = default)
+    parameters:
+    - id: client
+      type: PlcComm.KvHostLink.KvHostLinkClient
+      description: The client to use.
+    - id: device
+      type: System.String
+      description: Word device address string, e.g. "DM100".
+    - id: bitIndex
+      type: System.Int32
+      description: Bit position within the word (0–15).
+    - id: value
+      type: System.Boolean
+      description: New bit value.
+    - id: ct
+      type: System.Threading.CancellationToken
+      description: Cancellation token.
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Public Shared Function WriteBitInWordAsync(client As KvHostLinkClient, device As String, bitIndex As Integer, value As Boolean, ct As CancellationToken = Nothing) As Task
+  overload: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync*
+  nameWithType.vb: KvHostLinkClientExtensions.WriteBitInWordAsync(KvHostLinkClient, String, Integer, Boolean, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient, String, Integer, Boolean, System.Threading.CancellationToken)
+  name.vb: WriteBitInWordAsync(KvHostLinkClient, String, Integer, Boolean, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  id: ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  isExtensionMethod: true
+  parent: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  langs:
+  - csharp
+  - vb
+  name: ReadNamedAsync(KvHostLinkClient, IEnumerable<string>, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadNamedAsync(KvHostLinkClient, IEnumerable<string>, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable<string>, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ReadNamedAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+    startLine: 106
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Reads multiple devices by address string and returns results in a dictionary.
+  remarks: >-
+    Address format examples:
+
+    <ul><li>"DM100" — unsigned 16-bit (ushort)</li><li>"DM100:F" — float</li><li>"DM100:S" — signed 16-bit (short)</li><li>"DM100:D" — unsigned 32-bit</li><li>"DM100:L" — signed 32-bit</li><li>"DM100.3" — bit 3 within word (bool)</li></ul>
+  example: []
+  syntax:
+    content: public static Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(this KvHostLinkClient client, IEnumerable<string> addresses, CancellationToken ct = default)
+    parameters:
+    - id: client
+      type: PlcComm.KvHostLink.KvHostLinkClient
+    - id: addresses
+      type: System.Collections.Generic.IEnumerable{System.String}
+    - id: ct
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}}
+    content.vb: Public Shared Function ReadNamedAsync(client As KvHostLinkClient, addresses As IEnumerable(Of String), ct As CancellationToken = Nothing) As Task(Of IReadOnlyDictionary(Of String, Object))
+  overload: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync*
+  nameWithType.vb: KvHostLinkClientExtensions.ReadNamedAsync(KvHostLinkClient, IEnumerable(Of String), CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable(Of String), System.Threading.CancellationToken)
+  name.vb: ReadNamedAsync(KvHostLinkClient, IEnumerable(Of String), CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,System.Threading.CancellationToken)
+  id: PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,System.Threading.CancellationToken)
+  isExtensionMethod: true
+  parent: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  langs:
+  - csharp
+  - vb
+  name: PollAsync(KvHostLinkClient, IEnumerable<string>, TimeSpan, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.PollAsync(KvHostLinkClient, IEnumerable<string>, TimeSpan, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable<string>, System.TimeSpan, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: PollAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+    startLine: 140
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Continuously polls the specified devices at the given interval, yielding a snapshot each cycle.
+  example: []
+  syntax:
+    content: public static IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollAsync(this KvHostLinkClient client, IEnumerable<string> addresses, TimeSpan interval, CancellationToken ct = default)
+    parameters:
+    - id: client
+      type: PlcComm.KvHostLink.KvHostLinkClient
+      description: The client to use.
+    - id: addresses
+      type: System.Collections.Generic.IEnumerable{System.String}
+      description: Device addresses to poll (same format as <xref href="PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient%2cSystem.Collections.Generic.IEnumerable%7bSystem.String%7d%2cSystem.Threading.CancellationToken)" data-throw-if-not-resolved="false"></xref>).
+    - id: interval
+      type: System.TimeSpan
+      description: Time between polls.
+    - id: ct
+      type: System.Threading.CancellationToken
+      description: Cancellation token to stop polling.
+    return:
+      type: System.Collections.Generic.IAsyncEnumerable{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}}
+    content.vb: Public Shared Function PollAsync(client As KvHostLinkClient, addresses As IEnumerable(Of String), interval As TimeSpan, ct As CancellationToken = Nothing) As IAsyncEnumerable(Of IReadOnlyDictionary(Of String, Object))
+  overload: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync*
+  nameWithType.vb: KvHostLinkClientExtensions.PollAsync(KvHostLinkClient, IEnumerable(Of String), TimeSpan, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable(Of String), System.TimeSpan, System.Threading.CancellationToken)
+  name.vb: PollAsync(KvHostLinkClient, IEnumerable(Of String), TimeSpan, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  id: ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  isExtensionMethod: true
+  parent: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  langs:
+  - csharp
+  - vb
+  name: ReadWordsAsync(KvHostLinkClient, string, int, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadWordsAsync(KvHostLinkClient, string, int, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient, string, int, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ReadWordsAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+    startLine: 167
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Creates a <xref href="PlcComm.KvHostLink.KvHostLinkClient" data-throw-if-not-resolved="false"></xref> and opens the connection.
+  example: []
+  syntax:
+    content: public static Task<ushort[]> ReadWordsAsync(this KvHostLinkClient client, string device, int count, CancellationToken ct = default)
+    parameters:
+    - id: client
+      type: PlcComm.KvHostLink.KvHostLinkClient
+    - id: device
+      type: System.String
+    - id: count
+      type: System.Int32
+    - id: ct
+      type: System.Threading.CancellationToken
+      description: Cancellation token.
+    return:
+      type: System.Threading.Tasks.Task{System.UInt16[]}
+    content.vb: Public Shared Function ReadWordsAsync(client As KvHostLinkClient, device As String, count As Integer, ct As CancellationToken = Nothing) As Task(Of UShort())
+  overload: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync*
+  nameWithType.vb: KvHostLinkClientExtensions.ReadWordsAsync(KvHostLinkClient, String, Integer, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient, String, Integer, System.Threading.CancellationToken)
+  name.vb: ReadWordsAsync(KvHostLinkClient, String, Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  id: ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  isExtensionMethod: true
+  parent: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  langs:
+  - csharp
+  - vb
+  name: ReadDWordsAsync(KvHostLinkClient, string, int, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadDWordsAsync(KvHostLinkClient, string, int, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient, string, int, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ReadDWordsAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+    startLine: 184
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: >-
+    Reads <code class="paramref">count</code> contiguous DWord (32-bit unsigned) values starting at <code class="paramref">device</code>.
+
+    Combines adjacent word pairs (lo, hi).
+  example: []
+  syntax:
+    content: public static Task<uint[]> ReadDWordsAsync(this KvHostLinkClient client, string device, int count, CancellationToken ct = default)
+    parameters:
+    - id: client
+      type: PlcComm.KvHostLink.KvHostLinkClient
+    - id: device
+      type: System.String
+    - id: count
+      type: System.Int32
+    - id: ct
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{System.UInt32[]}
+    content.vb: Public Shared Function ReadDWordsAsync(client As KvHostLinkClient, device As String, count As Integer, ct As CancellationToken = Nothing) As Task(Of UInteger())
+  overload: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync*
+  nameWithType.vb: KvHostLinkClientExtensions.ReadDWordsAsync(KvHostLinkClient, String, Integer, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient, String, Integer, System.Threading.CancellationToken)
+  name.vb: ReadDWordsAsync(KvHostLinkClient, String, Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  id: OpenAndConnectAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  langs:
+  - csharp
+  - vb
+  name: OpenAndConnectAsync(string, int, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.OpenAndConnectAsync(string, int, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(string, int, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: OpenAndConnectAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClientExtensions.cs
+    startLine: 197
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: public static Task<KvHostLinkClient> OpenAndConnectAsync(string host, int port = 8501, CancellationToken ct = default)
+    parameters:
+    - id: host
+      type: System.String
+    - id: port
+      type: System.Int32
+    - id: ct
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{PlcComm.KvHostLink.KvHostLinkClient}
+    content.vb: Public Shared Function OpenAndConnectAsync(host As String, port As Integer = 8501, ct As CancellationToken = Nothing) As Task(Of KvHostLinkClient)
+  overload: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync*
+  nameWithType.vb: KvHostLinkClientExtensions.OpenAndConnectAsync(String, Integer, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(String, Integer, System.Threading.CancellationToken)
+  name.vb: OpenAndConnectAsync(String, Integer, CancellationToken)
 references:
 - uid: PlcComm.KvHostLink.KvHostLinkClient
   commentId: T:PlcComm.KvHostLink.KvHostLinkClient
@@ -570,3 +849,496 @@ references:
   name: Task
   nameWithType: Task
   fullName: System.Threading.Tasks.Task
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteBitInWordAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_Int32_System_Boolean_System_Threading_CancellationToken_
+  name: WriteBitInWordAsync
+  nameWithType: KvHostLinkClientExtensions.WriteBitInWordAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadNamedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_Collections_Generic_IEnumerable_System_String__System_Threading_CancellationToken_
+  name: ReadNamedAsync
+  nameWithType: KvHostLinkClientExtensions.ReadNamedAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync
+- uid: System.Collections.Generic.IEnumerable{System.String}
+  commentId: T:System.Collections.Generic.IEnumerable{System.String}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.IEnumerable`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  name: IEnumerable<string>
+  nameWithType: IEnumerable<string>
+  fullName: System.Collections.Generic.IEnumerable<string>
+  nameWithType.vb: IEnumerable(Of String)
+  fullName.vb: System.Collections.Generic.IEnumerable(Of String)
+  name.vb: IEnumerable(Of String)
+  spec.csharp:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}}
+  commentId: T:System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<IReadOnlyDictionary<string, object>>
+  nameWithType: Task<IReadOnlyDictionary<string, object>>
+  fullName: System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<string, object>>
+  nameWithType.vb: Task(Of IReadOnlyDictionary(Of String, Object))
+  fullName.vb: System.Threading.Tasks.Task(Of System.Collections.Generic.IReadOnlyDictionary(Of String, Object))
+  name.vb: Task(Of IReadOnlyDictionary(Of String, Object))
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: System.Collections.Generic.IReadOnlyDictionary`2
+    name: IReadOnlyDictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlydictionary-2
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IReadOnlyDictionary`2
+    name: IReadOnlyDictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlydictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  - name: )
+- uid: System.Collections.Generic.IEnumerable`1
+  commentId: T:System.Collections.Generic.IEnumerable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  name: IEnumerable<T>
+  nameWithType: IEnumerable<T>
+  fullName: System.Collections.Generic.IEnumerable<T>
+  nameWithType.vb: IEnumerable(Of T)
+  fullName.vb: System.Collections.Generic.IEnumerable(Of T)
+  name.vb: IEnumerable(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  isExternal: true
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadNamedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_Collections_Generic_IEnumerable_System_String__System_Threading_CancellationToken_
+  name: ReadNamedAsync(KvHostLinkClient, IEnumerable<string>, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadNamedAsync(KvHostLinkClient, IEnumerable<string>, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable<string>, System.Threading.CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.ReadNamedAsync(KvHostLinkClient, IEnumerable(Of String), CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable(Of String), System.Threading.CancellationToken)
+  name.vb: ReadNamedAsync(KvHostLinkClient, IEnumerable(Of String), CancellationToken)
+  spec.csharp:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+    name: ReadNamedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadNamedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_Collections_Generic_IEnumerable_System_String__System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+  spec.vb:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+    name: ReadNamedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadNamedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_Collections_Generic_IEnumerable_System_String__System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_PollAsync_PlcComm_KvHostLink_KvHostLinkClient_System_Collections_Generic_IEnumerable_System_String__System_TimeSpan_System_Threading_CancellationToken_
+  name: PollAsync
+  nameWithType: KvHostLinkClientExtensions.PollAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync
+- uid: System.TimeSpan
+  commentId: T:System.TimeSpan
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.timespan
+  name: TimeSpan
+  nameWithType: TimeSpan
+  fullName: System.TimeSpan
+- uid: System.Collections.Generic.IAsyncEnumerable{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}}
+  commentId: T:System.Collections.Generic.IAsyncEnumerable{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.IAsyncEnumerable`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1
+  name: IAsyncEnumerable<IReadOnlyDictionary<string, object>>
+  nameWithType: IAsyncEnumerable<IReadOnlyDictionary<string, object>>
+  fullName: System.Collections.Generic.IAsyncEnumerable<System.Collections.Generic.IReadOnlyDictionary<string, object>>
+  nameWithType.vb: IAsyncEnumerable(Of IReadOnlyDictionary(Of String, Object))
+  fullName.vb: System.Collections.Generic.IAsyncEnumerable(Of System.Collections.Generic.IReadOnlyDictionary(Of String, Object))
+  name.vb: IAsyncEnumerable(Of IReadOnlyDictionary(Of String, Object))
+  spec.csharp:
+  - uid: System.Collections.Generic.IAsyncEnumerable`1
+    name: IAsyncEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1
+  - name: <
+  - uid: System.Collections.Generic.IReadOnlyDictionary`2
+    name: IReadOnlyDictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlydictionary-2
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IAsyncEnumerable`1
+    name: IAsyncEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IReadOnlyDictionary`2
+    name: IReadOnlyDictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlydictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  - name: )
+- uid: System.Collections.Generic.IAsyncEnumerable`1
+  commentId: T:System.Collections.Generic.IAsyncEnumerable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1
+  name: IAsyncEnumerable<T>
+  nameWithType: IAsyncEnumerable<T>
+  fullName: System.Collections.Generic.IAsyncEnumerable<T>
+  nameWithType.vb: IAsyncEnumerable(Of T)
+  fullName.vb: System.Collections.Generic.IAsyncEnumerable(Of T)
+  name.vb: IAsyncEnumerable(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.IAsyncEnumerable`1
+    name: IAsyncEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IAsyncEnumerable`1
+    name: IAsyncEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadWordsAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_Int32_System_Threading_CancellationToken_
+  name: ReadWordsAsync
+  nameWithType: KvHostLinkClientExtensions.ReadWordsAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync
+- uid: System.Threading.Tasks.Task{System.UInt16[]}
+  commentId: T:System.Threading.Tasks.Task{System.UInt16[]}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<ushort[]>
+  nameWithType: Task<ushort[]>
+  fullName: System.Threading.Tasks.Task<ushort[]>
+  nameWithType.vb: Task(Of UShort())
+  fullName.vb: System.Threading.Tasks.Task(Of UShort())
+  name.vb: Task(Of UShort())
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: System.UInt16
+    name: ushort
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.uint16
+  - name: '['
+  - name: ']'
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.UInt16
+    name: UShort
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.uint16
+  - name: (
+  - name: )
+  - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadDWordsAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_Int32_System_Threading_CancellationToken_
+  name: ReadDWordsAsync
+  nameWithType: KvHostLinkClientExtensions.ReadDWordsAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync
+- uid: System.Threading.Tasks.Task{System.UInt32[]}
+  commentId: T:System.Threading.Tasks.Task{System.UInt32[]}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<uint[]>
+  nameWithType: Task<uint[]>
+  fullName: System.Threading.Tasks.Task<uint[]>
+  nameWithType.vb: Task(Of UInteger())
+  fullName.vb: System.Threading.Tasks.Task(Of UInteger())
+  name.vb: Task(Of UInteger())
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: System.UInt32
+    name: uint
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.uint32
+  - name: '['
+  - name: ']'
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.UInt32
+    name: UInteger
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.uint32
+  - name: (
+  - name: )
+  - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_OpenAndConnectAsync_System_String_System_Int32_System_Threading_CancellationToken_
+  name: OpenAndConnectAsync
+  nameWithType: KvHostLinkClientExtensions.OpenAndConnectAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync
+- uid: System.Threading.Tasks.Task{PlcComm.KvHostLink.KvHostLinkClient}
+  commentId: T:System.Threading.Tasks.Task{PlcComm.KvHostLink.KvHostLinkClient}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<KvHostLinkClient>
+  nameWithType: Task<KvHostLinkClient>
+  fullName: System.Threading.Tasks.Task<PlcComm.KvHostLink.KvHostLinkClient>
+  nameWithType.vb: Task(Of KvHostLinkClient)
+  fullName.vb: System.Threading.Tasks.Task(Of PlcComm.KvHostLink.KvHostLinkClient)
+  name.vb: Task(Of KvHostLinkClient)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: )

@@ -87,6 +87,12 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         }
     }
 
+    public Task CloseAsync()
+    {
+        Close();
+        return Task.CompletedTask;
+    }
+
     public void Dispose() => Close();
 
     public ValueTask DisposeAsync()
@@ -164,7 +170,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                     _rxBuffer.Clear();
                     return line;
                 }
-                throw new HostLinkConnectionException("Connection closed by PLC");
+                throw new HostLinkConnectionError("Connection closed by PLC");
             }
             _rxBuffer.AddRange(buffer.Take(read));
         }
@@ -175,7 +181,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         var response = await SendRawAsync(body, cancellationToken).ConfigureAwait(false);
         if (response != "OK")
         {
-            throw new HostLinkProtocolException($"Expected 'OK' but received '{response}' for command '{body}'");
+            throw new HostLinkProtocolError($"Expected 'OK' but received '{response}' for command '{body}'");
         }
     }
 
@@ -272,7 +278,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     public async Task WriteConsecutiveAsync(string device, IEnumerable<object> values, string? dataFormat = null, CancellationToken cancellationToken = default)
     {
         var valList = values.ToList();
-        if (valList.Count == 0) throw new HostLinkProtocolException("values must not be empty");
+        if (valList.Count == 0) throw new HostLinkProtocolError("values must not be empty");
 
         var addr = KvHostLinkDevice.ParseDevice(device);
         string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
@@ -288,8 +294,8 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     public async Task RegisterMonitorBitsAsync(IEnumerable<string> devices, CancellationToken cancellationToken = default)
     {
         var targets = devices.ToList();
-        if (targets.Count == 0) throw new HostLinkProtocolException("At least one device is required");
-        if (targets.Count > 120) throw new HostLinkProtocolException("Maximum 120 devices can be registered");
+        if (targets.Count == 0) throw new HostLinkProtocolError("At least one device is required");
+        if (targets.Count > 120) throw new HostLinkProtocolError("Maximum 120 devices can be registered");
 
         var tokens = new List<string>();
         foreach (var device in targets)
@@ -304,8 +310,8 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     public async Task RegisterMonitorWordsAsync(IEnumerable<string> devices, CancellationToken cancellationToken = default)
     {
         var targets = devices.ToList();
-        if (targets.Count == 0) throw new HostLinkProtocolException("At least one device is required");
-        if (targets.Count > 120) throw new HostLinkProtocolException("Maximum 120 devices can be registered");
+        if (targets.Count == 0) throw new HostLinkProtocolError("At least one device is required");
+        if (targets.Count > 120) throw new HostLinkProtocolError("Maximum 120 devices can be registered");
 
         var tokens = new List<string>();
         foreach (var device in targets)
@@ -378,7 +384,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         var valList = values.ToList();
-        if (valList.Count == 0) throw new HostLinkProtocolException("values must not be empty");
+        if (valList.Count == 0) throw new HostLinkProtocolError("values must not be empty");
         var addr = KvHostLinkDevice.ParseDevice(device);
         string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
         string effectiveFormat = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, suffix);
@@ -416,7 +422,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         var valList = values.ToList();
-        if (valList.Count == 0) throw new HostLinkProtocolException("values must not be empty");
+        if (valList.Count == 0) throw new HostLinkProtocolError("values must not be empty");
         var addr = KvHostLinkDevice.ParseDevice(device);
         KvHostLinkDevice.ValidateDeviceType("WSS", addr.DeviceType, KvHostLinkModels.WsDeviceTypes);
         string suffix = !string.IsNullOrEmpty(addr.Suffix) ? addr.Suffix
@@ -476,7 +482,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         var valList = values.ToList();
-        if (valList.Count == 0) throw new HostLinkProtocolException("values must not be empty");
+        if (valList.Count == 0) throw new HostLinkProtocolError("values must not be empty");
         if (unitNo is < 0 or > 48)
             throw new ArgumentOutOfRangeException(nameof(unitNo), "unitNo must be 0-48.");
         if (address is < 0 or > 59999)
