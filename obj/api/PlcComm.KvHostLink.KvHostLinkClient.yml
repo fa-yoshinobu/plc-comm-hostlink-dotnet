@@ -13,8 +13,11 @@ items:
   - PlcComm.KvHostLink.KvHostLinkClient.Close
   - PlcComm.KvHostLink.KvHostLinkClient.ConfirmOperatingModeAsync(System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.Dispose
+  - PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync
   - PlcComm.KvHostLink.KvHostLinkClient.ForcedResetAsync(System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.ForcedSetAsync(System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.IsOpen
   - PlcComm.KvHostLink.KvHostLinkClient.Open
   - PlcComm.KvHostLink.KvHostLinkClient.OpenAsync(System.Threading.CancellationToken)
@@ -22,15 +25,23 @@ items:
   - PlcComm.KvHostLink.KvHostLinkClient.ReadAsync(System.String,System.String,System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(System.String,System.Boolean,System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(System.Int32,System.Int32,System.Int32,System.String,System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorBitsAsync(System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorWordsAsync(System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorBitsAsync(System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorWordsAsync(System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync(System.String,System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.SetTimeAsync(System.Nullable{System.DateTime},System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(System.Int32,System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.Timeout
+  - PlcComm.KvHostLink.KvHostLinkClient.TraceHook
   - PlcComm.KvHostLink.KvHostLinkClient.WriteAsync(System.String,System.Object,System.String,System.Threading.CancellationToken)
   - PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync(System.Int32,System.Int32,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync(System.String,System.Object,System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
   langs:
   - csharp
   - vb
@@ -52,12 +63,13 @@ items:
   summary: A low-level Host Link (Upper Link) client for KEYENCE KV series PLCs.
   example: []
   syntax:
-    content: 'public sealed class KvHostLinkClient : IDisposable'
-    content.vb: Public NotInheritable Class KvHostLinkClient Implements IDisposable
+    content: 'public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable'
+    content.vb: Public NotInheritable Class KvHostLinkClient Implements IDisposable, IAsyncDisposable
   inheritance:
   - System.Object
   implements:
   - System.IDisposable
+  - System.IAsyncDisposable
   inheritedMembers:
   - System.Object.Equals(System.Object)
   - System.Object.Equals(System.Object,System.Object)
@@ -65,6 +77,9 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
+  extensionMethods:
+  - PlcComm.KvHostLink.KvHostLinkClient.PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(System.String,System.String,System.Threading.CancellationToken)
+  - PlcComm.KvHostLink.KvHostLinkClient.PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(System.String,System.String,System.Object,System.Threading.CancellationToken)
 - uid: PlcComm.KvHostLink.KvHostLinkClient.#ctor(System.String,System.Int32,PlcComm.KvHostLink.HostLinkTransportMode)
   commentId: M:PlcComm.KvHostLink.KvHostLinkClient.#ctor(System.String,System.Int32,PlcComm.KvHostLink.HostLinkTransportMode)
   id: '#ctor(System.String,System.Int32,PlcComm.KvHostLink.HostLinkTransportMode)'
@@ -159,6 +174,40 @@ items:
       type: System.Boolean
     content.vb: Public Property AppendLfOnSend As Boolean
   overload: PlcComm.KvHostLink.KvHostLinkClient.AppendLfOnSend*
+- uid: PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+  commentId: P:PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+  id: TraceHook
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: TraceHook
+  nameWithType: KvHostLinkClient.TraceHook
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+  type: Property
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: TraceHook
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 33
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: >-
+    Optional hook called for every raw frame sent and received.
+
+    Useful for protocol tracing and debugging.
+  example: []
+  syntax:
+    content: public Action<HostLinkTraceFrame>? TraceHook { get; set; }
+    parameters: []
+    return:
+      type: System.Action{PlcComm.KvHostLink.HostLinkTraceFrame}
+    content.vb: Public Property TraceHook As Action(Of HostLinkTraceFrame)
+  overload: PlcComm.KvHostLink.KvHostLinkClient.TraceHook*
 - uid: PlcComm.KvHostLink.KvHostLinkClient.IsOpen
   commentId: P:PlcComm.KvHostLink.KvHostLinkClient.IsOpen
   id: IsOpen
@@ -177,7 +226,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: IsOpen
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 29
+    startLine: 35
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -206,7 +255,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: OpenAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 31
+    startLine: 37
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -237,7 +286,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: Open
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 62
+    startLine: 68
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -263,7 +312,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: Close
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 64
+    startLine: 70
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -289,7 +338,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: Dispose
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 83
+    startLine: 89
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -301,6 +350,42 @@ items:
   overload: PlcComm.KvHostLink.KvHostLinkClient.Dispose*
   implements:
   - System.IDisposable.Dispose
+- uid: PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync
+  id: DisposeAsync
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: DisposeAsync()
+  nameWithType: KvHostLinkClient.DisposeAsync()
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync()
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: DisposeAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 91
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: >-
+    Performs application-defined tasks associated with freeing, releasing, or
+
+    resetting unmanaged resources asynchronously.
+  example: []
+  syntax:
+    content: public ValueTask DisposeAsync()
+    return:
+      type: System.Threading.Tasks.ValueTask
+      description: A task that represents the asynchronous dispose operation.
+    content.vb: Public Function DisposeAsync() As ValueTask
+  overload: PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync*
+  implements:
+  - System.IAsyncDisposable.DisposeAsync
 - uid: PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync(System.String,System.Threading.CancellationToken)
   commentId: M:PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync(System.String,System.Threading.CancellationToken)
   id: SendRawAsync(System.String,System.Threading.CancellationToken)
@@ -319,7 +404,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: SendRawAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 85
+    startLine: 100
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -355,7 +440,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ChangeModeAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 165
+    startLine: 183
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -388,7 +473,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ClearErrorAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 170
+    startLine: 188
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -419,7 +504,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: CheckErrorNoAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 175
+    startLine: 193
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -450,7 +535,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: QueryModelAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 180
+    startLine: 198
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -481,7 +566,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ConfirmOperatingModeAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 186
+    startLine: 204
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -512,7 +597,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: SetTimeAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 192
+    startLine: 210
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -548,7 +633,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ForcedSetAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 202
+    startLine: 220
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -584,7 +669,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ForcedResetAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 209
+    startLine: 227
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -620,7 +705,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ReadAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 216
+    startLine: 234
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -658,7 +743,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ReadConsecutiveAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 228
+    startLine: 246
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -698,7 +783,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: WriteAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 241
+    startLine: 259
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -738,7 +823,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: WriteConsecutiveAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 253
+    startLine: 271
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -778,7 +863,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: RegisterMonitorBitsAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 269
+    startLine: 287
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -814,7 +899,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: RegisterMonitorWordsAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 285
+    startLine: 303
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -850,7 +935,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ReadMonitorBitsAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 302
+    startLine: 320
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -881,7 +966,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ReadMonitorWordsAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 308
+    startLine: 326
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -894,6 +979,402 @@ items:
       type: System.Threading.Tasks.Task{System.String[]}
     content.vb: Public Function ReadMonitorWordsAsync(cancellationToken As CancellationToken = Nothing) As Task(Of String())
   overload: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorWordsAsync*
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  id: ForcedSetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: ForcedSetConsecutiveAsync(string, int, CancellationToken)
+  nameWithType: KvHostLinkClient.ForcedSetConsecutiveAsync(string, int, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(string, int, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ForcedSetConsecutiveAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 333
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Consecutively force-sets up to 16 bit devices starting at <code class="paramref">device</code> (STS command).
+  example: []
+  syntax:
+    content: public Task ForcedSetConsecutiveAsync(string device, int count, CancellationToken cancellationToken = default)
+    parameters:
+    - id: device
+      type: System.String
+    - id: count
+      type: System.Int32
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Public Function ForcedSetConsecutiveAsync(device As String, count As Integer, cancellationToken As CancellationToken = Nothing) As Task
+  overload: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync*
+  nameWithType.vb: KvHostLinkClient.ForcedSetConsecutiveAsync(String, Integer, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(String, Integer, System.Threading.CancellationToken)
+  name.vb: ForcedSetConsecutiveAsync(String, Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  id: ForcedResetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: ForcedResetConsecutiveAsync(string, int, CancellationToken)
+  nameWithType: KvHostLinkClient.ForcedResetConsecutiveAsync(string, int, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(string, int, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ForcedResetConsecutiveAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 344
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Consecutively force-resets up to 16 bit devices starting at <code class="paramref">device</code> (RSS command).
+  example: []
+  syntax:
+    content: public Task ForcedResetConsecutiveAsync(string device, int count, CancellationToken cancellationToken = default)
+    parameters:
+    - id: device
+      type: System.String
+    - id: count
+      type: System.Int32
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Public Function ForcedResetConsecutiveAsync(device As String, count As Integer, cancellationToken As CancellationToken = Nothing) As Task
+  overload: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync*
+  nameWithType.vb: KvHostLinkClient.ForcedResetConsecutiveAsync(String, Integer, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(String, Integer, System.Threading.CancellationToken)
+  name.vb: ForcedResetConsecutiveAsync(String, Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  id: ReadConsecutiveLegacyAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: ReadConsecutiveLegacyAsync(string, int, string?, CancellationToken)
+  nameWithType: KvHostLinkClient.ReadConsecutiveLegacyAsync(string, int, string?, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(string, int, string?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ReadConsecutiveLegacyAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 358
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: >-
+    Reads consecutive devices using the legacy RDE command.
+
+    Prefer <xref href="PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(System.String%2cSystem.Int32%2cSystem.String%2cSystem.Threading.CancellationToken)" data-throw-if-not-resolved="false"></xref> on current models.
+  example: []
+  syntax:
+    content: public Task<string[]> ReadConsecutiveLegacyAsync(string device, int count, string? dataFormat = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: device
+      type: System.String
+    - id: count
+      type: System.Int32
+    - id: dataFormat
+      type: System.String
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{System.String[]}
+    content.vb: Public Function ReadConsecutiveLegacyAsync(device As String, count As Integer, dataFormat As String = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of String())
+  overload: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync*
+  nameWithType.vb: KvHostLinkClient.ReadConsecutiveLegacyAsync(String, Integer, String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(String, Integer, String, System.Threading.CancellationToken)
+  name.vb: ReadConsecutiveLegacyAsync(String, Integer, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  id: WriteConsecutiveLegacyAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: WriteConsecutiveLegacyAsync(string, IEnumerable<object>, string?, CancellationToken)
+  nameWithType: KvHostLinkClient.WriteConsecutiveLegacyAsync(string, IEnumerable<object>, string?, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync(string, System.Collections.Generic.IEnumerable<object>, string?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: WriteConsecutiveLegacyAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 375
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: >-
+    Writes consecutive devices using the legacy WRE command.
+
+    Prefer <xref href="PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(System.String%2cSystem.Collections.Generic.IEnumerable%7bSystem.Object%7d%2cSystem.String%2cSystem.Threading.CancellationToken)" data-throw-if-not-resolved="false"></xref> on current models.
+  example: []
+  syntax:
+    content: public Task WriteConsecutiveLegacyAsync(string device, IEnumerable<object> values, string? dataFormat = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: device
+      type: System.String
+    - id: values
+      type: System.Collections.Generic.IEnumerable{System.Object}
+    - id: dataFormat
+      type: System.String
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Public Function WriteConsecutiveLegacyAsync(device As String, values As IEnumerable(Of Object), dataFormat As String = Nothing, cancellationToken As CancellationToken = Nothing) As Task
+  overload: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync*
+  nameWithType.vb: KvHostLinkClient.WriteConsecutiveLegacyAsync(String, IEnumerable(Of Object), String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync(String, System.Collections.Generic.IEnumerable(Of Object), String, System.Threading.CancellationToken)
+  name.vb: WriteConsecutiveLegacyAsync(String, IEnumerable(Of Object), String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync(System.String,System.Object,System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync(System.String,System.Object,System.String,System.Threading.CancellationToken)
+  id: WriteSetValueAsync(System.String,System.Object,System.String,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: WriteSetValueAsync(string, object, string?, CancellationToken)
+  nameWithType: KvHostLinkClient.WriteSetValueAsync(string, object, string?, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync(string, object, string?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: WriteSetValueAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 395
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: >-
+    Writes a set-value (preset) for a timer or counter device (WS command).
+
+    Supported device types: T, C.
+  example: []
+  syntax:
+    content: public Task WriteSetValueAsync(string device, object value, string? dataFormat = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: device
+      type: System.String
+    - id: value
+      type: System.Object
+    - id: dataFormat
+      type: System.String
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Public Function WriteSetValueAsync(device As String, value As Object, dataFormat As String = Nothing, cancellationToken As CancellationToken = Nothing) As Task
+  overload: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync*
+  nameWithType.vb: KvHostLinkClient.WriteSetValueAsync(String, Object, String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync(String, Object, String, System.Threading.CancellationToken)
+  name.vb: WriteSetValueAsync(String, Object, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  id: WriteSetValueConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: WriteSetValueConsecutiveAsync(string, IEnumerable<object>, string?, CancellationToken)
+  nameWithType: KvHostLinkClient.WriteSetValueConsecutiveAsync(string, IEnumerable<object>, string?, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync(string, System.Collections.Generic.IEnumerable<object>, string?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: WriteSetValueConsecutiveAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 413
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: >-
+    Writes set-values (presets) for consecutive timer or counter devices (WSS command).
+
+    Supported device types: T, C.
+  example: []
+  syntax:
+    content: public Task WriteSetValueConsecutiveAsync(string device, IEnumerable<object> values, string? dataFormat = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: device
+      type: System.String
+    - id: values
+      type: System.Collections.Generic.IEnumerable{System.Object}
+    - id: dataFormat
+      type: System.String
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Public Function WriteSetValueConsecutiveAsync(device As String, values As IEnumerable(Of Object), dataFormat As String = Nothing, cancellationToken As CancellationToken = Nothing) As Task
+  overload: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync*
+  nameWithType.vb: KvHostLinkClient.WriteSetValueConsecutiveAsync(String, IEnumerable(Of Object), String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync(String, System.Collections.Generic.IEnumerable(Of Object), String, System.Threading.CancellationToken)
+  name.vb: WriteSetValueConsecutiveAsync(String, IEnumerable(Of Object), String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(System.Int32,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(System.Int32,System.Threading.CancellationToken)
+  id: SwitchBankAsync(System.Int32,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: SwitchBankAsync(int, CancellationToken)
+  nameWithType: KvHostLinkClient.SwitchBankAsync(int, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(int, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: SwitchBankAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 431
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: 'Switches the active data bank (BE command). Valid range: 0–15.'
+  example: []
+  syntax:
+    content: public Task SwitchBankAsync(int bankNo, CancellationToken cancellationToken = default)
+    parameters:
+    - id: bankNo
+      type: System.Int32
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Public Function SwitchBankAsync(bankNo As Integer, cancellationToken As CancellationToken = Nothing) As Task
+  overload: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync*
+  nameWithType.vb: KvHostLinkClient.SwitchBankAsync(Integer, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(Integer, System.Threading.CancellationToken)
+  name.vb: SwitchBankAsync(Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(System.Int32,System.Int32,System.Int32,System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(System.Int32,System.Int32,System.Int32,System.String,System.Threading.CancellationToken)
+  id: ReadExpansionUnitBufferAsync(System.Int32,System.Int32,System.Int32,System.String,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: ReadExpansionUnitBufferAsync(int, int, int, string, CancellationToken)
+  nameWithType: KvHostLinkClient.ReadExpansionUnitBufferAsync(int, int, int, string, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(int, int, int, string, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: ReadExpansionUnitBufferAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 446
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Reads buffer memory from an expansion unit (URD command).
+  example: []
+  syntax:
+    content: public Task<string[]> ReadExpansionUnitBufferAsync(int unitNo, int address, int count, string dataFormat = "", CancellationToken cancellationToken = default)
+    parameters:
+    - id: unitNo
+      type: System.Int32
+      description: Unit number (0–48).
+    - id: address
+      type: System.Int32
+      description: Buffer address (0–59999).
+    - id: count
+      type: System.Int32
+      description: Number of values to read.
+    - id: dataFormat
+      type: System.String
+      description: Data format suffix, e.g. ".U" or ".S". Defaults to ".U".
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+      description: Cancellation token.
+    return:
+      type: System.Threading.Tasks.Task{System.String[]}
+    content.vb: Public Function ReadExpansionUnitBufferAsync(unitNo As Integer, address As Integer, count As Integer, dataFormat As String = "", cancellationToken As CancellationToken = Nothing) As Task(Of String())
+  overload: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync*
+  nameWithType.vb: KvHostLinkClient.ReadExpansionUnitBufferAsync(Integer, Integer, Integer, String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(Integer, Integer, Integer, String, System.Threading.CancellationToken)
+  name.vb: ReadExpansionUnitBufferAsync(Integer, Integer, Integer, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync(System.Int32,System.Int32,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync(System.Int32,System.Int32,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  id: WriteExpansionUnitBufferAsync(System.Int32,System.Int32,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClient
+  langs:
+  - csharp
+  - vb
+  name: WriteExpansionUnitBufferAsync(int, int, IEnumerable<object>, string, CancellationToken)
+  nameWithType: KvHostLinkClient.WriteExpansionUnitBufferAsync(int, int, IEnumerable<object>, string, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync(int, int, System.Collections.Generic.IEnumerable<object>, string, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: WriteExpansionUnitBufferAsync
+    path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
+    startLine: 472
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Writes buffer memory to an expansion unit (UWR command).
+  example: []
+  syntax:
+    content: public Task WriteExpansionUnitBufferAsync(int unitNo, int address, IEnumerable<object> values, string dataFormat = "", CancellationToken cancellationToken = default)
+    parameters:
+    - id: unitNo
+      type: System.Int32
+      description: Unit number (0–48).
+    - id: address
+      type: System.Int32
+      description: Buffer address (0–59999).
+    - id: values
+      type: System.Collections.Generic.IEnumerable{System.Object}
+      description: Values to write.
+    - id: dataFormat
+      type: System.String
+      description: Data format suffix, e.g. ".U" or ".S". Defaults to ".U".
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+      description: Cancellation token.
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Public Function WriteExpansionUnitBufferAsync(unitNo As Integer, address As Integer, values As IEnumerable(Of Object), dataFormat As String = "", cancellationToken As CancellationToken = Nothing) As Task
+  overload: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync*
+  nameWithType.vb: KvHostLinkClient.WriteExpansionUnitBufferAsync(Integer, Integer, IEnumerable(Of Object), String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync(Integer, Integer, System.Collections.Generic.IEnumerable(Of Object), String, System.Threading.CancellationToken)
+  name.vb: WriteExpansionUnitBufferAsync(Integer, Integer, IEnumerable(Of Object), String, CancellationToken)
 - uid: PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(System.String,System.Boolean,System.Threading.CancellationToken)
   commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(System.String,System.Boolean,System.Threading.CancellationToken)
   id: ReadCommentsAsync(System.String,System.Boolean,System.Threading.CancellationToken)
@@ -912,7 +1393,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ReadCommentsAsync
     path: src/PlcComm.KvHostLink/KvHostLinkClient.cs
-    startLine: 314
+    startLine: 492
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -974,6 +1455,14 @@ references:
   name: IDisposable
   nameWithType: IDisposable
   fullName: System.IDisposable
+- uid: System.IAsyncDisposable
+  commentId: T:System.IAsyncDisposable
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iasyncdisposable
+  name: IAsyncDisposable
+  nameWithType: IAsyncDisposable
+  fullName: System.IAsyncDisposable
 - uid: System.Object.Equals(System.Object)
   commentId: M:System.Object.Equals(System.Object)
   parent: System.Object
@@ -1169,6 +1658,148 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.object.tostring
   - name: (
   - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClient.PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(System.String,System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  definition: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Threading_CancellationToken_
+  name: ReadTypedAsync(KvHostLinkClient, string, string, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadTypedAsync(KvHostLinkClient, string, string, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, string, string, System.Threading.CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.ReadTypedAsync(KvHostLinkClient, String, String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, String, String, System.Threading.CancellationToken)
+  name.vb: ReadTypedAsync(KvHostLinkClient, String, String, CancellationToken)
+  spec.csharp:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+    name: ReadTypedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+  spec.vb:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+    name: ReadTypedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClient.PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(System.String,System.String,System.Object,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)
+  parent: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  definition: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Object_System_Threading_CancellationToken_
+  name: WriteTypedAsync(KvHostLinkClient, string, string, object, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.WriteTypedAsync(KvHostLinkClient, string, string, object, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, string, string, object, System.Threading.CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.WriteTypedAsync(KvHostLinkClient, String, String, Object, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, String, String, Object, System.Threading.CancellationToken)
+  name.vb: WriteTypedAsync(KvHostLinkClient, String, String, Object, CancellationToken)
+  spec.csharp:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)
+    name: WriteTypedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Object_System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+  spec.vb:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)
+    name: WriteTypedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Object_System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
 - uid: System
   commentId: N:System
   isExternal: true
@@ -1176,6 +1807,153 @@ references:
   name: System
   nameWithType: System
   fullName: System
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+  isExternal: true
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Threading_CancellationToken_
+  name: ReadTypedAsync(KvHostLinkClient, string, string, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadTypedAsync(KvHostLinkClient, string, string, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, string, string, System.Threading.CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.ReadTypedAsync(KvHostLinkClient, String, String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, String, String, System.Threading.CancellationToken)
+  name.vb: ReadTypedAsync(KvHostLinkClient, String, String, CancellationToken)
+  spec.csharp:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+    name: ReadTypedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+  spec.vb:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+    name: ReadTypedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  commentId: T:PlcComm.KvHostLink.KvHostLinkClientExtensions
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html
+  name: KvHostLinkClientExtensions
+  nameWithType: KvHostLinkClientExtensions
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)
+  isExternal: true
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Object_System_Threading_CancellationToken_
+  name: WriteTypedAsync(KvHostLinkClient, string, string, object, CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.WriteTypedAsync(KvHostLinkClient, string, string, object, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, string, string, object, System.Threading.CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.WriteTypedAsync(KvHostLinkClient, String, String, Object, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, String, String, Object, System.Threading.CancellationToken)
+  name.vb: WriteTypedAsync(KvHostLinkClient, String, String, Object, CancellationToken)
+  spec.csharp:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)
+    name: WriteTypedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Object_System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+  spec.vb:
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)
+    name: WriteTypedAsync
+    href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Object_System_Threading_CancellationToken_
+  - name: (
+  - uid: PlcComm.KvHostLink.KvHostLinkClient
+    name: KvHostLinkClient
+    href: PlcComm.KvHostLink.KvHostLinkClient.html
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
 - uid: PlcComm.KvHostLink.KvHostLinkClient.#ctor*
   commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.#ctor
   href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient__ctor_System_String_System_Int32_PlcComm_KvHostLink_HostLinkTransportMode_
@@ -1245,6 +2023,73 @@ references:
   nameWithType.vb: Boolean
   fullName.vb: Boolean
   name.vb: Boolean
+- uid: PlcComm.KvHostLink.KvHostLinkClient.TraceHook*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_TraceHook
+  name: TraceHook
+  nameWithType: KvHostLinkClient.TraceHook
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+- uid: System.Action{PlcComm.KvHostLink.HostLinkTraceFrame}
+  commentId: T:System.Action{PlcComm.KvHostLink.HostLinkTraceFrame}
+  parent: System
+  definition: System.Action`1
+  href: https://learn.microsoft.com/dotnet/api/system.action-1
+  name: Action<HostLinkTraceFrame>
+  nameWithType: Action<HostLinkTraceFrame>
+  fullName: System.Action<PlcComm.KvHostLink.HostLinkTraceFrame>
+  nameWithType.vb: Action(Of HostLinkTraceFrame)
+  fullName.vb: System.Action(Of PlcComm.KvHostLink.HostLinkTraceFrame)
+  name.vb: Action(Of HostLinkTraceFrame)
+  spec.csharp:
+  - uid: System.Action`1
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-1
+  - name: <
+  - uid: PlcComm.KvHostLink.HostLinkTraceFrame
+    name: HostLinkTraceFrame
+    href: PlcComm.KvHostLink.HostLinkTraceFrame.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Action`1
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: PlcComm.KvHostLink.HostLinkTraceFrame
+    name: HostLinkTraceFrame
+    href: PlcComm.KvHostLink.HostLinkTraceFrame.html
+  - name: )
+- uid: System.Action`1
+  commentId: T:System.Action`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.action-1
+  name: Action<T>
+  nameWithType: Action<T>
+  fullName: System.Action<T>
+  nameWithType.vb: Action(Of T)
+  fullName.vb: System.Action(Of T)
+  name.vb: Action(Of T)
+  spec.csharp:
+  - uid: System.Action`1
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Action`1
+    name: Action
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.action-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
 - uid: PlcComm.KvHostLink.KvHostLinkClient.IsOpen*
   commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.IsOpen
   href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_IsOpen
@@ -1377,6 +2222,42 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.idisposable.dispose
   - name: (
   - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_DisposeAsync
+  name: DisposeAsync
+  nameWithType: KvHostLinkClient.DisposeAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync
+- uid: System.IAsyncDisposable.DisposeAsync
+  commentId: M:System.IAsyncDisposable.DisposeAsync
+  parent: System.IAsyncDisposable
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync
+  name: DisposeAsync()
+  nameWithType: IAsyncDisposable.DisposeAsync()
+  fullName: System.IAsyncDisposable.DisposeAsync()
+  spec.csharp:
+  - uid: System.IAsyncDisposable.DisposeAsync
+    name: DisposeAsync
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.IAsyncDisposable.DisposeAsync
+    name: DisposeAsync
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync
+  - name: (
+  - name: )
+- uid: System.Threading.Tasks.ValueTask
+  commentId: T:System.Threading.Tasks.ValueTask
+  parent: System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask
+  name: ValueTask
+  nameWithType: ValueTask
+  fullName: System.Threading.Tasks.ValueTask
 - uid: PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync*
   commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync
   href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_SendRawAsync_System_String_System_Threading_CancellationToken_
@@ -1840,6 +2721,206 @@ references:
   name: ReadMonitorWordsAsync
   nameWithType: KvHostLinkClient.ReadMonitorWordsAsync
   fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorWordsAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedSetConsecutiveAsync_System_String_System_Int32_System_Threading_CancellationToken_
+  name: ForcedSetConsecutiveAsync
+  nameWithType: KvHostLinkClient.ForcedSetConsecutiveAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedResetConsecutiveAsync_System_String_System_Int32_System_Threading_CancellationToken_
+  name: ForcedResetConsecutiveAsync
+  nameWithType: KvHostLinkClient.ForcedResetConsecutiveAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  isExternal: true
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadConsecutiveAsync_System_String_System_Int32_System_String_System_Threading_CancellationToken_
+  name: ReadConsecutiveAsync(string, int, string, CancellationToken)
+  nameWithType: KvHostLinkClient.ReadConsecutiveAsync(string, int, string, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(string, int, string, System.Threading.CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ReadConsecutiveAsync(String, Integer, String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(String, Integer, String, System.Threading.CancellationToken)
+  name.vb: ReadConsecutiveAsync(String, Integer, String, CancellationToken)
+  spec.csharp:
+  - uid: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+    name: ReadConsecutiveAsync
+    href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadConsecutiveAsync_System_String_System_Int32_System_String_System_Threading_CancellationToken_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+  spec.vb:
+  - uid: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+    name: ReadConsecutiveAsync
+    href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadConsecutiveAsync_System_String_System_Int32_System_String_System_Threading_CancellationToken_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadConsecutiveLegacyAsync_System_String_System_Int32_System_String_System_Threading_CancellationToken_
+  name: ReadConsecutiveLegacyAsync
+  nameWithType: KvHostLinkClient.ReadConsecutiveLegacyAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+  isExternal: true
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteConsecutiveAsync_System_String_System_Collections_Generic_IEnumerable_System_Object__System_String_System_Threading_CancellationToken_
+  name: WriteConsecutiveAsync(string, IEnumerable<object>, string, CancellationToken)
+  nameWithType: KvHostLinkClient.WriteConsecutiveAsync(string, IEnumerable<object>, string, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(string, System.Collections.Generic.IEnumerable<object>, string, System.Threading.CancellationToken)
+  nameWithType.vb: KvHostLinkClient.WriteConsecutiveAsync(String, IEnumerable(Of Object), String, CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(String, System.Collections.Generic.IEnumerable(Of Object), String, System.Threading.CancellationToken)
+  name.vb: WriteConsecutiveAsync(String, IEnumerable(Of Object), String, CancellationToken)
+  spec.csharp:
+  - uid: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+    name: WriteConsecutiveAsync
+    href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteConsecutiveAsync_System_String_System_Collections_Generic_IEnumerable_System_Object__System_String_System_Threading_CancellationToken_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: <
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '>'
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+  spec.vb:
+  - uid: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)
+    name: WriteConsecutiveAsync
+    href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteConsecutiveAsync_System_String_System_Collections_Generic_IEnumerable_System_Object__System_String_System_Threading_CancellationToken_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.IEnumerable`1
+    name: IEnumerable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteConsecutiveLegacyAsync_System_String_System_Collections_Generic_IEnumerable_System_Object__System_String_System_Threading_CancellationToken_
+  name: WriteConsecutiveLegacyAsync
+  nameWithType: KvHostLinkClient.WriteConsecutiveLegacyAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteSetValueAsync_System_String_System_Object_System_String_System_Threading_CancellationToken_
+  name: WriteSetValueAsync
+  nameWithType: KvHostLinkClient.WriteSetValueAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteSetValueConsecutiveAsync_System_String_System_Collections_Generic_IEnumerable_System_Object__System_String_System_Threading_CancellationToken_
+  name: WriteSetValueConsecutiveAsync
+  nameWithType: KvHostLinkClient.WriteSetValueConsecutiveAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_SwitchBankAsync_System_Int32_System_Threading_CancellationToken_
+  name: SwitchBankAsync
+  nameWithType: KvHostLinkClient.SwitchBankAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadExpansionUnitBufferAsync_System_Int32_System_Int32_System_Int32_System_String_System_Threading_CancellationToken_
+  name: ReadExpansionUnitBufferAsync
+  nameWithType: KvHostLinkClient.ReadExpansionUnitBufferAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync*
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync
+  href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteExpansionUnitBufferAsync_System_Int32_System_Int32_System_Collections_Generic_IEnumerable_System_Object__System_String_System_Threading_CancellationToken_
+  name: WriteExpansionUnitBufferAsync
+  nameWithType: KvHostLinkClient.WriteExpansionUnitBufferAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync
 - uid: PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync*
   commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync
   href: PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadCommentsAsync_System_String_System_Boolean_System_Threading_CancellationToken_

@@ -9,7 +9,7 @@
       "PlcComm.KvHostLink.Tests/1.0.0": {
         "dependencies": {
           "Microsoft.NET.Test.Sdk": "17.12.0",
-          "PlcComm.KvHostLink": "1.0.0",
+          "PlcComm.KvHostLink": "0.1.2",
           "coverlet.collector": "6.0.2",
           "xunit": "2.9.2",
           "xunit.runner.visualstudio": "2.8.2"
@@ -341,11 +341,11 @@
         }
       },
       "xunit.runner.visualstudio/2.8.2": {},
-      "PlcComm.KvHostLink/1.0.0": {
+      "PlcComm.KvHostLink/0.1.2": {
         "runtime": {
           "PlcComm.KvHostLink.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
+            "assemblyVersion": "0.1.2.0",
+            "fileVersion": "0.1.2.0"
           }
         }
       }
@@ -462,7 +462,7 @@
       "path": "xunit.runner.visualstudio/2.8.2",
       "hashPath": "xunit.runner.visualstudio.2.8.2.nupkg.sha512"
     },
-    "PlcComm.KvHostLink/1.0.0": {
+    "PlcComm.KvHostLink/0.1.2": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

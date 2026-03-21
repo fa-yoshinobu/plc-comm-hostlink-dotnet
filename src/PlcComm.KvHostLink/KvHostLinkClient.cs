@@ -6,7 +6,7 @@ namespace PlcComm.KvHostLink;
 /// <summary>
 /// A low-level Host Link (Upper Link) client for KEYENCE KV series PLCs.
 /// </summary>
-public sealed class KvHostLinkClient : IDisposable
+public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 {
     private readonly string _host;
     private readonly int _port;
@@ -26,6 +26,12 @@ public sealed class KvHostLinkClient : IDisposable
 
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(3);
     public bool AppendLfOnSend { get; set; } = false;
+
+    /// <summary>
+    /// Optional hook called for every raw frame sent and received.
+    /// Useful for protocol tracing and debugging.
+    /// </summary>
+    public Action<HostLinkTraceFrame>? TraceHook { get; set; }
 
     public bool IsOpen => _transportMode == HostLinkTransportMode.Tcp ? _tcp?.Connected == true : _udp is not null;
 
@@ -83,6 +89,15 @@ public sealed class KvHostLinkClient : IDisposable
 
     public void Dispose() => Close();
 
+    public ValueTask DisposeAsync()
+    {
+        Close();
+        return ValueTask.CompletedTask;
+    }
+
+    private void FireTrace(HostLinkTraceDirection direction, byte[] data)
+        => TraceHook?.Invoke(new HostLinkTraceFrame(direction, data, DateTime.UtcNow));
+
     public async Task<string> SendRawAsync(string body, CancellationToken cancellationToken = default)
     {
         await OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -91,16 +106,19 @@ public sealed class KvHostLinkClient : IDisposable
         try
         {
             var frame = KvHostLinkProtocol.BuildFrame(body, AppendLfOnSend);
+            FireTrace(HostLinkTraceDirection.Send, frame);
             if (_transportMode == HostLinkTransportMode.Tcp)
             {
                 await _tcpStream!.WriteAsync(frame, cancellationToken).ConfigureAwait(false);
                 var responseRaw = await RecvTcpLineAsync(cancellationToken).ConfigureAwait(false);
+                FireTrace(HostLinkTraceDirection.Receive, responseRaw);
                 return KvHostLinkProtocol.EnsureSuccess(KvHostLinkProtocol.DecodeResponse(responseRaw));
             }
             else
             {
                 await _udp!.SendAsync(frame, cancellationToken).ConfigureAwait(false);
                 var result = await _udp.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+                FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
                 return KvHostLinkProtocol.EnsureSuccess(KvHostLinkProtocol.DecodeResponse(result.Buffer));
             }
         }
@@ -310,6 +328,166 @@ public sealed class KvHostLinkClient : IDisposable
     {
         string response = await SendRawAsync("MWR", cancellationToken).ConfigureAwait(false);
         return KvHostLinkProtocol.SplitDataTokens(response);
+    }
+
+    /// <summary>Consecutively force-sets up to 16 bit devices starting at <paramref name="device"/> (STS command).</summary>
+    public async Task ForcedSetConsecutiveAsync(
+        string device, int count, CancellationToken cancellationToken = default)
+    {
+        if (count is < 1 or > 16) throw new ArgumentOutOfRangeException(nameof(count), "count must be 1-16.");
+        var addr = KvHostLinkDevice.ParseDevice(device);
+        KvHostLinkDevice.ValidateDeviceType("STS", addr.DeviceType, KvHostLinkModels.ForceDeviceTypes);
+        await ExpectOkAsync($"STS {(addr with { Suffix = "" }).ToText()} {count}", cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>Consecutively force-resets up to 16 bit devices starting at <paramref name="device"/> (RSS command).</summary>
+    public async Task ForcedResetConsecutiveAsync(
+        string device, int count, CancellationToken cancellationToken = default)
+    {
+        if (count is < 1 or > 16) throw new ArgumentOutOfRangeException(nameof(count), "count must be 1-16.");
+        var addr = KvHostLinkDevice.ParseDevice(device);
+        KvHostLinkDevice.ValidateDeviceType("RSS", addr.DeviceType, KvHostLinkModels.ForceDeviceTypes);
+        await ExpectOkAsync($"RSS {(addr with { Suffix = "" }).ToText()} {count}", cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Reads consecutive devices using the legacy RDE command.
+    /// Prefer <see cref="ReadConsecutiveAsync"/> on current models.
+    /// </summary>
+    public async Task<string[]> ReadConsecutiveLegacyAsync(
+        string device, int count, string? dataFormat = null, CancellationToken cancellationToken = default)
+    {
+        var addr = KvHostLinkDevice.ParseDevice(device);
+        string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
+        string effectiveFormat = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, suffix);
+        KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, effectiveFormat, count);
+        var target = addr with { Suffix = suffix };
+        string response = await SendRawAsync($"RDE {target.ToText()} {count}", cancellationToken)
+            .ConfigureAwait(false);
+        return KvHostLinkProtocol.SplitDataTokens(response);
+    }
+
+    /// <summary>
+    /// Writes consecutive devices using the legacy WRE command.
+    /// Prefer <see cref="WriteConsecutiveAsync"/> on current models.
+    /// </summary>
+    public async Task WriteConsecutiveLegacyAsync(
+        string device, IEnumerable<object> values, string? dataFormat = null,
+        CancellationToken cancellationToken = default)
+    {
+        var valList = values.ToList();
+        if (valList.Count == 0) throw new HostLinkProtocolException("values must not be empty");
+        var addr = KvHostLinkDevice.ParseDevice(device);
+        string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
+        string effectiveFormat = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, suffix);
+        KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, effectiveFormat, valList.Count);
+        var target = addr with { Suffix = suffix };
+        string payload = string.Join(" ", valList.Select(v => FormatValue(v, suffix)));
+        await ExpectOkAsync($"WRE {target.ToText()} {valList.Count} {payload}", cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Writes a set-value (preset) for a timer or counter device (WS command).
+    /// Supported device types: T, C.
+    /// </summary>
+    public async Task WriteSetValueAsync(
+        string device, object value, string? dataFormat = null,
+        CancellationToken cancellationToken = default)
+    {
+        var addr = KvHostLinkDevice.ParseDevice(device);
+        KvHostLinkDevice.ValidateDeviceType("WS", addr.DeviceType, KvHostLinkModels.WsDeviceTypes);
+        string suffix = !string.IsNullOrEmpty(addr.Suffix) ? addr.Suffix
+            : KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
+        if (dataFormat != null) suffix = KvHostLinkDevice.NormalizeSuffix(dataFormat);
+        var target = addr with { Suffix = suffix };
+        string valStr = FormatValue(value, suffix);
+        await ExpectOkAsync($"WS {target.ToText()} {valStr}", cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Writes set-values (presets) for consecutive timer or counter devices (WSS command).
+    /// Supported device types: T, C.
+    /// </summary>
+    public async Task WriteSetValueConsecutiveAsync(
+        string device, IEnumerable<object> values, string? dataFormat = null,
+        CancellationToken cancellationToken = default)
+    {
+        var valList = values.ToList();
+        if (valList.Count == 0) throw new HostLinkProtocolException("values must not be empty");
+        var addr = KvHostLinkDevice.ParseDevice(device);
+        KvHostLinkDevice.ValidateDeviceType("WSS", addr.DeviceType, KvHostLinkModels.WsDeviceTypes);
+        string suffix = !string.IsNullOrEmpty(addr.Suffix) ? addr.Suffix
+            : KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
+        if (dataFormat != null) suffix = KvHostLinkDevice.NormalizeSuffix(dataFormat);
+        var target = addr with { Suffix = suffix };
+        string payload = string.Join(" ", valList.Select(v => FormatValue(v, suffix)));
+        await ExpectOkAsync($"WSS {target.ToText()} {valList.Count} {payload}", cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>Switches the active data bank (BE command). Valid range: 0–15.</summary>
+    public async Task SwitchBankAsync(int bankNo, CancellationToken cancellationToken = default)
+    {
+        if (bankNo is < 0 or > 15)
+            throw new ArgumentOutOfRangeException(nameof(bankNo), "bankNo must be 0-15.");
+        await ExpectOkAsync($"BE {bankNo}", cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Reads buffer memory from an expansion unit (URD command).
+    /// </summary>
+    /// <param name="unitNo">Unit number (0–48).</param>
+    /// <param name="address">Buffer address (0–59999).</param>
+    /// <param name="count">Number of values to read.</param>
+    /// <param name="dataFormat">Data format suffix, e.g. ".U" or ".S". Defaults to ".U".</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task<string[]> ReadExpansionUnitBufferAsync(
+        int unitNo, int address, int count,
+        string dataFormat = "",
+        CancellationToken cancellationToken = default)
+    {
+        if (unitNo is < 0 or > 48)
+            throw new ArgumentOutOfRangeException(nameof(unitNo), "unitNo must be 0-48.");
+        if (address is < 0 or > 59999)
+            throw new ArgumentOutOfRangeException(nameof(address), "address must be 0-59999.");
+
+        string suffix = string.IsNullOrEmpty(dataFormat) ? ".U"
+            : KvHostLinkDevice.NormalizeSuffix(dataFormat);
+
+        string cmd = $"URD {unitNo:D2} {address} {suffix} {count}";
+        string response = await SendRawAsync(cmd, cancellationToken).ConfigureAwait(false);
+        return KvHostLinkProtocol.SplitDataTokens(response);
+    }
+
+    /// <summary>
+    /// Writes buffer memory to an expansion unit (UWR command).
+    /// </summary>
+    /// <param name="unitNo">Unit number (0–48).</param>
+    /// <param name="address">Buffer address (0–59999).</param>
+    /// <param name="values">Values to write.</param>
+    /// <param name="dataFormat">Data format suffix, e.g. ".U" or ".S". Defaults to ".U".</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task WriteExpansionUnitBufferAsync(
+        int unitNo, int address, IEnumerable<object> values,
+        string dataFormat = "",
+        CancellationToken cancellationToken = default)
+    {
+        var valList = values.ToList();
+        if (valList.Count == 0) throw new HostLinkProtocolException("values must not be empty");
+        if (unitNo is < 0 or > 48)
+            throw new ArgumentOutOfRangeException(nameof(unitNo), "unitNo must be 0-48.");
+        if (address is < 0 or > 59999)
+            throw new ArgumentOutOfRangeException(nameof(address), "address must be 0-59999.");
+
+        string suffix = string.IsNullOrEmpty(dataFormat) ? ".U"
+            : KvHostLinkDevice.NormalizeSuffix(dataFormat);
+
+        string payload = string.Join(" ", valList.Select(v => FormatValue(v, suffix)));
+        string cmd = $"UWR {unitNo:D2} {address} {suffix} {valList.Count} {payload}";
+        await ExpectOkAsync(cmd, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<string> ReadCommentsAsync(string device, bool stripPadding = true, CancellationToken cancellationToken = default)

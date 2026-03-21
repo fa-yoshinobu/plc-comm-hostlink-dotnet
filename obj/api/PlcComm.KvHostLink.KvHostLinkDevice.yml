@@ -130,7 +130,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ParseDeviceText
     path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
-    startLine: 73
+    startLine: 81
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -166,7 +166,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ResolveEffectiveFormat
     path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
-    startLine: 82
+    startLine: 90
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
@@ -202,20 +202,20 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ValidateDeviceType
     path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
-    startLine: 88
+    startLine: 96
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink
   syntax:
-    content: public static void ValidateDeviceType(string name, string deviceType, HashSet<string> allowedTypes)
+    content: public static void ValidateDeviceType(string command, string deviceType, HashSet<string> allowedTypes)
     parameters:
-    - id: name
+    - id: command
       type: System.String
     - id: deviceType
       type: System.String
     - id: allowedTypes
       type: System.Collections.Generic.HashSet{System.String}
-    content.vb: Public Shared Sub ValidateDeviceType(name As String, deviceType As String, allowedTypes As HashSet(Of String))
+    content.vb: Public Shared Sub ValidateDeviceType(command As String, deviceType As String, allowedTypes As HashSet(Of String))
   overload: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType*
   nameWithType.vb: KvHostLinkDevice.ValidateDeviceType(String, String, HashSet(Of String))
   fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(String, String, System.Collections.Generic.HashSet(Of String))
@@ -238,7 +238,7 @@ items:
       repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
     id: ValidateDeviceCount
     path: src/PlcComm.KvHostLink/KvHostLinkDevice.cs
-    startLine: 97
+    startLine: 107
   assemblies:
   - PlcComm.KvHostLink
   namespace: PlcComm.KvHostLink

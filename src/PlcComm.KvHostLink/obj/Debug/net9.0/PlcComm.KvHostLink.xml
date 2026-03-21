@@ -9,6 +9,93 @@
             A low-level Host Link (Upper Link) client for KEYENCE KV series PLCs.
             </summary>
         </member>
+        <member name="P:PlcComm.KvHostLink.KvHostLinkClient.TraceHook">
+            <summary>
+            Optional hook called for every raw frame sent and received.
+            Useful for protocol tracing and debugging.
+            </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>Consecutively force-sets up to 16 bit devices starting at <paramref name="device"/> (STS command).</summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>Consecutively force-resets up to 16 bit devices starting at <paramref name="device"/> (RSS command).</summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Reads consecutive devices using the legacy RDE command.
+            Prefer <see cref="M:PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)"/> on current models.
+            </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)">
+            <summary>
+            Writes consecutive devices using the legacy WRE command.
+            Prefer <see cref="M:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)"/> on current models.
+            </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync(System.String,System.Object,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Writes a set-value (preset) for a timer or counter device (WS command).
+            Supported device types: T, C.
+            </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)">
+            <summary>
+            Writes set-values (presets) for consecutive timer or counter devices (WSS command).
+            Supported device types: T, C.
+            </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>Switches the active data bank (BE command). Valid range: 0–15.</summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(System.Int32,System.Int32,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Reads buffer memory from an expansion unit (URD command).
+            </summary>
+            <param name="unitNo">Unit number (0–48).</param>
+            <param name="address">Buffer address (0–59999).</param>
+            <param name="count">Number of values to read.</param>
+            <param name="dataFormat">Data format suffix, e.g. ".U" or ".S". Defaults to ".U".</param>
+            <param name="cancellationToken">Cancellation token.</param>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync(System.Int32,System.Int32,System.Collections.Generic.IEnumerable{System.Object},System.String,System.Threading.CancellationToken)">
+            <summary>
+            Writes buffer memory to an expansion unit (UWR command).
+            </summary>
+            <param name="unitNo">Unit number (0–48).</param>
+            <param name="address">Buffer address (0–59999).</param>
+            <param name="values">Values to write.</param>
+            <param name="dataFormat">Data format suffix, e.g. ".U" or ".S". Defaults to ".U".</param>
+            <param name="cancellationToken">Cancellation token.</param>
+        </member>
+        <member name="T:PlcComm.KvHostLink.KvHostLinkClientExtensions">
+            <summary>
+            Typed read/write helpers for <see cref="T:PlcComm.KvHostLink.KvHostLinkClient"/>.
+            </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Reads a single device value and converts it to the specified type.
+            </summary>
+            <param name="client">The client to use.</param>
+            <param name="device">Device address string, e.g. "DM100".</param>
+            <param name="dtype">
+            Data type: "U" = ushort, "S" = short, "D" = uint, "L" = int (signed 32-bit), "F" = float.
+            </param>
+            <param name="ct">Cancellation token.</param>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Writes a single device value using the specified data type format.
+            </summary>
+            <param name="client">The client to use.</param>
+            <param name="device">Device address string, e.g. "DM100".</param>
+            <param name="dtype">
+            Data type: "U" = ushort, "S" = short, "D" = uint, "L" = int, "F" = float.
+            </param>
+            <param name="value">Value to write.</param>
+            <param name="ct">Cancellation token.</param>
+        </member>
         <member name="T:PlcComm.KvHostLink.HostLinkTransportMode">
             <summary>
             Transport protocol for Host Link communication.
@@ -17,6 +104,21 @@
         <member name="T:PlcComm.KvHostLink.KvPlcMode">
             <summary>
             PLC operating mode.
+            </summary>
+        </member>
+        <member name="T:PlcComm.KvHostLink.HostLinkTraceDirection">
+            <summary>
+            Direction of a traced frame.
+            </summary>
+        </member>
+        <member name="T:PlcComm.KvHostLink.HostLinkTraceFrame">
+            <summary>
+            A raw frame captured by <see cref="P:PlcComm.KvHostLink.KvHostLinkClient.TraceHook"/>.
+            </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.HostLinkTraceFrame.#ctor(PlcComm.KvHostLink.HostLinkTraceDirection,System.Byte[],System.DateTime)">
+            <summary>
+            A raw frame captured by <see cref="P:PlcComm.KvHostLink.KvHostLinkClient.TraceHook"/>.
             </summary>
         </member>
         <member name="T:PlcComm.KvHostLink.HostLinkException">

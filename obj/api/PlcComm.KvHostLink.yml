@@ -7,9 +7,12 @@ items:
   - PlcComm.KvHostLink.HostLinkConnectionException
   - PlcComm.KvHostLink.HostLinkException
   - PlcComm.KvHostLink.HostLinkProtocolException
+  - PlcComm.KvHostLink.HostLinkTraceDirection
+  - PlcComm.KvHostLink.HostLinkTraceFrame
   - PlcComm.KvHostLink.HostLinkTransportMode
   - PlcComm.KvHostLink.KvDeviceAddress
   - PlcComm.KvHostLink.KvHostLinkClient
+  - PlcComm.KvHostLink.KvHostLinkClientExtensions
   - PlcComm.KvHostLink.KvHostLinkDevice
   - PlcComm.KvHostLink.KvModelInfo
   - PlcComm.KvHostLink.KvPlcMode
@@ -25,10 +28,18 @@ items:
 references:
 - uid: PlcComm.KvHostLink.KvHostLinkClient
   commentId: T:PlcComm.KvHostLink.KvHostLinkClient
+  parent: PlcComm.KvHostLink
   href: PlcComm.KvHostLink.KvHostLinkClient.html
   name: KvHostLinkClient
   nameWithType: KvHostLinkClient
   fullName: PlcComm.KvHostLink.KvHostLinkClient
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  commentId: T:PlcComm.KvHostLink.KvHostLinkClientExtensions
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.KvHostLinkClientExtensions.html
+  name: KvHostLinkClientExtensions
+  nameWithType: KvHostLinkClientExtensions
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions
 - uid: PlcComm.KvHostLink.KvDeviceAddress
   commentId: T:PlcComm.KvHostLink.KvDeviceAddress
   parent: PlcComm.KvHostLink
@@ -56,6 +67,19 @@ references:
   name: KvPlcMode
   nameWithType: KvPlcMode
   fullName: PlcComm.KvHostLink.KvPlcMode
+- uid: PlcComm.KvHostLink.HostLinkTraceDirection
+  commentId: T:PlcComm.KvHostLink.HostLinkTraceDirection
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.HostLinkTraceDirection.html
+  name: HostLinkTraceDirection
+  nameWithType: HostLinkTraceDirection
+  fullName: PlcComm.KvHostLink.HostLinkTraceDirection
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame
+  commentId: T:PlcComm.KvHostLink.HostLinkTraceFrame
+  href: PlcComm.KvHostLink.HostLinkTraceFrame.html
+  name: HostLinkTraceFrame
+  nameWithType: HostLinkTraceFrame
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame
 - uid: PlcComm.KvHostLink.HostLinkException
   commentId: T:PlcComm.KvHostLink.HostLinkException
   parent: PlcComm.KvHostLink

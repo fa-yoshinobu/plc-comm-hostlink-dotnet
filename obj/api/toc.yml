@@ -13,6 +13,12 @@ items:
   - uid: PlcComm.KvHostLink.HostLinkProtocolException
     name: HostLinkProtocolException
     type: Class
+  - uid: PlcComm.KvHostLink.HostLinkTraceDirection
+    name: HostLinkTraceDirection
+    type: Enum
+  - uid: PlcComm.KvHostLink.HostLinkTraceFrame
+    name: HostLinkTraceFrame
+    type: Class
   - uid: PlcComm.KvHostLink.HostLinkTransportMode
     name: HostLinkTransportMode
     type: Enum
@@ -21,6 +27,9 @@ items:
     type: Class
   - uid: PlcComm.KvHostLink.KvHostLinkClient
     name: KvHostLinkClient
+    type: Class
+  - uid: PlcComm.KvHostLink.KvHostLinkClientExtensions
+    name: KvHostLinkClientExtensions
     type: Class
   - uid: PlcComm.KvHostLink.KvHostLinkDevice
     name: KvHostLinkDevice

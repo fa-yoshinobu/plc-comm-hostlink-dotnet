@@ -13,11 +13,11 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("fa-yoshinobu")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Modern Host Link (Upper Link) client library for KEYENCE KV series PLCs.")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+05d81b576dee2e10419427a6644a369f2e3853d2")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("0.1.2.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.2+4bd379ada0681b8f303e78592d4bd5c0f05ed484")]
 [assembly: System.Reflection.AssemblyProductAttribute("PlcComm.KvHostLink")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PlcComm.KvHostLink")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyVersionAttribute("0.1.2.0")]
 [assembly: System.Reflection.AssemblyMetadataAttribute("RepositoryUrl", "https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet")]
 
 // MSBuild WriteCodeFragment クラスによって生成されました。

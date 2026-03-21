@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PlcComm.KvHostLink.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0cddc2284fcdf65fde1afc943994104149a6cb74")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4bd379ada0681b8f303e78592d4bd5c0f05ed484")]
 [assembly: System.Reflection.AssemblyProductAttribute("PlcComm.KvHostLink.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PlcComm.KvHostLink.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

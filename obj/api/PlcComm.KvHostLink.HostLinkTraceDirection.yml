@@ -1,0 +1,114 @@
+### YamlMime:ManagedReference
+items:
+- uid: PlcComm.KvHostLink.HostLinkTraceDirection
+  commentId: T:PlcComm.KvHostLink.HostLinkTraceDirection
+  id: HostLinkTraceDirection
+  parent: PlcComm.KvHostLink
+  children:
+  - PlcComm.KvHostLink.HostLinkTraceDirection.Receive
+  - PlcComm.KvHostLink.HostLinkTraceDirection.Send
+  langs:
+  - csharp
+  - vb
+  name: HostLinkTraceDirection
+  nameWithType: HostLinkTraceDirection
+  fullName: PlcComm.KvHostLink.HostLinkTraceDirection
+  type: Enum
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: HostLinkTraceDirection
+    path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+    startLine: 23
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  summary: Direction of a traced frame.
+  example: []
+  syntax:
+    content: public enum HostLinkTraceDirection
+    content.vb: Public Enum HostLinkTraceDirection
+- uid: PlcComm.KvHostLink.HostLinkTraceDirection.Send
+  commentId: F:PlcComm.KvHostLink.HostLinkTraceDirection.Send
+  id: Send
+  parent: PlcComm.KvHostLink.HostLinkTraceDirection
+  langs:
+  - csharp
+  - vb
+  name: Send
+  nameWithType: HostLinkTraceDirection.Send
+  fullName: PlcComm.KvHostLink.HostLinkTraceDirection.Send
+  type: Field
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: Send
+    path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+    startLine: 25
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: Send = 0
+    return:
+      type: PlcComm.KvHostLink.HostLinkTraceDirection
+- uid: PlcComm.KvHostLink.HostLinkTraceDirection.Receive
+  commentId: F:PlcComm.KvHostLink.HostLinkTraceDirection.Receive
+  id: Receive
+  parent: PlcComm.KvHostLink.HostLinkTraceDirection
+  langs:
+  - csharp
+  - vb
+  name: Receive
+  nameWithType: HostLinkTraceDirection.Receive
+  fullName: PlcComm.KvHostLink.HostLinkTraceDirection.Receive
+  type: Field
+  source:
+    remote:
+      path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+      branch: main
+      repo: https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet.git
+    id: Receive
+    path: src/PlcComm.KvHostLink/KvHostLinkEnums.cs
+    startLine: 26
+  assemblies:
+  - PlcComm.KvHostLink
+  namespace: PlcComm.KvHostLink
+  syntax:
+    content: Receive = 1
+    return:
+      type: PlcComm.KvHostLink.HostLinkTraceDirection
+references:
+- uid: PlcComm.KvHostLink
+  commentId: N:PlcComm.KvHostLink
+  href: PlcComm.html
+  name: PlcComm.KvHostLink
+  nameWithType: PlcComm.KvHostLink
+  fullName: PlcComm.KvHostLink
+  spec.csharp:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html
+  spec.vb:
+  - uid: PlcComm
+    name: PlcComm
+    href: PlcComm.html
+  - name: .
+  - uid: PlcComm.KvHostLink
+    name: KvHostLink
+    href: PlcComm.KvHostLink.html
+- uid: PlcComm.KvHostLink.HostLinkTraceDirection
+  commentId: T:PlcComm.KvHostLink.HostLinkTraceDirection
+  parent: PlcComm.KvHostLink
+  href: PlcComm.KvHostLink.HostLinkTraceDirection.html
+  name: HostLinkTraceDirection
+  nameWithType: HostLinkTraceDirection
+  fullName: PlcComm.KvHostLink.HostLinkTraceDirection

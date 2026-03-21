@@ -45,7 +45,10 @@ public static class KvHostLinkDevice
         {
             if (allowOmittedType && int.TryParse(raw, out _))
                 return ParseDevice("R" + raw, false);
-            throw new HostLinkProtocolException($"Invalid device expression: {text}");
+            var validTypes = string.Join(", ", KvHostLinkModels.DeviceRanges.Keys.OrderBy(k => k));
+            throw new HostLinkProtocolException(
+                $"Invalid device string '{text}'. " +
+                $"Valid device types: {validTypes}.");
         }
 
         string deviceType = match.Groups["type"].Value;
@@ -55,7 +58,12 @@ public static class KvHostLinkDevice
         string suffix = NormalizeSuffix(match.Groups["suffix"].Value);
 
         if (!KvHostLinkModels.DeviceRanges.TryGetValue(deviceType, out var range))
-            throw new HostLinkProtocolException($"Unsupported device type: {deviceType}");
+        {
+            var validTypes = string.Join(", ", KvHostLinkModels.DeviceRanges.Keys.OrderBy(k => k));
+            throw new HostLinkProtocolException(
+                $"Unknown device type '{deviceType}' in '{text}'. " +
+                $"Valid types: {validTypes}.");
+        }
 
         try
         {
@@ -86,12 +94,14 @@ public static class KvHostLinkDevice
         return KvHostLinkModels.DefaultFormatByDeviceType.GetValueOrDefault(deviceType, "");
     }
 
-    public static void ValidateDeviceType(string name, string deviceType, HashSet<string> allowedTypes)
+    public static void ValidateDeviceType(string command, string deviceType, HashSet<string> allowedTypes)
     {
         if (!allowedTypes.Contains(deviceType))
         {
-            var allowed = string.Join(", ", allowedTypes.OrderBy(x => x));
-            throw new HostLinkProtocolException($"{name} does not support device type {deviceType}. Allowed: {allowed}");
+            var supported = string.Join(", ", allowedTypes.OrderBy(x => x));
+            throw new HostLinkProtocolException(
+                $"Command '{command}' does not support device type '{deviceType}'. " +
+                $"Supported types: {supported}.");
         }
     }
 
@@ -125,6 +135,8 @@ public static class KvHostLinkDevice
         }
 
         if (count < lo || count > hi)
-            throw new HostLinkProtocolException($"count out of range: {count} (allowed: {lo}..{hi})");
+            throw new HostLinkProtocolException(
+                $"Count {count} is out of range for device type '{deviceType}' with format '{effectiveFormat}' " +
+                $"(allowed: {lo}..{hi}).");
     }
 }
