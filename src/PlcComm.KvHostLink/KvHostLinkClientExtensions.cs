@@ -33,7 +33,7 @@ public static class KvHostLinkClientExtensions
             "D" => uint.Parse(raw, CultureInfo.InvariantCulture),
             "L" => int.Parse(raw, CultureInfo.InvariantCulture),
             "F" => float.Parse(raw, CultureInfo.InvariantCulture),
-            _   => ushort.Parse(raw, CultureInfo.InvariantCulture),
+            _ => ushort.Parse(raw, CultureInfo.InvariantCulture),
         };
     }
 
@@ -81,8 +81,8 @@ public static class KvHostLinkClientExtensions
             throw new ArgumentOutOfRangeException(nameof(bitIndex), "bitIndex must be 0-15.");
         var tokens = await client.ReadAsync(device, ".U", ct).ConfigureAwait(false);
         int cur = ushort.Parse(tokens.FirstOrDefault() ?? "0", CultureInfo.InvariantCulture);
-        if (value) cur |=   1 << bitIndex;
-        else       cur &= ~(1 << bitIndex);
+        if (value) cur |= 1 << bitIndex;
+        else cur &= ~(1 << bitIndex);
         await client.WriteAsync(device, (ushort)(cur & 0xFFFF), ".U", ct).ConfigureAwait(false);
     }
 
@@ -157,14 +157,12 @@ public static class KvHostLinkClientExtensions
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// Creates a <see cref="KvHostLinkClient"/> and opens the connection.
-    /// </summary>
-    /// <param name="host">PLC IP address or hostname.</param>
-    /// <param name="port">KV HostLink TCP port. Defaults to 8501.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <summary>
     /// Reads <paramref name="count"/> contiguous word values starting at <paramref name="device"/>.
     /// </summary>
+    /// <param name="client">The client to use.</param>
+    /// <param name="device">Starting device address (e.g. <c>"DM0"</c>).</param>
+    /// <param name="count">Number of words to read.</param>
+    /// <param name="ct">Cancellation token.</param>
     public static async Task<ushort[]> ReadWordsAsync(
         this KvHostLinkClient client,
         string device,
@@ -174,7 +172,7 @@ public static class KvHostLinkClientExtensions
         var tokens = await client.ReadConsecutiveAsync(device, count, "U", ct).ConfigureAwait(false);
         var result = new ushort[tokens.Length];
         for (int i = 0; i < tokens.Length; i++)
-            result[i] = ushort.Parse(tokens[i]);
+            result[i] = ushort.Parse(tokens[i], CultureInfo.InvariantCulture);
         return result;
     }
 
@@ -195,6 +193,12 @@ public static class KvHostLinkClientExtensions
         return result;
     }
 
+    /// <summary>
+    /// Creates a <see cref="KvHostLinkClient"/> and opens the connection.
+    /// </summary>
+    /// <param name="host">PLC IP address or hostname.</param>
+    /// <param name="port">KV HostLink TCP port. Defaults to 8501.</param>
+    /// <param name="ct">Cancellation token.</param>
     public static async Task<KvHostLinkClient> OpenAndConnectAsync(
         string host,
         int port = 8501,

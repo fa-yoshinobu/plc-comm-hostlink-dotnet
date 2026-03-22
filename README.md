@@ -1,7 +1,7 @@
 
 [![Documentation](https://img.shields.io/badge/docs-GitHub_Pages-blue.svg)](https://fa-yoshinobu.github.io/plc-comm-hostlink-dotnet/)
 
-[![.NET 9.0](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/download/dotnet/9.0)
+[![.NET 9.0](https://img.shields.io/badge/.NET-9.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/9.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Static Analysis: dotnet format](https://img.shields.io/badge/Lint-dotnet%20format-blue.svg)](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-format)
 
@@ -19,14 +19,18 @@ A modern .NET client library for KEYENCE KV series PLCs using the **Host Link Co
 
 ### Basic Usage
 ```csharp
-using HostLink;
+using PlcComm.KvHostLink;
 
 // Connect to a KEYENCE KV PLC
-using var client = new HostLinkClient("192.168.1.10", 8501);
+using var client = new KvHostLinkClient("192.168.1.10", 8501);
+await client.OpenAsync();
 
-// Read D100 (Word)
-int val = await client.ReadWordAsync("D100");
+// Read DM100 (Word, unsigned 16-bit)
+object val = await client.ReadTypedAsync("DM100", "U");
 Console.WriteLine($"Value: {val}");
+
+// Write to DM200
+await client.WriteTypedAsync("DM200", 1234, "U");
 ```
 
 ## Documentation

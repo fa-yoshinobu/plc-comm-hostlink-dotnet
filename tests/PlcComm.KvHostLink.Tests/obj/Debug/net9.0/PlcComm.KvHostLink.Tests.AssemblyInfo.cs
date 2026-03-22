@@ -10,13 +10,17 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("PlcComm.KvHostLink.Tests")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("fa-yoshinobu")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
+[assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright (c) 2026 fa-yoshinobu")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1842c07944c1ec74cb344cafc39b2e65bc377995")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7803dca6e007150c532ee2c8bd28b0d2861d2465")]
 [assembly: System.Reflection.AssemblyProductAttribute("PlcComm.KvHostLink.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PlcComm.KvHostLink.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyMetadataAttribute("RepositoryUrl", "https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet")]
+[assembly: System.Reflection.AssemblyMetadata("License", "MIT")]
+[assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet")]
 
 // MSBuild WriteCodeFragment クラスによって生成されました。
 

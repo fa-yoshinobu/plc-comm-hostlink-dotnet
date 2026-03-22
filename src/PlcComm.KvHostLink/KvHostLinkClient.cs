@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Sockets;
 using System.Text;
 
@@ -25,7 +26,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     }
 
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(3);
-    public bool AppendLfOnSend { get; set; } = false;
+    public bool AppendLfOnSend { get; set; }
 
     /// <summary>
     /// Optional hook called for every raw frame sent and received.
@@ -211,7 +212,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     public async Task<KvPlcMode> ConfirmOperatingModeAsync(CancellationToken cancellationToken = default)
     {
         string response = await SendRawAsync("?M", cancellationToken).ConfigureAwait(false);
-        return (KvPlcMode)int.Parse(response);
+        return (KvPlcMode)int.Parse(response, CultureInfo.InvariantCulture);
     }
 
     public async Task SetTimeAsync(DateTime? value = null, CancellationToken cancellationToken = default)
@@ -219,7 +220,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         var dt = value ?? DateTime.Now;
         int year = dt.Year % 100;
         int week = ((int)dt.DayOfWeek + 1) % 7; // Matching Python logic: (now.weekday() + 1) % 7
-        
+
         string cmd = $"WRT {year:D2} {dt.Month:D2} {dt.Day:D2} {dt.Hour:D2} {dt.Minute:D2} {dt.Second:D2} {week}";
         await ExpectOkAsync(cmd, cancellationToken).ConfigureAwait(false);
     }
@@ -255,9 +256,9 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         var addr = KvHostLinkDevice.ParseDevice(device);
         string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
         string effectiveFormat = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, suffix);
-        
+
         KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, effectiveFormat, count);
-        
+
         var target = addr with { Suffix = suffix };
         string response = await SendRawAsync($"RDS {target.ToText()} {count}", cancellationToken).ConfigureAwait(false);
         return KvHostLinkProtocol.SplitDataTokens(response);
@@ -508,7 +509,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     {
         if (value is int i && dataFormat == ".H")
         {
-            return (i & 0xFFFF).ToString("X");
+            return (i & 0xFFFF).ToString("X", CultureInfo.InvariantCulture);
         }
         return value.ToString()?.Trim() ?? "";
     }

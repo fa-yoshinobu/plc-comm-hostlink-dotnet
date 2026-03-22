@@ -134,20 +134,26 @@
         </member>
         <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)">
             <summary>
-            Creates a <see cref="T:PlcComm.KvHostLink.KvHostLinkClient"/> and opens the connection.
-            </summary>
-            <param name="host">PLC IP address or hostname.</param>
-            <param name="port">KV HostLink TCP port. Defaults to 8501.</param>
-            <param name="ct">Cancellation token.</param>
-            <summary>
             Reads <paramref name="count"/> contiguous word values starting at <paramref name="device"/>.
             </summary>
+            <param name="client">The client to use.</param>
+            <param name="device">Starting device address (e.g. <c>"DM0"</c>).</param>
+            <param name="count">Number of words to read.</param>
+            <param name="ct">Cancellation token.</param>
         </member>
         <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)">
             <summary>
             Reads <paramref name="count"/> contiguous DWord (32-bit unsigned) values starting at <paramref name="device"/>.
             Combines adjacent word pairs (lo, hi).
             </summary>
+        </member>
+        <member name="M:PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Creates a <see cref="T:PlcComm.KvHostLink.KvHostLinkClient"/> and opens the connection.
+            </summary>
+            <param name="host">PLC IP address or hostname.</param>
+            <param name="port">KV HostLink TCP port. Defaults to 8501.</param>
+            <param name="ct">Cancellation token.</param>
         </member>
         <member name="T:PlcComm.KvHostLink.HostLinkTransportMode">
             <summary>

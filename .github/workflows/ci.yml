@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore PlcComm.KvHostLink.sln
+
+      - name: Build
+        run: dotnet build PlcComm.KvHostLink.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test PlcComm.KvHostLink.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/test-results.trx"
+          if-no-files-found: ignore
+
+      - name: Install docfx
+        run: dotnet tool install -g docfx
+
+      - name: Build docs
+        run: docfx docfx.json
+
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs
+          path: docs/
+          if-no-files-found: ignore

@@ -1,5 +1,6 @@
 namespace PlcComm.KvHostLink;
 
+#pragma warning disable CA1710 // Intentionally named *Error (not *Exception) for cross-language API consistency
 /// <summary>
 /// Base exception for Host Link communication.
 /// </summary>
@@ -34,3 +35,4 @@ public class HostLinkConnectionError : HostLinkError
     public HostLinkConnectionError(string message) : base(message) { }
     public HostLinkConnectionError(string message, Exception inner) : base(message, inner) { }
 }
+#pragma warning restore CA1710

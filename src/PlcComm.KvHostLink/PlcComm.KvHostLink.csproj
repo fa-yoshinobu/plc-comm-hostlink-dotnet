@@ -10,10 +10,21 @@
     <PackageId>PlcComm.KvHostLink</PackageId>
     <Title>PLC Communication KEYENCE Host Link .NET</Title>
     <Description>Modern Host Link (Upper Link) client library for KEYENCE KV series PLCs.</Description>
+    <PackageTags>keyence kv hostlink plc tcp udp</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet</RepositoryUrl>
-    <Authors>fa-yoshinobu</Authors>
+    <PackageProjectUrl>https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Exclude repository-only files from NuGet package distribution [REPO] -->

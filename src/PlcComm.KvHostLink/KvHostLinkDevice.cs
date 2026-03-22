@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace PlcComm.KvHostLink;
@@ -9,7 +10,7 @@ public record KvDeviceAddress(string DeviceType, int Number, string Suffix = "")
         if (!KvHostLinkModels.DeviceRanges.TryGetValue(DeviceType, out var range))
             throw new HostLinkProtocolError($"Unsupported device type: {DeviceType}");
 
-        string numberStr = range.Base == 16 ? Number.ToString("X") : Number.ToString();
+        string numberStr = range.Base == 16 ? Number.ToString("X", CultureInfo.InvariantCulture) : Number.ToString(CultureInfo.InvariantCulture);
         return $"{DeviceType}{numberStr}{Suffix}";
     }
 }
