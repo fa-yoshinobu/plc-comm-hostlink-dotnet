@@ -1,0 +1,1242 @@
+### YamlMime:XRefMap
+sorted: true
+references:
+- uid: PlcComm.KvHostLink
+  name: PlcComm.KvHostLink
+  href: api/obj/api/PlcComm.KvHostLink.html
+  commentId: N:PlcComm.KvHostLink
+  fullName: PlcComm.KvHostLink
+  nameWithType: PlcComm.KvHostLink
+- uid: PlcComm.KvHostLink.HostLinkConnectionError
+  name: HostLinkConnectionError
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkConnectionError.html
+  commentId: T:PlcComm.KvHostLink.HostLinkConnectionError
+  fullName: PlcComm.KvHostLink.HostLinkConnectionError
+  nameWithType: HostLinkConnectionError
+- uid: PlcComm.KvHostLink.HostLinkConnectionError.#ctor(System.String)
+  name: HostLinkConnectionError(string)
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkConnectionError.html#PlcComm_KvHostLink_HostLinkConnectionError__ctor_System_String_
+  commentId: M:PlcComm.KvHostLink.HostLinkConnectionError.#ctor(System.String)
+  name.vb: New(String)
+  fullName: PlcComm.KvHostLink.HostLinkConnectionError.HostLinkConnectionError(string)
+  fullName.vb: PlcComm.KvHostLink.HostLinkConnectionError.New(String)
+  nameWithType: HostLinkConnectionError.HostLinkConnectionError(string)
+  nameWithType.vb: HostLinkConnectionError.New(String)
+- uid: PlcComm.KvHostLink.HostLinkConnectionError.#ctor(System.String,System.Exception)
+  name: HostLinkConnectionError(string, Exception)
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkConnectionError.html#PlcComm_KvHostLink_HostLinkConnectionError__ctor_System_String_System_Exception_
+  commentId: M:PlcComm.KvHostLink.HostLinkConnectionError.#ctor(System.String,System.Exception)
+  name.vb: New(String, Exception)
+  fullName: PlcComm.KvHostLink.HostLinkConnectionError.HostLinkConnectionError(string, System.Exception)
+  fullName.vb: PlcComm.KvHostLink.HostLinkConnectionError.New(String, System.Exception)
+  nameWithType: HostLinkConnectionError.HostLinkConnectionError(string, Exception)
+  nameWithType.vb: HostLinkConnectionError.New(String, Exception)
+- uid: PlcComm.KvHostLink.HostLinkConnectionError.#ctor*
+  name: HostLinkConnectionError
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkConnectionError.html#PlcComm_KvHostLink_HostLinkConnectionError__ctor_
+  commentId: Overload:PlcComm.KvHostLink.HostLinkConnectionError.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: PlcComm.KvHostLink.HostLinkConnectionError.HostLinkConnectionError
+  fullName.vb: PlcComm.KvHostLink.HostLinkConnectionError.New
+  nameWithType: HostLinkConnectionError.HostLinkConnectionError
+  nameWithType.vb: HostLinkConnectionError.New
+- uid: PlcComm.KvHostLink.HostLinkError
+  name: HostLinkError
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkError.html
+  commentId: T:PlcComm.KvHostLink.HostLinkError
+  fullName: PlcComm.KvHostLink.HostLinkError
+  nameWithType: HostLinkError
+- uid: PlcComm.KvHostLink.HostLinkError.#ctor(System.String)
+  name: HostLinkError(string)
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkError.html#PlcComm_KvHostLink_HostLinkError__ctor_System_String_
+  commentId: M:PlcComm.KvHostLink.HostLinkError.#ctor(System.String)
+  name.vb: New(String)
+  fullName: PlcComm.KvHostLink.HostLinkError.HostLinkError(string)
+  fullName.vb: PlcComm.KvHostLink.HostLinkError.New(String)
+  nameWithType: HostLinkError.HostLinkError(string)
+  nameWithType.vb: HostLinkError.New(String)
+- uid: PlcComm.KvHostLink.HostLinkError.#ctor(System.String,System.Exception)
+  name: HostLinkError(string, Exception)
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkError.html#PlcComm_KvHostLink_HostLinkError__ctor_System_String_System_Exception_
+  commentId: M:PlcComm.KvHostLink.HostLinkError.#ctor(System.String,System.Exception)
+  name.vb: New(String, Exception)
+  fullName: PlcComm.KvHostLink.HostLinkError.HostLinkError(string, System.Exception)
+  fullName.vb: PlcComm.KvHostLink.HostLinkError.New(String, System.Exception)
+  nameWithType: HostLinkError.HostLinkError(string, Exception)
+  nameWithType.vb: HostLinkError.New(String, Exception)
+- uid: PlcComm.KvHostLink.HostLinkError.#ctor(System.String,System.String,System.String)
+  name: HostLinkError(string, string, string)
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkError.html#PlcComm_KvHostLink_HostLinkError__ctor_System_String_System_String_System_String_
+  commentId: M:PlcComm.KvHostLink.HostLinkError.#ctor(System.String,System.String,System.String)
+  name.vb: New(String, String, String)
+  fullName: PlcComm.KvHostLink.HostLinkError.HostLinkError(string, string, string)
+  fullName.vb: PlcComm.KvHostLink.HostLinkError.New(String, String, String)
+  nameWithType: HostLinkError.HostLinkError(string, string, string)
+  nameWithType.vb: HostLinkError.New(String, String, String)
+- uid: PlcComm.KvHostLink.HostLinkError.#ctor*
+  name: HostLinkError
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkError.html#PlcComm_KvHostLink_HostLinkError__ctor_
+  commentId: Overload:PlcComm.KvHostLink.HostLinkError.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: PlcComm.KvHostLink.HostLinkError.HostLinkError
+  fullName.vb: PlcComm.KvHostLink.HostLinkError.New
+  nameWithType: HostLinkError.HostLinkError
+  nameWithType.vb: HostLinkError.New
+- uid: PlcComm.KvHostLink.HostLinkError.Code
+  name: Code
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkError.html#PlcComm_KvHostLink_HostLinkError_Code
+  commentId: P:PlcComm.KvHostLink.HostLinkError.Code
+  fullName: PlcComm.KvHostLink.HostLinkError.Code
+  nameWithType: HostLinkError.Code
+- uid: PlcComm.KvHostLink.HostLinkError.Code*
+  name: Code
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkError.html#PlcComm_KvHostLink_HostLinkError_Code_
+  commentId: Overload:PlcComm.KvHostLink.HostLinkError.Code
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.HostLinkError.Code
+  nameWithType: HostLinkError.Code
+- uid: PlcComm.KvHostLink.HostLinkError.Response
+  name: Response
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkError.html#PlcComm_KvHostLink_HostLinkError_Response
+  commentId: P:PlcComm.KvHostLink.HostLinkError.Response
+  fullName: PlcComm.KvHostLink.HostLinkError.Response
+  nameWithType: HostLinkError.Response
+- uid: PlcComm.KvHostLink.HostLinkError.Response*
+  name: Response
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkError.html#PlcComm_KvHostLink_HostLinkError_Response_
+  commentId: Overload:PlcComm.KvHostLink.HostLinkError.Response
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.HostLinkError.Response
+  nameWithType: HostLinkError.Response
+- uid: PlcComm.KvHostLink.HostLinkProtocolError
+  name: HostLinkProtocolError
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkProtocolError.html
+  commentId: T:PlcComm.KvHostLink.HostLinkProtocolError
+  fullName: PlcComm.KvHostLink.HostLinkProtocolError
+  nameWithType: HostLinkProtocolError
+- uid: PlcComm.KvHostLink.HostLinkProtocolError.#ctor(System.String)
+  name: HostLinkProtocolError(string)
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkProtocolError.html#PlcComm_KvHostLink_HostLinkProtocolError__ctor_System_String_
+  commentId: M:PlcComm.KvHostLink.HostLinkProtocolError.#ctor(System.String)
+  name.vb: New(String)
+  fullName: PlcComm.KvHostLink.HostLinkProtocolError.HostLinkProtocolError(string)
+  fullName.vb: PlcComm.KvHostLink.HostLinkProtocolError.New(String)
+  nameWithType: HostLinkProtocolError.HostLinkProtocolError(string)
+  nameWithType.vb: HostLinkProtocolError.New(String)
+- uid: PlcComm.KvHostLink.HostLinkProtocolError.#ctor(System.String,System.Exception)
+  name: HostLinkProtocolError(string, Exception)
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkProtocolError.html#PlcComm_KvHostLink_HostLinkProtocolError__ctor_System_String_System_Exception_
+  commentId: M:PlcComm.KvHostLink.HostLinkProtocolError.#ctor(System.String,System.Exception)
+  name.vb: New(String, Exception)
+  fullName: PlcComm.KvHostLink.HostLinkProtocolError.HostLinkProtocolError(string, System.Exception)
+  fullName.vb: PlcComm.KvHostLink.HostLinkProtocolError.New(String, System.Exception)
+  nameWithType: HostLinkProtocolError.HostLinkProtocolError(string, Exception)
+  nameWithType.vb: HostLinkProtocolError.New(String, Exception)
+- uid: PlcComm.KvHostLink.HostLinkProtocolError.#ctor*
+  name: HostLinkProtocolError
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkProtocolError.html#PlcComm_KvHostLink_HostLinkProtocolError__ctor_
+  commentId: Overload:PlcComm.KvHostLink.HostLinkProtocolError.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: PlcComm.KvHostLink.HostLinkProtocolError.HostLinkProtocolError
+  fullName.vb: PlcComm.KvHostLink.HostLinkProtocolError.New
+  nameWithType: HostLinkProtocolError.HostLinkProtocolError
+  nameWithType.vb: HostLinkProtocolError.New
+- uid: PlcComm.KvHostLink.HostLinkTraceDirection
+  name: HostLinkTraceDirection
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceDirection.html
+  commentId: T:PlcComm.KvHostLink.HostLinkTraceDirection
+  fullName: PlcComm.KvHostLink.HostLinkTraceDirection
+  nameWithType: HostLinkTraceDirection
+- uid: PlcComm.KvHostLink.HostLinkTraceDirection.Receive
+  name: Receive
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceDirection.html#PlcComm_KvHostLink_HostLinkTraceDirection_Receive
+  commentId: F:PlcComm.KvHostLink.HostLinkTraceDirection.Receive
+  fullName: PlcComm.KvHostLink.HostLinkTraceDirection.Receive
+  nameWithType: HostLinkTraceDirection.Receive
+- uid: PlcComm.KvHostLink.HostLinkTraceDirection.Send
+  name: Send
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceDirection.html#PlcComm_KvHostLink_HostLinkTraceDirection_Send
+  commentId: F:PlcComm.KvHostLink.HostLinkTraceDirection.Send
+  fullName: PlcComm.KvHostLink.HostLinkTraceDirection.Send
+  nameWithType: HostLinkTraceDirection.Send
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame
+  name: HostLinkTraceFrame
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html
+  commentId: T:PlcComm.KvHostLink.HostLinkTraceFrame
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame
+  nameWithType: HostLinkTraceFrame
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame.#ctor(PlcComm.KvHostLink.HostLinkTraceDirection,System.Byte[],System.DateTime)
+  name: HostLinkTraceFrame(HostLinkTraceDirection, byte[], DateTime)
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html#PlcComm_KvHostLink_HostLinkTraceFrame__ctor_PlcComm_KvHostLink_HostLinkTraceDirection_System_Byte___System_DateTime_
+  commentId: M:PlcComm.KvHostLink.HostLinkTraceFrame.#ctor(PlcComm.KvHostLink.HostLinkTraceDirection,System.Byte[],System.DateTime)
+  name.vb: New(HostLinkTraceDirection, Byte(), Date)
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame.HostLinkTraceFrame(PlcComm.KvHostLink.HostLinkTraceDirection, byte[], System.DateTime)
+  fullName.vb: PlcComm.KvHostLink.HostLinkTraceFrame.New(PlcComm.KvHostLink.HostLinkTraceDirection, Byte(), Date)
+  nameWithType: HostLinkTraceFrame.HostLinkTraceFrame(HostLinkTraceDirection, byte[], DateTime)
+  nameWithType.vb: HostLinkTraceFrame.New(HostLinkTraceDirection, Byte(), Date)
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame.#ctor*
+  name: HostLinkTraceFrame
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html#PlcComm_KvHostLink_HostLinkTraceFrame__ctor_
+  commentId: Overload:PlcComm.KvHostLink.HostLinkTraceFrame.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame.HostLinkTraceFrame
+  fullName.vb: PlcComm.KvHostLink.HostLinkTraceFrame.New
+  nameWithType: HostLinkTraceFrame.HostLinkTraceFrame
+  nameWithType.vb: HostLinkTraceFrame.New
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame.Data
+  name: Data
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html#PlcComm_KvHostLink_HostLinkTraceFrame_Data
+  commentId: P:PlcComm.KvHostLink.HostLinkTraceFrame.Data
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame.Data
+  nameWithType: HostLinkTraceFrame.Data
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame.Data*
+  name: Data
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html#PlcComm_KvHostLink_HostLinkTraceFrame_Data_
+  commentId: Overload:PlcComm.KvHostLink.HostLinkTraceFrame.Data
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame.Data
+  nameWithType: HostLinkTraceFrame.Data
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame.Direction
+  name: Direction
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html#PlcComm_KvHostLink_HostLinkTraceFrame_Direction
+  commentId: P:PlcComm.KvHostLink.HostLinkTraceFrame.Direction
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame.Direction
+  nameWithType: HostLinkTraceFrame.Direction
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame.Direction*
+  name: Direction
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html#PlcComm_KvHostLink_HostLinkTraceFrame_Direction_
+  commentId: Overload:PlcComm.KvHostLink.HostLinkTraceFrame.Direction
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame.Direction
+  nameWithType: HostLinkTraceFrame.Direction
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame.Timestamp
+  name: Timestamp
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html#PlcComm_KvHostLink_HostLinkTraceFrame_Timestamp
+  commentId: P:PlcComm.KvHostLink.HostLinkTraceFrame.Timestamp
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame.Timestamp
+  nameWithType: HostLinkTraceFrame.Timestamp
+- uid: PlcComm.KvHostLink.HostLinkTraceFrame.Timestamp*
+  name: Timestamp
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html#PlcComm_KvHostLink_HostLinkTraceFrame_Timestamp_
+  commentId: Overload:PlcComm.KvHostLink.HostLinkTraceFrame.Timestamp
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.HostLinkTraceFrame.Timestamp
+  nameWithType: HostLinkTraceFrame.Timestamp
+- uid: PlcComm.KvHostLink.HostLinkTransportMode
+  name: HostLinkTransportMode
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTransportMode.html
+  commentId: T:PlcComm.KvHostLink.HostLinkTransportMode
+  fullName: PlcComm.KvHostLink.HostLinkTransportMode
+  nameWithType: HostLinkTransportMode
+- uid: PlcComm.KvHostLink.HostLinkTransportMode.Tcp
+  name: Tcp
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTransportMode.html#PlcComm_KvHostLink_HostLinkTransportMode_Tcp
+  commentId: F:PlcComm.KvHostLink.HostLinkTransportMode.Tcp
+  fullName: PlcComm.KvHostLink.HostLinkTransportMode.Tcp
+  nameWithType: HostLinkTransportMode.Tcp
+- uid: PlcComm.KvHostLink.HostLinkTransportMode.Udp
+  name: Udp
+  href: api/obj/api/PlcComm.KvHostLink.HostLinkTransportMode.html#PlcComm_KvHostLink_HostLinkTransportMode_Udp
+  commentId: F:PlcComm.KvHostLink.HostLinkTransportMode.Udp
+  fullName: PlcComm.KvHostLink.HostLinkTransportMode.Udp
+  nameWithType: HostLinkTransportMode.Udp
+- uid: PlcComm.KvHostLink.KvDeviceAddress
+  name: KvDeviceAddress
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html
+  commentId: T:PlcComm.KvHostLink.KvDeviceAddress
+  fullName: PlcComm.KvHostLink.KvDeviceAddress
+  nameWithType: KvDeviceAddress
+- uid: PlcComm.KvHostLink.KvDeviceAddress.#ctor(System.String,System.Int32,System.String)
+  name: KvDeviceAddress(string, int, string)
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress__ctor_System_String_System_Int32_System_String_
+  commentId: M:PlcComm.KvHostLink.KvDeviceAddress.#ctor(System.String,System.Int32,System.String)
+  name.vb: New(String, Integer, String)
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.KvDeviceAddress(string, int, string)
+  fullName.vb: PlcComm.KvHostLink.KvDeviceAddress.New(String, Integer, String)
+  nameWithType: KvDeviceAddress.KvDeviceAddress(string, int, string)
+  nameWithType.vb: KvDeviceAddress.New(String, Integer, String)
+- uid: PlcComm.KvHostLink.KvDeviceAddress.#ctor*
+  name: KvDeviceAddress
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress__ctor_
+  commentId: Overload:PlcComm.KvHostLink.KvDeviceAddress.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.KvDeviceAddress
+  fullName.vb: PlcComm.KvHostLink.KvDeviceAddress.New
+  nameWithType: KvDeviceAddress.KvDeviceAddress
+  nameWithType.vb: KvDeviceAddress.New
+- uid: PlcComm.KvHostLink.KvDeviceAddress.DeviceType
+  name: DeviceType
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress_DeviceType
+  commentId: P:PlcComm.KvHostLink.KvDeviceAddress.DeviceType
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.DeviceType
+  nameWithType: KvDeviceAddress.DeviceType
+- uid: PlcComm.KvHostLink.KvDeviceAddress.DeviceType*
+  name: DeviceType
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress_DeviceType_
+  commentId: Overload:PlcComm.KvHostLink.KvDeviceAddress.DeviceType
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.DeviceType
+  nameWithType: KvDeviceAddress.DeviceType
+- uid: PlcComm.KvHostLink.KvDeviceAddress.Number
+  name: Number
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress_Number
+  commentId: P:PlcComm.KvHostLink.KvDeviceAddress.Number
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.Number
+  nameWithType: KvDeviceAddress.Number
+- uid: PlcComm.KvHostLink.KvDeviceAddress.Number*
+  name: Number
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress_Number_
+  commentId: Overload:PlcComm.KvHostLink.KvDeviceAddress.Number
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.Number
+  nameWithType: KvDeviceAddress.Number
+- uid: PlcComm.KvHostLink.KvDeviceAddress.Suffix
+  name: Suffix
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress_Suffix
+  commentId: P:PlcComm.KvHostLink.KvDeviceAddress.Suffix
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.Suffix
+  nameWithType: KvDeviceAddress.Suffix
+- uid: PlcComm.KvHostLink.KvDeviceAddress.Suffix*
+  name: Suffix
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress_Suffix_
+  commentId: Overload:PlcComm.KvHostLink.KvDeviceAddress.Suffix
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.Suffix
+  nameWithType: KvDeviceAddress.Suffix
+- uid: PlcComm.KvHostLink.KvDeviceAddress.ToText
+  name: ToText()
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress_ToText
+  commentId: M:PlcComm.KvHostLink.KvDeviceAddress.ToText
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.ToText()
+  nameWithType: KvDeviceAddress.ToText()
+- uid: PlcComm.KvHostLink.KvDeviceAddress.ToText*
+  name: ToText
+  href: api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html#PlcComm_KvHostLink_KvDeviceAddress_ToText_
+  commentId: Overload:PlcComm.KvHostLink.KvDeviceAddress.ToText
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvDeviceAddress.ToText
+  nameWithType: KvDeviceAddress.ToText
+- uid: PlcComm.KvHostLink.KvHostLinkClient
+  name: KvHostLinkClient
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html
+  commentId: T:PlcComm.KvHostLink.KvHostLinkClient
+  fullName: PlcComm.KvHostLink.KvHostLinkClient
+  nameWithType: KvHostLinkClient
+- uid: PlcComm.KvHostLink.KvHostLinkClient.#ctor(System.String,System.Int32,PlcComm.KvHostLink.HostLinkTransportMode)
+  name: KvHostLinkClient(string, int, HostLinkTransportMode)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient__ctor_System_String_System_Int32_PlcComm_KvHostLink_HostLinkTransportMode_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.#ctor(System.String,System.Int32,PlcComm.KvHostLink.HostLinkTransportMode)
+  name.vb: New(String, Integer, HostLinkTransportMode)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.KvHostLinkClient(string, int, PlcComm.KvHostLink.HostLinkTransportMode)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.New(String, Integer, PlcComm.KvHostLink.HostLinkTransportMode)
+  nameWithType: KvHostLinkClient.KvHostLinkClient(string, int, HostLinkTransportMode)
+  nameWithType.vb: KvHostLinkClient.New(String, Integer, HostLinkTransportMode)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.#ctor*
+  name: KvHostLinkClient
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient__ctor_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.KvHostLinkClient
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.New
+  nameWithType: KvHostLinkClient.KvHostLinkClient
+  nameWithType.vb: KvHostLinkClient.New
+- uid: PlcComm.KvHostLink.KvHostLinkClient.AppendLfOnSend
+  name: AppendLfOnSend
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_AppendLfOnSend
+  commentId: P:PlcComm.KvHostLink.KvHostLinkClient.AppendLfOnSend
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.AppendLfOnSend
+  nameWithType: KvHostLinkClient.AppendLfOnSend
+- uid: PlcComm.KvHostLink.KvHostLinkClient.AppendLfOnSend*
+  name: AppendLfOnSend
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_AppendLfOnSend_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.AppendLfOnSend
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.AppendLfOnSend
+  nameWithType: KvHostLinkClient.AppendLfOnSend
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ChangeModeAsync(PlcComm.KvHostLink.KvPlcMode,System.Threading.CancellationToken)
+  name: ChangeModeAsync(KvPlcMode, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ChangeModeAsync_PlcComm_KvHostLink_KvPlcMode_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ChangeModeAsync(PlcComm.KvHostLink.KvPlcMode,System.Threading.CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ChangeModeAsync(PlcComm.KvHostLink.KvPlcMode, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ChangeModeAsync(KvPlcMode, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ChangeModeAsync*
+  name: ChangeModeAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ChangeModeAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ChangeModeAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ChangeModeAsync
+  nameWithType: KvHostLinkClient.ChangeModeAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.CheckErrorNoAsync(System.Threading.CancellationToken)
+  name: CheckErrorNoAsync(CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_CheckErrorNoAsync_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.CheckErrorNoAsync(System.Threading.CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.CheckErrorNoAsync(System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.CheckErrorNoAsync(CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.CheckErrorNoAsync*
+  name: CheckErrorNoAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_CheckErrorNoAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.CheckErrorNoAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.CheckErrorNoAsync
+  nameWithType: KvHostLinkClient.CheckErrorNoAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ClearErrorAsync(System.Threading.CancellationToken)
+  name: ClearErrorAsync(CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ClearErrorAsync_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ClearErrorAsync(System.Threading.CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ClearErrorAsync(System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ClearErrorAsync(CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ClearErrorAsync*
+  name: ClearErrorAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ClearErrorAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ClearErrorAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ClearErrorAsync
+  nameWithType: KvHostLinkClient.ClearErrorAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.Close
+  name: Close()
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_Close
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.Close
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.Close()
+  nameWithType: KvHostLinkClient.Close()
+- uid: PlcComm.KvHostLink.KvHostLinkClient.Close*
+  name: Close
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_Close_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.Close
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.Close
+  nameWithType: KvHostLinkClient.Close
+- uid: PlcComm.KvHostLink.KvHostLinkClient.CloseAsync
+  name: CloseAsync()
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_CloseAsync
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.CloseAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.CloseAsync()
+  nameWithType: KvHostLinkClient.CloseAsync()
+- uid: PlcComm.KvHostLink.KvHostLinkClient.CloseAsync*
+  name: CloseAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_CloseAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.CloseAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.CloseAsync
+  nameWithType: KvHostLinkClient.CloseAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ConfirmOperatingModeAsync(System.Threading.CancellationToken)
+  name: ConfirmOperatingModeAsync(CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ConfirmOperatingModeAsync_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ConfirmOperatingModeAsync(System.Threading.CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ConfirmOperatingModeAsync(System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ConfirmOperatingModeAsync(CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ConfirmOperatingModeAsync*
+  name: ConfirmOperatingModeAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ConfirmOperatingModeAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ConfirmOperatingModeAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ConfirmOperatingModeAsync
+  nameWithType: KvHostLinkClient.ConfirmOperatingModeAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.Dispose
+  name: Dispose()
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_Dispose
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.Dispose
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.Dispose()
+  nameWithType: KvHostLinkClient.Dispose()
+- uid: PlcComm.KvHostLink.KvHostLinkClient.Dispose*
+  name: Dispose
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_Dispose_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.Dispose
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.Dispose
+  nameWithType: KvHostLinkClient.Dispose
+- uid: PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync
+  name: DisposeAsync()
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_DisposeAsync
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync()
+  nameWithType: KvHostLinkClient.DisposeAsync()
+- uid: PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync*
+  name: DisposeAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_DisposeAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.DisposeAsync
+  nameWithType: KvHostLinkClient.DisposeAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetAsync(System.String,System.Threading.CancellationToken)
+  name: ForcedResetAsync(string, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedResetAsync_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ForcedResetAsync(System.String,System.Threading.CancellationToken)
+  name.vb: ForcedResetAsync(String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetAsync(string, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetAsync(String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ForcedResetAsync(string, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ForcedResetAsync(String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetAsync*
+  name: ForcedResetAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedResetAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ForcedResetAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetAsync
+  nameWithType: KvHostLinkClient.ForcedResetAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  name: ForcedResetConsecutiveAsync(string, int, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedResetConsecutiveAsync_System_String_System_Int32_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  name.vb: ForcedResetConsecutiveAsync(String, Integer, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(string, int, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync(String, Integer, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ForcedResetConsecutiveAsync(string, int, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ForcedResetConsecutiveAsync(String, Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync*
+  name: ForcedResetConsecutiveAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedResetConsecutiveAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedResetConsecutiveAsync
+  nameWithType: KvHostLinkClient.ForcedResetConsecutiveAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetAsync(System.String,System.Threading.CancellationToken)
+  name: ForcedSetAsync(string, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedSetAsync_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ForcedSetAsync(System.String,System.Threading.CancellationToken)
+  name.vb: ForcedSetAsync(String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetAsync(string, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetAsync(String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ForcedSetAsync(string, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ForcedSetAsync(String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetAsync*
+  name: ForcedSetAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedSetAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ForcedSetAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetAsync
+  nameWithType: KvHostLinkClient.ForcedSetAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  name: ForcedSetConsecutiveAsync(string, int, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedSetConsecutiveAsync_System_String_System_Int32_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  name.vb: ForcedSetConsecutiveAsync(String, Integer, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(string, int, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync(String, Integer, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ForcedSetConsecutiveAsync(string, int, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ForcedSetConsecutiveAsync(String, Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync*
+  name: ForcedSetConsecutiveAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ForcedSetConsecutiveAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ForcedSetConsecutiveAsync
+  nameWithType: KvHostLinkClient.ForcedSetConsecutiveAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.IsOpen
+  name: IsOpen
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_IsOpen
+  commentId: P:PlcComm.KvHostLink.KvHostLinkClient.IsOpen
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.IsOpen
+  nameWithType: KvHostLinkClient.IsOpen
+- uid: PlcComm.KvHostLink.KvHostLinkClient.IsOpen*
+  name: IsOpen
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_IsOpen_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.IsOpen
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.IsOpen
+  nameWithType: KvHostLinkClient.IsOpen
+- uid: PlcComm.KvHostLink.KvHostLinkClient.Open
+  name: Open()
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_Open
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.Open
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.Open()
+  nameWithType: KvHostLinkClient.Open()
+- uid: PlcComm.KvHostLink.KvHostLinkClient.Open*
+  name: Open
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_Open_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.Open
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.Open
+  nameWithType: KvHostLinkClient.Open
+- uid: PlcComm.KvHostLink.KvHostLinkClient.OpenAsync(System.Threading.CancellationToken)
+  name: OpenAsync(CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_OpenAsync_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.OpenAsync(System.Threading.CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.OpenAsync(System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.OpenAsync(CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.OpenAsync*
+  name: OpenAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_OpenAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.OpenAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.OpenAsync
+  nameWithType: KvHostLinkClient.OpenAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.QueryModelAsync(System.Threading.CancellationToken)
+  name: QueryModelAsync(CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_QueryModelAsync_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.QueryModelAsync(System.Threading.CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.QueryModelAsync(System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.QueryModelAsync(CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.QueryModelAsync*
+  name: QueryModelAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_QueryModelAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.QueryModelAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.QueryModelAsync
+  nameWithType: KvHostLinkClient.QueryModelAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadAsync(System.String,System.String,System.Threading.CancellationToken)
+  name: ReadAsync(string, string?, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadAsync_System_String_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadAsync(System.String,System.String,System.Threading.CancellationToken)
+  name.vb: ReadAsync(String, String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadAsync(string, string?, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ReadAsync(String, String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ReadAsync(string, string?, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ReadAsync(String, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadAsync*
+  name: ReadAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadAsync
+  nameWithType: KvHostLinkClient.ReadAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(System.String,System.Boolean,System.Threading.CancellationToken)
+  name: ReadCommentsAsync(string, bool, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadCommentsAsync_System_String_System_Boolean_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(System.String,System.Boolean,System.Threading.CancellationToken)
+  name.vb: ReadCommentsAsync(String, Boolean, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(string, bool, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(String, Boolean, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ReadCommentsAsync(string, bool, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ReadCommentsAsync(String, Boolean, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync*
+  name: ReadCommentsAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadCommentsAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync
+  nameWithType: KvHostLinkClient.ReadCommentsAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  name: ReadConsecutiveAsync(string, int, string?, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadConsecutiveAsync_System_String_System_Int32_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  name.vb: ReadConsecutiveAsync(String, Integer, String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(string, int, string?, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync(String, Integer, String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ReadConsecutiveAsync(string, int, string?, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ReadConsecutiveAsync(String, Integer, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync*
+  name: ReadConsecutiveAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadConsecutiveAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveAsync
+  nameWithType: KvHostLinkClient.ReadConsecutiveAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  name: ReadConsecutiveLegacyAsync(string, int, string?, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadConsecutiveLegacyAsync_System_String_System_Int32_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(System.String,System.Int32,System.String,System.Threading.CancellationToken)
+  name.vb: ReadConsecutiveLegacyAsync(String, Integer, String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(string, int, string?, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync(String, Integer, String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ReadConsecutiveLegacyAsync(string, int, string?, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ReadConsecutiveLegacyAsync(String, Integer, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync*
+  name: ReadConsecutiveLegacyAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadConsecutiveLegacyAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadConsecutiveLegacyAsync
+  nameWithType: KvHostLinkClient.ReadConsecutiveLegacyAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(System.Int32,System.Int32,System.Int32,System.String,System.Threading.CancellationToken)
+  name: ReadExpansionUnitBufferAsync(int, int, int, string, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadExpansionUnitBufferAsync_System_Int32_System_Int32_System_Int32_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(System.Int32,System.Int32,System.Int32,System.String,System.Threading.CancellationToken)
+  name.vb: ReadExpansionUnitBufferAsync(Integer, Integer, Integer, String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(int, int, int, string, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync(Integer, Integer, Integer, String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ReadExpansionUnitBufferAsync(int, int, int, string, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.ReadExpansionUnitBufferAsync(Integer, Integer, Integer, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync*
+  name: ReadExpansionUnitBufferAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadExpansionUnitBufferAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadExpansionUnitBufferAsync
+  nameWithType: KvHostLinkClient.ReadExpansionUnitBufferAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorBitsAsync(System.Threading.CancellationToken)
+  name: ReadMonitorBitsAsync(CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadMonitorBitsAsync_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorBitsAsync(System.Threading.CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorBitsAsync(System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ReadMonitorBitsAsync(CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorBitsAsync*
+  name: ReadMonitorBitsAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadMonitorBitsAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorBitsAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorBitsAsync
+  nameWithType: KvHostLinkClient.ReadMonitorBitsAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorWordsAsync(System.Threading.CancellationToken)
+  name: ReadMonitorWordsAsync(CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadMonitorWordsAsync_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorWordsAsync(System.Threading.CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorWordsAsync(System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.ReadMonitorWordsAsync(CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorWordsAsync*
+  name: ReadMonitorWordsAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_ReadMonitorWordsAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorWordsAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.ReadMonitorWordsAsync
+  nameWithType: KvHostLinkClient.ReadMonitorWordsAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorBitsAsync(System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  name: RegisterMonitorBitsAsync(IEnumerable<string>, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_RegisterMonitorBitsAsync_System_Collections_Generic_IEnumerable_System_String__System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorBitsAsync(System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  name.vb: RegisterMonitorBitsAsync(IEnumerable(Of String), CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorBitsAsync(System.Collections.Generic.IEnumerable<string>, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorBitsAsync(System.Collections.Generic.IEnumerable(Of String), System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.RegisterMonitorBitsAsync(IEnumerable<string>, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.RegisterMonitorBitsAsync(IEnumerable(Of String), CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorBitsAsync*
+  name: RegisterMonitorBitsAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_RegisterMonitorBitsAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorBitsAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorBitsAsync
+  nameWithType: KvHostLinkClient.RegisterMonitorBitsAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorWordsAsync(System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  name: RegisterMonitorWordsAsync(IEnumerable<string>, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_RegisterMonitorWordsAsync_System_Collections_Generic_IEnumerable_System_String__System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorWordsAsync(System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  name.vb: RegisterMonitorWordsAsync(IEnumerable(Of String), CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorWordsAsync(System.Collections.Generic.IEnumerable<string>, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorWordsAsync(System.Collections.Generic.IEnumerable(Of String), System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.RegisterMonitorWordsAsync(IEnumerable<string>, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.RegisterMonitorWordsAsync(IEnumerable(Of String), CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorWordsAsync*
+  name: RegisterMonitorWordsAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_RegisterMonitorWordsAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorWordsAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.RegisterMonitorWordsAsync
+  nameWithType: KvHostLinkClient.RegisterMonitorWordsAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync(System.String,System.Threading.CancellationToken)
+  name: SendRawAsync(string, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_SendRawAsync_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync(System.String,System.Threading.CancellationToken)
+  name.vb: SendRawAsync(String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync(string, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync(String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.SendRawAsync(string, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.SendRawAsync(String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync*
+  name: SendRawAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_SendRawAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.SendRawAsync
+  nameWithType: KvHostLinkClient.SendRawAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.SetTimeAsync(System.Nullable{System.DateTime},System.Threading.CancellationToken)
+  name: SetTimeAsync(DateTime?, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_SetTimeAsync_System_Nullable_System_DateTime__System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.SetTimeAsync(System.Nullable{System.DateTime},System.Threading.CancellationToken)
+  name.vb: SetTimeAsync(Date?, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.SetTimeAsync(System.DateTime?, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.SetTimeAsync(Date?, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.SetTimeAsync(DateTime?, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.SetTimeAsync(Date?, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.SetTimeAsync*
+  name: SetTimeAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_SetTimeAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.SetTimeAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.SetTimeAsync
+  nameWithType: KvHostLinkClient.SetTimeAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(System.Int32,System.Threading.CancellationToken)
+  name: SwitchBankAsync(int, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_SwitchBankAsync_System_Int32_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(System.Int32,System.Threading.CancellationToken)
+  name.vb: SwitchBankAsync(Integer, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(int, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync(Integer, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.SwitchBankAsync(int, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.SwitchBankAsync(Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync*
+  name: SwitchBankAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_SwitchBankAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.SwitchBankAsync
+  nameWithType: KvHostLinkClient.SwitchBankAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.Timeout
+  name: Timeout
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_Timeout
+  commentId: P:PlcComm.KvHostLink.KvHostLinkClient.Timeout
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.Timeout
+  nameWithType: KvHostLinkClient.Timeout
+- uid: PlcComm.KvHostLink.KvHostLinkClient.Timeout*
+  name: Timeout
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_Timeout_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.Timeout
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.Timeout
+  nameWithType: KvHostLinkClient.Timeout
+- uid: PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+  name: TraceHook
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_TraceHook
+  commentId: P:PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+  nameWithType: KvHostLinkClient.TraceHook
+- uid: PlcComm.KvHostLink.KvHostLinkClient.TraceHook*
+  name: TraceHook
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_TraceHook_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.TraceHook
+  nameWithType: KvHostLinkClient.TraceHook
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteAsync*
+  name: WriteAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteAsync
+  nameWithType: KvHostLinkClient.WriteAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteAsync``1(System.String,``0,System.String,System.Threading.CancellationToken)
+  name: WriteAsync<T>(string, T, string?, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteAsync__1_System_String___0_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteAsync``1(System.String,``0,System.String,System.Threading.CancellationToken)
+  name.vb: WriteAsync(Of T)(String, T, String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteAsync<T>(string, T, string?, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteAsync(Of T)(String, T, String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.WriteAsync<T>(string, T, string?, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.WriteAsync(Of T)(String, T, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync*
+  name: WriteConsecutiveAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteConsecutiveAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync
+  nameWithType: KvHostLinkClient.WriteConsecutiveAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)
+  name: WriteConsecutiveAsync<T>(string, IEnumerable<T>, string?, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteConsecutiveAsync__1_System_String_System_Collections_Generic_IEnumerable___0__System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)
+  name.vb: WriteConsecutiveAsync(Of T)(String, IEnumerable(Of T), String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync<T>(string, System.Collections.Generic.IEnumerable<T>, string?, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(Of T)(String, System.Collections.Generic.IEnumerable(Of T), String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.WriteConsecutiveAsync<T>(string, IEnumerable<T>, string?, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.WriteConsecutiveAsync(Of T)(String, IEnumerable(Of T), String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync*
+  name: WriteConsecutiveLegacyAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteConsecutiveLegacyAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync
+  nameWithType: KvHostLinkClient.WriteConsecutiveLegacyAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)
+  name: WriteConsecutiveLegacyAsync<T>(string, IEnumerable<T>, string?, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteConsecutiveLegacyAsync__1_System_String_System_Collections_Generic_IEnumerable___0__System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)
+  name.vb: WriteConsecutiveLegacyAsync(Of T)(String, IEnumerable(Of T), String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync<T>(string, System.Collections.Generic.IEnumerable<T>, string?, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveLegacyAsync(Of T)(String, System.Collections.Generic.IEnumerable(Of T), String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.WriteConsecutiveLegacyAsync<T>(string, IEnumerable<T>, string?, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.WriteConsecutiveLegacyAsync(Of T)(String, IEnumerable(Of T), String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync*
+  name: WriteExpansionUnitBufferAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteExpansionUnitBufferAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync
+  nameWithType: KvHostLinkClient.WriteExpansionUnitBufferAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync``1(System.Int32,System.Int32,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)
+  name: WriteExpansionUnitBufferAsync<T>(int, int, IEnumerable<T>, string, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteExpansionUnitBufferAsync__1_System_Int32_System_Int32_System_Collections_Generic_IEnumerable___0__System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync``1(System.Int32,System.Int32,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)
+  name.vb: WriteExpansionUnitBufferAsync(Of T)(Integer, Integer, IEnumerable(Of T), String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync<T>(int, int, System.Collections.Generic.IEnumerable<T>, string, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteExpansionUnitBufferAsync(Of T)(Integer, Integer, System.Collections.Generic.IEnumerable(Of T), String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.WriteExpansionUnitBufferAsync<T>(int, int, IEnumerable<T>, string, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.WriteExpansionUnitBufferAsync(Of T)(Integer, Integer, IEnumerable(Of T), String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync*
+  name: WriteSetValueAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteSetValueAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync
+  nameWithType: KvHostLinkClient.WriteSetValueAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync``1(System.String,``0,System.String,System.Threading.CancellationToken)
+  name: WriteSetValueAsync<T>(string, T, string?, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteSetValueAsync__1_System_String___0_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync``1(System.String,``0,System.String,System.Threading.CancellationToken)
+  name.vb: WriteSetValueAsync(Of T)(String, T, String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync<T>(string, T, string?, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueAsync(Of T)(String, T, String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.WriteSetValueAsync<T>(string, T, string?, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.WriteSetValueAsync(Of T)(String, T, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync*
+  name: WriteSetValueConsecutiveAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteSetValueConsecutiveAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync
+  nameWithType: KvHostLinkClient.WriteSetValueConsecutiveAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)
+  name: WriteSetValueConsecutiveAsync<T>(string, IEnumerable<T>, string?, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html#PlcComm_KvHostLink_KvHostLinkClient_WriteSetValueConsecutiveAsync__1_System_String_System_Collections_Generic_IEnumerable___0__System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)
+  name.vb: WriteSetValueConsecutiveAsync(Of T)(String, IEnumerable(Of T), String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync<T>(string, System.Collections.Generic.IEnumerable<T>, string?, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClient.WriteSetValueConsecutiveAsync(Of T)(String, System.Collections.Generic.IEnumerable(Of T), String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClient.WriteSetValueConsecutiveAsync<T>(string, IEnumerable<T>, string?, CancellationToken)
+  nameWithType.vb: KvHostLinkClient.WriteSetValueConsecutiveAsync(Of T)(String, IEnumerable(Of T), String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  name: KvHostLinkClientExtensions
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html
+  commentId: T:PlcComm.KvHostLink.KvHostLinkClientExtensions
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions
+  nameWithType: KvHostLinkClientExtensions
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  name: OpenAndConnectAsync(string, int, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_OpenAndConnectAsync_System_String_System_Int32_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(System.String,System.Int32,System.Threading.CancellationToken)
+  name.vb: OpenAndConnectAsync(String, Integer, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(string, int, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(String, Integer, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.OpenAndConnectAsync(string, int, CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.OpenAndConnectAsync(String, Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync*
+  name: OpenAndConnectAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_OpenAndConnectAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync
+  nameWithType: KvHostLinkClientExtensions.OpenAndConnectAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,System.Threading.CancellationToken)
+  name: PollAsync(KvHostLinkClient, IEnumerable<string>, TimeSpan, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_PollAsync_PlcComm_KvHostLink_KvHostLinkClient_System_Collections_Generic_IEnumerable_System_String__System_TimeSpan_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,System.Threading.CancellationToken)
+  name.vb: PollAsync(KvHostLinkClient, IEnumerable(Of String), TimeSpan, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable<string>, System.TimeSpan, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable(Of String), System.TimeSpan, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.PollAsync(KvHostLinkClient, IEnumerable<string>, TimeSpan, CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.PollAsync(KvHostLinkClient, IEnumerable(Of String), TimeSpan, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync*
+  name: PollAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_PollAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync
+  nameWithType: KvHostLinkClientExtensions.PollAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  name: ReadDWordsAsync(KvHostLinkClient, string, int, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadDWordsAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_Int32_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  name.vb: ReadDWordsAsync(KvHostLinkClient, String, Integer, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient, string, int, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient, String, Integer, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadDWordsAsync(KvHostLinkClient, string, int, CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.ReadDWordsAsync(KvHostLinkClient, String, Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync*
+  name: ReadDWordsAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadDWordsAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync
+  nameWithType: KvHostLinkClientExtensions.ReadDWordsAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  name: ReadNamedAsync(KvHostLinkClient, IEnumerable<string>, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadNamedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_Collections_Generic_IEnumerable_System_String__System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)
+  name.vb: ReadNamedAsync(KvHostLinkClient, IEnumerable(Of String), CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable<string>, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient, System.Collections.Generic.IEnumerable(Of String), System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadNamedAsync(KvHostLinkClient, IEnumerable<string>, CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.ReadNamedAsync(KvHostLinkClient, IEnumerable(Of String), CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync*
+  name: ReadNamedAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadNamedAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync
+  nameWithType: KvHostLinkClientExtensions.ReadNamedAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+  name: ReadTypedAsync(KvHostLinkClient, string, string, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadTypedAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)
+  name.vb: ReadTypedAsync(KvHostLinkClient, String, String, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, string, string, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient, String, String, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadTypedAsync(KvHostLinkClient, string, string, CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.ReadTypedAsync(KvHostLinkClient, String, String, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync*
+  name: ReadTypedAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadTypedAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync
+  nameWithType: KvHostLinkClientExtensions.ReadTypedAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  name: ReadWordsAsync(KvHostLinkClient, string, int, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadWordsAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_Int32_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)
+  name.vb: ReadWordsAsync(KvHostLinkClient, String, Integer, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient, string, int, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient, String, Integer, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.ReadWordsAsync(KvHostLinkClient, string, int, CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.ReadWordsAsync(KvHostLinkClient, String, Integer, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync*
+  name: ReadWordsAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_ReadWordsAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync
+  nameWithType: KvHostLinkClientExtensions.ReadWordsAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)
+  name: WriteBitInWordAsync(KvHostLinkClient, string, int, bool, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteBitInWordAsync_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_Int32_System_Boolean_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)
+  name.vb: WriteBitInWordAsync(KvHostLinkClient, String, Integer, Boolean, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient, string, int, bool, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient, String, Integer, Boolean, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.WriteBitInWordAsync(KvHostLinkClient, string, int, bool, CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.WriteBitInWordAsync(KvHostLinkClient, String, Integer, Boolean, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync*
+  name: WriteBitInWordAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteBitInWordAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync
+  nameWithType: KvHostLinkClientExtensions.WriteBitInWordAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync*
+  name: WriteTypedAsync
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteTypedAsync_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync
+  nameWithType: KvHostLinkClientExtensions.WriteTypedAsync
+- uid: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync``1(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,``0,System.Threading.CancellationToken)
+  name: WriteTypedAsync<T>(KvHostLinkClient, string, string, T, CancellationToken)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html#PlcComm_KvHostLink_KvHostLinkClientExtensions_WriteTypedAsync__1_PlcComm_KvHostLink_KvHostLinkClient_System_String_System_String___0_System_Threading_CancellationToken_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync``1(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,``0,System.Threading.CancellationToken)
+  name.vb: WriteTypedAsync(Of T)(KvHostLinkClient, String, String, T, CancellationToken)
+  fullName: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync<T>(PlcComm.KvHostLink.KvHostLinkClient, string, string, T, System.Threading.CancellationToken)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(Of T)(PlcComm.KvHostLink.KvHostLinkClient, String, String, T, System.Threading.CancellationToken)
+  nameWithType: KvHostLinkClientExtensions.WriteTypedAsync<T>(KvHostLinkClient, string, string, T, CancellationToken)
+  nameWithType.vb: KvHostLinkClientExtensions.WriteTypedAsync(Of T)(KvHostLinkClient, String, String, T, CancellationToken)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice
+  name: KvHostLinkDevice
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html
+  commentId: T:PlcComm.KvHostLink.KvHostLinkDevice
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice
+  nameWithType: KvHostLinkDevice
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix(System.String)
+  name: NormalizeSuffix(string?)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_NormalizeSuffix_System_String_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix(System.String)
+  name.vb: NormalizeSuffix(String)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix(string?)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix(String)
+  nameWithType: KvHostLinkDevice.NormalizeSuffix(string?)
+  nameWithType.vb: KvHostLinkDevice.NormalizeSuffix(String)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix*
+  name: NormalizeSuffix
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_NormalizeSuffix_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.NormalizeSuffix
+  nameWithType: KvHostLinkDevice.NormalizeSuffix
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice(System.String,System.Boolean)
+  name: ParseDevice(string, bool)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ParseDevice_System_String_System_Boolean_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice(System.String,System.Boolean)
+  name.vb: ParseDevice(String, Boolean)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice(string, bool)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice(String, Boolean)
+  nameWithType: KvHostLinkDevice.ParseDevice(string, bool)
+  nameWithType.vb: KvHostLinkDevice.ParseDevice(String, Boolean)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice*
+  name: ParseDevice
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ParseDevice_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ParseDevice
+  nameWithType: KvHostLinkDevice.ParseDevice
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText(System.String,System.String)
+  name: ParseDeviceText(string, string)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ParseDeviceText_System_String_System_String_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText(System.String,System.String)
+  name.vb: ParseDeviceText(String, String)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText(string, string)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText(String, String)
+  nameWithType: KvHostLinkDevice.ParseDeviceText(string, string)
+  nameWithType.vb: KvHostLinkDevice.ParseDeviceText(String, String)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText*
+  name: ParseDeviceText
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ParseDeviceText_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ParseDeviceText
+  nameWithType: KvHostLinkDevice.ParseDeviceText
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat(System.String,System.String)
+  name: ResolveEffectiveFormat(string, string)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ResolveEffectiveFormat_System_String_System_String_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat(System.String,System.String)
+  name.vb: ResolveEffectiveFormat(String, String)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat(string, string)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat(String, String)
+  nameWithType: KvHostLinkDevice.ResolveEffectiveFormat(string, string)
+  nameWithType.vb: KvHostLinkDevice.ResolveEffectiveFormat(String, String)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat*
+  name: ResolveEffectiveFormat
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ResolveEffectiveFormat_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ResolveEffectiveFormat
+  nameWithType: KvHostLinkDevice.ResolveEffectiveFormat
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount(System.String,System.String,System.Int32)
+  name: ValidateDeviceCount(string, string, int)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateDeviceCount_System_String_System_String_System_Int32_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount(System.String,System.String,System.Int32)
+  name.vb: ValidateDeviceCount(String, String, Integer)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount(string, string, int)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount(String, String, Integer)
+  nameWithType: KvHostLinkDevice.ValidateDeviceCount(string, string, int)
+  nameWithType.vb: KvHostLinkDevice.ValidateDeviceCount(String, String, Integer)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount*
+  name: ValidateDeviceCount
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateDeviceCount_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceCount
+  nameWithType: KvHostLinkDevice.ValidateDeviceCount
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceSpan(System.String,System.Int32,System.String,System.Int32)
+  name: ValidateDeviceSpan(string, int, string, int)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateDeviceSpan_System_String_System_Int32_System_String_System_Int32_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceSpan(System.String,System.Int32,System.String,System.Int32)
+  name.vb: ValidateDeviceSpan(String, Integer, String, Integer)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceSpan(string, int, string, int)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceSpan(String, Integer, String, Integer)
+  nameWithType: KvHostLinkDevice.ValidateDeviceSpan(string, int, string, int)
+  nameWithType.vb: KvHostLinkDevice.ValidateDeviceSpan(String, Integer, String, Integer)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceSpan*
+  name: ValidateDeviceSpan
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateDeviceSpan_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceSpan
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceSpan
+  nameWithType: KvHostLinkDevice.ValidateDeviceSpan
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(System.String,System.String,System.Collections.Generic.HashSet{System.String})
+  name: ValidateDeviceType(string, string, HashSet<string>)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateDeviceType_System_String_System_String_System_Collections_Generic_HashSet_System_String__
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(System.String,System.String,System.Collections.Generic.HashSet{System.String})
+  name.vb: ValidateDeviceType(String, String, HashSet(Of String))
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(string, string, System.Collections.Generic.HashSet<string>)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType(String, String, System.Collections.Generic.HashSet(Of String))
+  nameWithType: KvHostLinkDevice.ValidateDeviceType(string, string, HashSet<string>)
+  nameWithType.vb: KvHostLinkDevice.ValidateDeviceType(String, String, HashSet(Of String))
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType*
+  name: ValidateDeviceType
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateDeviceType_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateDeviceType
+  nameWithType: KvHostLinkDevice.ValidateDeviceType
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferCount(System.String,System.Int32)
+  name: ValidateExpansionBufferCount(string, int)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateExpansionBufferCount_System_String_System_Int32_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferCount(System.String,System.Int32)
+  name.vb: ValidateExpansionBufferCount(String, Integer)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferCount(string, int)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferCount(String, Integer)
+  nameWithType: KvHostLinkDevice.ValidateExpansionBufferCount(string, int)
+  nameWithType.vb: KvHostLinkDevice.ValidateExpansionBufferCount(String, Integer)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferCount*
+  name: ValidateExpansionBufferCount
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateExpansionBufferCount_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferCount
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferCount
+  nameWithType: KvHostLinkDevice.ValidateExpansionBufferCount
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferSpan(System.Int32,System.String,System.Int32)
+  name: ValidateExpansionBufferSpan(int, string, int)
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateExpansionBufferSpan_System_Int32_System_String_System_Int32_
+  commentId: M:PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferSpan(System.Int32,System.String,System.Int32)
+  name.vb: ValidateExpansionBufferSpan(Integer, String, Integer)
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferSpan(int, string, int)
+  fullName.vb: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferSpan(Integer, String, Integer)
+  nameWithType: KvHostLinkDevice.ValidateExpansionBufferSpan(int, string, int)
+  nameWithType.vb: KvHostLinkDevice.ValidateExpansionBufferSpan(Integer, String, Integer)
+- uid: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferSpan*
+  name: ValidateExpansionBufferSpan
+  href: api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html#PlcComm_KvHostLink_KvHostLinkDevice_ValidateExpansionBufferSpan_
+  commentId: Overload:PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferSpan
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvHostLinkDevice.ValidateExpansionBufferSpan
+  nameWithType: KvHostLinkDevice.ValidateExpansionBufferSpan
+- uid: PlcComm.KvHostLink.KvModelInfo
+  name: KvModelInfo
+  href: api/obj/api/PlcComm.KvHostLink.KvModelInfo.html
+  commentId: T:PlcComm.KvHostLink.KvModelInfo
+  fullName: PlcComm.KvHostLink.KvModelInfo
+  nameWithType: KvModelInfo
+- uid: PlcComm.KvHostLink.KvModelInfo.#ctor(System.String,System.String)
+  name: KvModelInfo(string, string)
+  href: api/obj/api/PlcComm.KvHostLink.KvModelInfo.html#PlcComm_KvHostLink_KvModelInfo__ctor_System_String_System_String_
+  commentId: M:PlcComm.KvHostLink.KvModelInfo.#ctor(System.String,System.String)
+  name.vb: New(String, String)
+  fullName: PlcComm.KvHostLink.KvModelInfo.KvModelInfo(string, string)
+  fullName.vb: PlcComm.KvHostLink.KvModelInfo.New(String, String)
+  nameWithType: KvModelInfo.KvModelInfo(string, string)
+  nameWithType.vb: KvModelInfo.New(String, String)
+- uid: PlcComm.KvHostLink.KvModelInfo.#ctor*
+  name: KvModelInfo
+  href: api/obj/api/PlcComm.KvHostLink.KvModelInfo.html#PlcComm_KvHostLink_KvModelInfo__ctor_
+  commentId: Overload:PlcComm.KvHostLink.KvModelInfo.#ctor
+  isSpec: "True"
+  name.vb: New
+  fullName: PlcComm.KvHostLink.KvModelInfo.KvModelInfo
+  fullName.vb: PlcComm.KvHostLink.KvModelInfo.New
+  nameWithType: KvModelInfo.KvModelInfo
+  nameWithType.vb: KvModelInfo.New
+- uid: PlcComm.KvHostLink.KvModelInfo.Code
+  name: Code
+  href: api/obj/api/PlcComm.KvHostLink.KvModelInfo.html#PlcComm_KvHostLink_KvModelInfo_Code
+  commentId: P:PlcComm.KvHostLink.KvModelInfo.Code
+  fullName: PlcComm.KvHostLink.KvModelInfo.Code
+  nameWithType: KvModelInfo.Code
+- uid: PlcComm.KvHostLink.KvModelInfo.Code*
+  name: Code
+  href: api/obj/api/PlcComm.KvHostLink.KvModelInfo.html#PlcComm_KvHostLink_KvModelInfo_Code_
+  commentId: Overload:PlcComm.KvHostLink.KvModelInfo.Code
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvModelInfo.Code
+  nameWithType: KvModelInfo.Code
+- uid: PlcComm.KvHostLink.KvModelInfo.Model
+  name: Model
+  href: api/obj/api/PlcComm.KvHostLink.KvModelInfo.html#PlcComm_KvHostLink_KvModelInfo_Model
+  commentId: P:PlcComm.KvHostLink.KvModelInfo.Model
+  fullName: PlcComm.KvHostLink.KvModelInfo.Model
+  nameWithType: KvModelInfo.Model
+- uid: PlcComm.KvHostLink.KvModelInfo.Model*
+  name: Model
+  href: api/obj/api/PlcComm.KvHostLink.KvModelInfo.html#PlcComm_KvHostLink_KvModelInfo_Model_
+  commentId: Overload:PlcComm.KvHostLink.KvModelInfo.Model
+  isSpec: "True"
+  fullName: PlcComm.KvHostLink.KvModelInfo.Model
+  nameWithType: KvModelInfo.Model
+- uid: PlcComm.KvHostLink.KvPlcMode
+  name: KvPlcMode
+  href: api/obj/api/PlcComm.KvHostLink.KvPlcMode.html
+  commentId: T:PlcComm.KvHostLink.KvPlcMode
+  fullName: PlcComm.KvHostLink.KvPlcMode
+  nameWithType: KvPlcMode
+- uid: PlcComm.KvHostLink.KvPlcMode.Program
+  name: Program
+  href: api/obj/api/PlcComm.KvHostLink.KvPlcMode.html#PlcComm_KvHostLink_KvPlcMode_Program
+  commentId: F:PlcComm.KvHostLink.KvPlcMode.Program
+  fullName: PlcComm.KvHostLink.KvPlcMode.Program
+  nameWithType: KvPlcMode.Program
+- uid: PlcComm.KvHostLink.KvPlcMode.Run
+  name: Run
+  href: api/obj/api/PlcComm.KvHostLink.KvPlcMode.html#PlcComm_KvHostLink_KvPlcMode_Run
+  commentId: F:PlcComm.KvHostLink.KvPlcMode.Run
+  fullName: PlcComm.KvHostLink.KvPlcMode.Run
+  nameWithType: KvPlcMode.Run

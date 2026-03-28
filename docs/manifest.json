@@ -1,0 +1,208 @@
+{
+  "source_base_path": "D:/PLC_COMM_PROJ/plc-comm-hostlink-dotnet",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      }
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docsrc/user/DEVICE_HANDLING.md",
+      "output": {
+        ".html": {
+          "relative_path": "user/DEVICE_HANDLING.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "docsrc/user/USER_GUIDE.md",
+      "output": {
+        ".html": {
+          "relative_path": "user/USER_GUIDE.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "docsrc/user/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "user/toc.html"
+        },
+        ".json": {
+          "relative_path": "user/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkConnectionError.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.HostLinkConnectionError.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkError.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.HostLinkError.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkProtocolError.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.HostLinkProtocolError.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkTraceDirection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.HostLinkTraceDirection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.HostLinkTraceFrame.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.HostLinkTransportMode.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.HostLinkTransportMode.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvDeviceAddress.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvDeviceAddress.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkClient.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvHostLinkClient.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvHostLinkClientExtensions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkDevice.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvModelInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvModelInfo.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvPlcMode.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvPlcMode.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "obj/api/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/obj/api/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html"
+        },
+        ".json": {
+          "relative_path": "toc.json"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}

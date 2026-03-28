@@ -1,0 +1,24 @@
+{
+  "_comment": "HostLink frame body vectors. Python and .NET must send identical ASCII frames for each entry.",
+  "vectors": [
+    {"id": "rd_dm100",         "command": "read",                  "device": "DM100", "expected_body": "RD DM100.U"},
+    {"id": "rds_dm100_3",      "command": "read_consecutive",      "device": "DM100", "count": 3,              "expected_body": "RDS DM100.U 3"},
+    {"id": "wr_dm100_1234",    "command": "write",                 "device": "DM100", "value": 1234,           "expected_body": "WR DM100.U 1234"},
+    {"id": "wrs_dm100_vals",   "command": "write_consecutive",     "device": "DM100", "values": [100, 200, 300],"expected_body": "WRS DM100.U 3 100 200 300"},
+    {"id": "rd_r0",            "command": "read",                  "device": "R0",    "expected_body": "RD R0"},
+    {"id": "rds_r0_2",         "command": "read_consecutive",      "device": "R0",    "count": 2,              "expected_body": "RDS R0 2"},
+    {"id": "rd_b100",          "command": "read",                  "device": "B100",  "expected_body": "RD B100"},
+    {"id": "wr_mr500_1",       "command": "write",                 "device": "MR500", "value": 1,              "expected_body": "WR MR500 1"},
+    {"id": "change_mode_run",  "command": "change_mode",           "mode": "RUN",     "expected_body": "M1"},
+    {"id": "change_mode_prog", "command": "change_mode",           "mode": "PROGRAM", "expected_body": "M0"},
+    {"id": "clear_error",      "command": "clear_error",                              "expected_body": "ER"},
+    {"id": "set_time",         "command": "set_time",
+      "args": [26, 3, 13, 22, 5, 9, 5],
+      "dotnet_datetime": "2026-03-13T22:05:09",
+      "expected_body": "WRT 26 03 13 22 05 09 5"},
+    {"id": "rd_dm100_d",       "command": "read_format",           "device": "DM100", "data_format": ".D",     "expected_body": "RD DM100.D"},
+    {"id": "rd_dm100_h",       "command": "read_format",           "device": "DM100", "data_format": ".H",     "expected_body": "RD DM100.H"},
+    {"id": "rde_dm100_3",      "command": "read_consecutive_legacy","device": "DM100", "count": 3,             "expected_body": "RDE DM100.U 3"},
+    {"id": "ws_t0_1000",       "command": "write_set_value",       "device": "T0",    "value": 1000,           "expected_body": "WS T0.D 1000"}
+  ]
+}

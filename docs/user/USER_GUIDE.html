@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>User Guide: Host Link Communication .NET | KEYENCE Host Link .NET Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="User Guide: Host Link Communication .NET | KEYENCE Host Link .NET Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/USER_GUIDE.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="user-guide-host-link-communication-net">User Guide: Host Link Communication .NET</h1>
+
+<p>This guide covers the recommended high-level API only.</p>
+<p>Use these entry points in normal application code:</p>
+<ul>
+<li><code>OpenAndConnectAsync</code></li>
+<li><code>ReadTypedAsync</code></li>
+<li><code>WriteTypedAsync</code></li>
+<li><code>WriteBitInWordAsync</code></li>
+<li><code>ReadNamedAsync</code></li>
+<li><code>PollAsync</code></li>
+<li><code>ReadWordsAsync</code></li>
+<li><code>ReadDWordsAsync</code></li>
+</ul>
+<p>Raw token-oriented reads, writes, and protocol details are intentionally left to
+the maintainer documentation.</p>
+<h2 id="installation">Installation</h2>
+<p>Add a project reference to:</p>
+<pre><code class="lang-text">src/PlcComm.KvHostLink/PlcComm.KvHostLink.csproj
+</code></pre>
+<p>or reference the compiled assembly from a .NET 9 application.</p>
+<h2 id="connect-once">Connect Once</h2>
+<pre><code class="lang-csharp">using PlcComm.KvHostLink;
+
+await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync(
+    &quot;192.168.250.100&quot;,
+    8501);
+</code></pre>
+<p><code>OpenAndConnectAsync</code> returns an open <code>KvHostLinkClient</code> ready for the helper
+extension methods below.</p>
+<h2 id="typed-read-and-write">Typed Read and Write</h2>
+<p>Supported dtype codes:</p>
+<table>
+<thead>
+<tr>
+<th>dtype</th>
+<th>Meaning</th>
+<th>Width</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>U</code></td>
+<td>unsigned 16-bit</td>
+<td>1 word</td>
+</tr>
+<tr>
+<td><code>S</code></td>
+<td>signed 16-bit</td>
+<td>1 word</td>
+</tr>
+<tr>
+<td><code>D</code></td>
+<td>unsigned 32-bit</td>
+<td>2 words</td>
+</tr>
+<tr>
+<td><code>L</code></td>
+<td>signed 32-bit</td>
+<td>2 words</td>
+</tr>
+<tr>
+<td><code>F</code></td>
+<td>IEEE 754 float32</td>
+<td>2 words</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="lang-csharp">ushort u = (ushort)await client.ReadTypedAsync(&quot;DM0&quot;, &quot;U&quot;);
+short s = (short)await client.ReadTypedAsync(&quot;DM1&quot;, &quot;S&quot;);
+uint d = (uint)await client.ReadTypedAsync(&quot;DM2&quot;, &quot;D&quot;);
+float f = (float)await client.ReadTypedAsync(&quot;DM4&quot;, &quot;F&quot;);
+
+await client.WriteTypedAsync(&quot;DM10&quot;, &quot;U&quot;, u);
+await client.WriteTypedAsync(&quot;DM11&quot;, &quot;S&quot;, s);
+await client.WriteTypedAsync(&quot;DM12&quot;, &quot;D&quot;, d);
+await client.WriteTypedAsync(&quot;DM14&quot;, &quot;F&quot;, f);
+</code></pre>
+<p><code>F</code> is implemented in the helper layer by converting two <code>.U</code> words as
+float32.</p>
+<h2 id="block-reads">Block Reads</h2>
+<p>Use block helpers for contiguous data in a word area.</p>
+<pre><code class="lang-csharp">ushort[] words = await client.ReadWordsAsync(&quot;DM100&quot;, 8);
+uint[] dwords = await client.ReadDWordsAsync(&quot;DM200&quot;, 4);
+</code></pre>
+<h2 id="bit-in-word">Bit in Word</h2>
+<p>Use <code>WriteBitInWordAsync</code> for bit updates inside word devices such as <code>DM</code>,
+<code>EM</code>, <code>FM</code>, <code>W</code>, or <code>Z</code>.</p>
+<pre><code class="lang-csharp">await client.WriteBitInWordAsync(&quot;DM500&quot;, bitIndex: 0, value: true);
+await client.WriteBitInWordAsync(&quot;DM500&quot;, bitIndex: 3, value: false);
+</code></pre>
+<p>This helper performs a read-modify-write so that the other 15 bits remain
+unchanged.</p>
+<h2 id="mixed-snapshots-with-readnamedasync">Mixed Snapshots with <code>ReadNamedAsync</code></h2>
+<p>Supported address notation:</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;DM100&quot;</code></td>
+<td>unsigned 16-bit</td>
+</tr>
+<tr>
+<td><code>&quot;DM100:S&quot;</code></td>
+<td>signed 16-bit</td>
+</tr>
+<tr>
+<td><code>&quot;DM100:D&quot;</code></td>
+<td>unsigned 32-bit</td>
+</tr>
+<tr>
+<td><code>&quot;DM100:L&quot;</code></td>
+<td>signed 32-bit</td>
+</tr>
+<tr>
+<td><code>&quot;DM100:F&quot;</code></td>
+<td>float32</td>
+</tr>
+<tr>
+<td><code>&quot;DM100.3&quot;</code></td>
+<td>bit 3 inside the word</td>
+</tr>
+<tr>
+<td><code>&quot;DM100.A&quot;</code></td>
+<td>bit 10 inside the word</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="lang-csharp">var snapshot = await client.ReadNamedAsync(
+    new[] { &quot;DM100&quot;, &quot;DM101:S&quot;, &quot;DM102:D&quot;, &quot;DM104:F&quot;, &quot;DM200.0&quot;, &quot;DM200.A&quot; });
+</code></pre>
+<p>Bit indices use hexadecimal notation from <code>0</code> to <code>F</code>.</p>
+<h2 id="polling">Polling</h2>
+<p><code>PollAsync</code> repeatedly yields the same kind of snapshot dictionary.</p>
+<pre><code class="lang-csharp">using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+await foreach (var snapshot in client.PollAsync(
+    new[] { &quot;DM100&quot;, &quot;DM101:L&quot;, &quot;DM200.3&quot; },
+    TimeSpan.FromSeconds(1),
+    cts.Token))
+{
+    Console.WriteLine(snapshot[&quot;DM100&quot;]);
+}
+</code></pre>
+<h2 id="error-handling">Error Handling</h2>
+<table>
+<thead>
+<tr>
+<th>Exception</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HostLinkError</code></td>
+<td>PLC returned an error code</td>
+</tr>
+<tr>
+<td><code>HostLinkProtocolError</code></td>
+<td>Local validation or parsing failure</td>
+</tr>
+<tr>
+<td><code>HostLinkConnectionError</code></td>
+<td>Connect, disconnect, socket, or timeout failure</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="lang-csharp">try
+{
+    var value = await client.ReadTypedAsync(&quot;DM100&quot;, &quot;U&quot;);
+}
+catch (HostLinkProtocolError ex)
+{
+    Console.WriteLine($&quot;Protocol error: {ex.Message}&quot;);
+}
+catch (HostLinkConnectionError ex)
+{
+    Console.WriteLine($&quot;Connection error: {ex.Message}&quot;);
+}
+catch (HostLinkError ex)
+{
+    Console.WriteLine($&quot;PLC error: {ex.Message}&quot;);
+}
+</code></pre>
+<h2 id="recommended-samples">Recommended Samples</h2>
+<table>
+<thead>
+<tr>
+<th>API / workflow</th>
+<th>Sample</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OpenAndConnectAsync</code>, <code>ReadTypedAsync</code>, <code>WriteTypedAsync</code>, <code>ReadWordsAsync</code>, <code>ReadDWordsAsync</code>, <code>WriteBitInWordAsync</code>, <code>ReadNamedAsync</code>, <code>PollAsync</code></td>
+<td><code>samples/PlcComm.KvHostLink.HighLevelSample/PlcComm.KvHostLink.HighLevelSample.csproj</code></td>
+<td>Full helper-layer walkthrough</td>
+</tr>
+<tr>
+<td><code>ReadTypedAsync</code>, <code>WriteTypedAsync</code>, <code>ReadWordsAsync</code>, <code>ReadDWordsAsync</code></td>
+<td><code>samples/PlcComm.KvHostLink.BasicReadWriteSample/PlcComm.KvHostLink.BasicReadWriteSample.csproj</code></td>
+<td>Focused typed and contiguous block example</td>
+</tr>
+<tr>
+<td><code>ReadNamedAsync</code>, <code>WriteBitInWordAsync</code>, <code>PollAsync</code></td>
+<td><code>samples/PlcComm.KvHostLink.NamedPollingSample/PlcComm.KvHostLink.NamedPollingSample.csproj</code></td>
+<td>Mixed snapshot and polling example</td>
+</tr>
+</tbody>
+</table>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/USER_GUIDE.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PLC Communication Workspace - fa-yoshinobu
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

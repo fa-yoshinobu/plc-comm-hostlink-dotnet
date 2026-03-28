@@ -1,0 +1,17 @@
+﻿**/bin/
+**/obj/
+.vs/
+.idea/
+*.user
+*.suo
+TestResults/
+local_folder/
+publish/
+*.log
+*.binlog
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+*.nupkg
+*.snupkg

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Device and Type Handling | KEYENCE Host Link .NET Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Device and Type Handling | KEYENCE Host Link .NET Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/DEVICE_HANDLING.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="device-and-type-handling">Device and Type Handling</h1>
+
+<p>This page describes device handling from the recommended high-level API.</p>
+<h2 id="typed-helpers">Typed Helpers</h2>
+<p><code>ReadTypedAsync</code> and <code>WriteTypedAsync</code> are the standard entry points for single
+typed values.</p>
+<table>
+<thead>
+<tr>
+<th>dtype</th>
+<th>Meaning</th>
+<th>Width</th>
+<th>.NET type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>U</code></td>
+<td>unsigned 16-bit</td>
+<td>1 word</td>
+<td><code>ushort</code></td>
+</tr>
+<tr>
+<td><code>S</code></td>
+<td>signed 16-bit</td>
+<td>1 word</td>
+<td><code>short</code></td>
+</tr>
+<tr>
+<td><code>D</code></td>
+<td>unsigned 32-bit</td>
+<td>2 words</td>
+<td><code>uint</code></td>
+</tr>
+<tr>
+<td><code>L</code></td>
+<td>signed 32-bit</td>
+<td>2 words</td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><code>F</code></td>
+<td>IEEE 754 float32</td>
+<td>2 words</td>
+<td><code>float</code></td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<pre><code class="lang-csharp">ushort dm0 = (ushort)await client.ReadTypedAsync(&quot;DM0&quot;, &quot;U&quot;);
+int counter = (int)await client.ReadTypedAsync(&quot;DM10&quot;, &quot;L&quot;);
+float temp = (float)await client.ReadTypedAsync(&quot;DM20&quot;, &quot;F&quot;);
+
+await client.WriteTypedAsync(&quot;DM100&quot;, &quot;U&quot;, dm0);
+await client.WriteTypedAsync(&quot;DM110&quot;, &quot;L&quot;, counter);
+await client.WriteTypedAsync(&quot;DM120&quot;, &quot;F&quot;, temp);
+</code></pre>
+<h2 id="contiguous-areas">Contiguous Areas</h2>
+<p>Use block helpers when the data occupies consecutive word addresses.</p>
+<pre><code class="lang-csharp">ushort[] words = await client.ReadWordsAsync(&quot;DM200&quot;, 8);
+uint[] dwords = await client.ReadDWordsAsync(&quot;DM300&quot;, 4);
+</code></pre>
+<ul>
+<li><code>ReadWordsAsync</code> reads contiguous unsigned 16-bit values</li>
+<li><code>ReadDWordsAsync</code> reads contiguous unsigned 32-bit values from adjacent words</li>
+</ul>
+<h2 id="bit-in-word-addresses">Bit-in-Word Addresses</h2>
+<p>Use <code>WriteBitInWordAsync</code> to update a single bit inside a word device without
+disturbing the other bits.</p>
+<pre><code class="lang-csharp">await client.WriteBitInWordAsync(&quot;DM500&quot;, bitIndex: 0, value: true);
+await client.WriteBitInWordAsync(&quot;DM500&quot;, bitIndex: 10, value: false);
+</code></pre>
+<h2 id="mixed-snapshots">Mixed Snapshots</h2>
+<p>Use <code>ReadNamedAsync</code> when one application snapshot mixes typed word values and
+bit-in-word values.</p>
+<p>Supported notation:</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;DM100&quot;</code></td>
+<td>unsigned 16-bit</td>
+</tr>
+<tr>
+<td><code>&quot;DM100:S&quot;</code></td>
+<td>signed 16-bit</td>
+</tr>
+<tr>
+<td><code>&quot;DM100:D&quot;</code></td>
+<td>unsigned 32-bit</td>
+</tr>
+<tr>
+<td><code>&quot;DM100:L&quot;</code></td>
+<td>signed 32-bit</td>
+</tr>
+<tr>
+<td><code>&quot;DM100:F&quot;</code></td>
+<td>float32</td>
+</tr>
+<tr>
+<td><code>&quot;DM100.3&quot;</code></td>
+<td>bit 3 inside the word</td>
+</tr>
+<tr>
+<td><code>&quot;DM100.A&quot;</code></td>
+<td>bit 10 inside the word</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<pre><code class="lang-csharp">var snapshot = await client.ReadNamedAsync(
+    new[] { &quot;DM100&quot;, &quot;DM101:S&quot;, &quot;DM102:D&quot;, &quot;DM104:F&quot;, &quot;DM200.3&quot;, &quot;DM200.A&quot; });
+</code></pre>
+<p>Bit indices use hexadecimal notation from <code>0</code> to <code>F</code>.</p>
+<h2 id="scope">Scope</h2>
+<p>This user-facing page intentionally stops at the helper layer.
+Token-oriented reads, raw suffix handling, and direct protocol operations are
+documented for maintainers only.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/DEVICE_HANDLING.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PLC Communication Workspace - fa-yoshinobu
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
