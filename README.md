@@ -7,7 +7,7 @@
 
 # KV Host Link Protocol for .NET
 
-![Illustration](docsrc/assets/kv.png)
+![Illustration](https://raw.githubusercontent.com/fa-yoshinobu/plc-comm-hostlink-dotnet/main/docsrc/assets/kv.png)
 
 Modern .NET library for KEYENCE KV series PLCs using the Host Link
 (Upper Link) protocol.
