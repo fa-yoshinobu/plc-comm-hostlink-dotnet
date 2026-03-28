@@ -48,7 +48,7 @@ dotnet add package PlcComm.KvHostLink
 Or add a package reference directly:
 
 ```xml
-<PackageReference Include="PlcComm.KvHostLink" Version="0.1.3" />
+<PackageReference Include="PlcComm.KvHostLink" Version="0.1.4" />
 ```
 
 You can also reference `src/PlcComm.KvHostLink/PlcComm.KvHostLink.csproj` directly during local development.
