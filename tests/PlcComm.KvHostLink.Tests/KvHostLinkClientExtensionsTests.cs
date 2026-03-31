@@ -53,6 +53,23 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task OpenAndConnectAsync_ReturnsQueuedClientThatUsesQueuedHelperOverloads()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD DM10.U" => "123",
+            _ => "E1",
+        });
+
+        await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync("127.0.0.1", server.Port);
+        var value = await client.ReadTypedAsync("DM10", "U");
+
+        Assert.True(client.IsOpen);
+        Assert.Equal((ushort)123, Assert.IsType<ushort>(value));
+        Assert.Equal(["RD DM10.U"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task PollAsync_ReusesCompiledReadPlanForEachCycle()
     {
         int responses = 0;
@@ -87,6 +104,26 @@ public sealed class KvHostLinkClientExtensionsTests
 
         Assert.Equal(
             ["RDS DM100.U 3", "RDS DM100.U 3"],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task ReadDWordsChunkedAsync_AdvancesByWholeDwordBoundaries()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RDS DM200.D 1" => "65537",
+            "RDS DM202.D 1" => "131074",
+            "RDS DM204.D 1" => "196611",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        var values = await client.ReadDWordsChunkedAsync("DM200", 3, 1);
+
+        Assert.Equal(new uint[] { 65537, 131074, 196611 }, values);
+        Assert.Equal(
+            ["RDS DM200.D 1", "RDS DM202.D 1", "RDS DM204.D 1"],
             server.ReceivedCommands.ToArray());
     }
 

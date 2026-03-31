@@ -14,14 +14,16 @@ Modern .NET library for KEYENCE KV series PLCs using the Host Link
 
 This README intentionally covers the recommended high-level API only:
 
-- `OpenAndConnectAsync`
+- `KvHostLinkClientFactory.OpenAndConnectAsync`
+- `KvHostLinkConnectionOptions`
 - `ReadTypedAsync`
 - `WriteTypedAsync`
 - `WriteBitInWordAsync`
 - `ReadNamedAsync`
 - `PollAsync`
-- `ReadWordsAsync`
-- `ReadDWordsAsync`
+- `ReadWordsSingleRequestAsync` / `ReadDWordsSingleRequestAsync`
+- `ReadWordsChunkedAsync` / `ReadDWordsChunkedAsync`
+- `KvHostLinkAddress.Normalize`
 
 Low-level token-oriented methods and protocol details are kept in maintainer
 documentation.
@@ -29,10 +31,11 @@ documentation.
 ## Key Features
 
 - Async-first .NET API
+- Explicit queued-client connection factory
 - High-level typed read/write helpers
 - Mixed snapshots with `ReadNamedAsync`
 - Polling with `PollAsync`
-- Contiguous block helpers for `ushort[]` and `uint[]`
+- Explicit single-request and chunked block helpers for `ushort[]` and `uint[]`
 - Hardware-verified against KV-7500
 
 ## Quick Start
@@ -58,9 +61,8 @@ You can also reference `src/PlcComm.KvHostLink/PlcComm.KvHostLink.csproj` direct
 ```csharp
 using PlcComm.KvHostLink;
 
-await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync(
-    "192.168.250.100",
-    8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 ushort dm0 = (ushort)await client.ReadTypedAsync("DM0", "U");
 await client.WriteTypedAsync("DM10", "U", dm0);
@@ -76,8 +78,15 @@ Console.WriteLine(string.Join(", ", snapshot.Select(kv => $"{kv.Key}={kv.Value}"
 Typed block reads:
 
 ```csharp
-ushort[] words = await client.ReadWordsAsync("DM100", 10);
-uint[] dwords = await client.ReadDWordsAsync("DM200", 4);
+ushort[] words = await client.ReadWordsSingleRequestAsync("DM100", 10);
+uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM200", 4);
+```
+
+Explicit chunked reads:
+
+```csharp
+ushort[] longWords = await client.ReadWordsChunkedAsync("DM1000", 200, maxWordsPerRequest: 64);
+uint[] longDwords = await client.ReadDWordsChunkedAsync("DM2000", 40, maxDwordsPerRequest: 32);
 ```
 
 Bit-in-word update:
@@ -96,6 +105,17 @@ await foreach (var snapshot in client.PollAsync(
     Console.WriteLine(snapshot["DM100"]);
 }
 ```
+
+Connection and address helpers:
+
+```csharp
+string normalized = KvHostLinkAddress.Normalize("dm100.a");
+Console.WriteLine(normalized); // DM100.A
+```
+
+Use `*SingleRequestAsync` when one PLC request is required. Use `*ChunkedAsync`
+only when request splitting is acceptable for the data you are reading or
+writing.
 
 ## Sample Projects
 
@@ -128,6 +148,7 @@ User documentation:
 - [User Guide](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/USER_GUIDE.md)
 - [Device Handling](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/DEVICE_HANDLING.md)
 - [Sample Projects](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/samples/README.md)
+- [High-Level API Contract](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/HIGH_LEVEL_API_CONTRACT.md)
 
 Maintainer and QA documentation:
 

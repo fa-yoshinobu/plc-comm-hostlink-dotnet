@@ -6,8 +6,8 @@ Buildable sample projects for the recommended high-level API.
 
 | Project | Primary APIs | Description |
 |---|---|---|
-| `PlcComm.KvHostLink.HighLevelSample` | `OpenAndConnectAsync`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsAsync`, `ReadDWordsAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync` | Guided tour of all high-level APIs |
-| `PlcComm.KvHostLink.BasicReadWriteSample` | `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsAsync`, `ReadDWordsAsync` | Focused typed read/write and block read example |
+| `PlcComm.KvHostLink.HighLevelSample` | `OpenAndConnectAsync`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsAsync`, `ReadDWordsAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync` | Guided tour of the helper layer and device-string workflows |
+| `PlcComm.KvHostLink.BasicReadWriteSample` | `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsAsync`, `ReadDWordsAsync` | Focused typed read/write and contiguous block example |
 | `PlcComm.KvHostLink.NamedPollingSample` | `ReadNamedAsync`, `WriteBitInWordAsync`, `PollAsync` | Mixed snapshot, bit-in-word, and polling example |
 
 ## Quick start
@@ -24,3 +24,7 @@ dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- 192.168.25
 
 CI validates these projects with explicit `dotnet build` commands and checks
 that the published docs reference every user-facing sample project.
+
+The newer explicit APIs such as `KvHostLinkClientFactory.OpenAndConnectAsync`,
+`ReadWordsSingleRequestAsync`, and `ReadWordsChunkedAsync` use the same device
+syntax and queued-client model as the samples above.

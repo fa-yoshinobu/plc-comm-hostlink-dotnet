@@ -4,14 +4,18 @@ This guide covers the recommended high-level API only.
 
 Use these entry points in normal application code:
 
-- `OpenAndConnectAsync`
+- `KvHostLinkClientFactory.OpenAndConnectAsync`
+- `KvHostLinkConnectionOptions`
 - `ReadTypedAsync`
 - `WriteTypedAsync`
 - `WriteBitInWordAsync`
 - `ReadNamedAsync`
 - `PollAsync`
-- `ReadWordsAsync`
-- `ReadDWordsAsync`
+- `ReadWordsSingleRequestAsync`
+- `ReadDWordsSingleRequestAsync`
+- `ReadWordsChunkedAsync`
+- `ReadDWordsChunkedAsync`
+- `KvHostLinkAddress.Normalize`
 
 Raw token-oriented reads, writes, and protocol details are intentionally left to
 the maintainer documentation.
@@ -31,13 +35,14 @@ or reference the compiled assembly from a .NET 9 application.
 ```csharp
 using PlcComm.KvHostLink;
 
-await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync(
-    "192.168.250.100",
-    8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 ```
 
-`OpenAndConnectAsync` returns an open `KvHostLinkClient` ready for the helper
-extension methods below.
+The factory returns an open `QueuedKvHostLinkClient` ready for the helper
+extension methods below. The shortcut `OpenAndConnectAsync(host, port)` remains
+available, but the factory plus options object is the recommended public entry
+point.
 
 ## Typed Read and Write
 
@@ -66,14 +71,24 @@ await client.WriteTypedAsync("DM14", "F", f);
 `F` is implemented in the helper layer by converting two `.U` words as
 float32.
 
-## Block Reads
+## Contiguous Blocks
 
-Use block helpers for contiguous data in a word area.
+Use explicit single-request helpers when one PLC request is required.
 
 ```csharp
-ushort[] words = await client.ReadWordsAsync("DM100", 8);
-uint[] dwords = await client.ReadDWordsAsync("DM200", 4);
+ushort[] words = await client.ReadWordsSingleRequestAsync("DM100", 8);
+uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM200", 4);
 ```
+
+Use explicit chunked helpers only when splitting is acceptable:
+
+```csharp
+ushort[] largeWords = await client.ReadWordsChunkedAsync("DM1000", 200, maxWordsPerRequest: 64);
+uint[] largeDwords = await client.ReadDWordsChunkedAsync("DM2000", 40, maxDwordsPerRequest: 32);
+```
+
+`*SingleRequestAsync` does not silently split one logical request. If the PLC
+or protocol cannot satisfy that request shape, the helper returns an error.
 
 ## Bit in Word
 
@@ -108,6 +123,15 @@ var snapshot = await client.ReadNamedAsync(
 ```
 
 Bit indices use hexadecimal notation from `0` to `F`.
+
+## Address Normalization
+
+Use `KvHostLinkAddress.Normalize` when you want one stable string form:
+
+```csharp
+string canonical = KvHostLinkAddress.Normalize("dm100.a");
+Console.WriteLine(canonical); // DM100.A
+```
 
 ## Polling
 

@@ -7,6 +7,12 @@ namespace PlcComm.KvHostLink;
 /// <summary>
 /// A low-level Host Link (Upper Link) client for KEYENCE KV series PLCs.
 /// </summary>
+/// <remarks>
+/// This class serializes individual raw requests on one connection, but
+/// compound helper workflows such as typed polling and read-modify-write are
+/// better served by <see cref="QueuedKvHostLinkClient"/>. For application code,
+/// prefer <see cref="KvHostLinkClientFactory.OpenAndConnectAsync(KvHostLinkConnectionOptions, CancellationToken)"/>.
+/// </remarks>
 public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 {
     private readonly string _host;

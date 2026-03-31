@@ -29,15 +29,23 @@ await client.WriteTypedAsync("DM120", "F", temp);
 
 ## Contiguous Areas
 
-Use block helpers when the data occupies consecutive word addresses.
+Use explicit single-request helpers when the data occupies consecutive word
+addresses and one PLC request is required.
 
 ```csharp
-ushort[] words = await client.ReadWordsAsync("DM200", 8);
-uint[] dwords = await client.ReadDWordsAsync("DM300", 4);
+ushort[] words = await client.ReadWordsSingleRequestAsync("DM200", 8);
+uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM300", 4);
 ```
 
-- `ReadWordsAsync` reads contiguous unsigned 16-bit values
-- `ReadDWordsAsync` reads contiguous unsigned 32-bit values from adjacent words
+- `ReadWordsSingleRequestAsync` reads contiguous unsigned 16-bit values
+- `ReadDWordsSingleRequestAsync` reads contiguous unsigned 32-bit values from adjacent words
+
+Use explicit chunked helpers only when splitting is acceptable:
+
+```csharp
+ushort[] largeWords = await client.ReadWordsChunkedAsync("DM1000", 200, maxWordsPerRequest: 64);
+uint[] largeDwords = await client.ReadDWordsChunkedAsync("DM2000", 40, maxDwordsPerRequest: 32);
+```
 
 ## Bit-in-Word Addresses
 
