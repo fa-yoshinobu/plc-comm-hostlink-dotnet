@@ -115,6 +115,16 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkAddress.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvHostLinkAddress.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkClient.yml",
       "output": {
         ".html": {
@@ -135,10 +145,40 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkClientFactory.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvHostLinkClientFactory.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkConnectionOptions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvHostLinkConnectionOptions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "obj/api/PlcComm.KvHostLink.KvHostLinkDevice.yml",
       "output": {
         ".html": {
           "relative_path": "api/obj/api/PlcComm.KvHostLink.KvHostLinkDevice.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.KvLogicalAddress.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.KvLogicalAddress.html"
         }
       },
       "version": ""
@@ -159,6 +199,16 @@
       "output": {
         ".html": {
           "relative_path": "api/obj/api/PlcComm.KvHostLink.KvPlcMode.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/api/PlcComm.KvHostLink.QueuedKvHostLinkClient.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/obj/api/PlcComm.KvHostLink.QueuedKvHostLinkClient.html"
         }
       },
       "version": ""

@@ -90,14 +90,18 @@
 <p>This guide covers the recommended high-level API only.</p>
 <p>Use these entry points in normal application code:</p>
 <ul>
-<li><code>OpenAndConnectAsync</code></li>
+<li><code>KvHostLinkClientFactory.OpenAndConnectAsync</code></li>
+<li><code>KvHostLinkConnectionOptions</code></li>
 <li><code>ReadTypedAsync</code></li>
 <li><code>WriteTypedAsync</code></li>
 <li><code>WriteBitInWordAsync</code></li>
 <li><code>ReadNamedAsync</code></li>
 <li><code>PollAsync</code></li>
-<li><code>ReadWordsAsync</code></li>
-<li><code>ReadDWordsAsync</code></li>
+<li><code>ReadWordsSingleRequestAsync</code></li>
+<li><code>ReadDWordsSingleRequestAsync</code></li>
+<li><code>ReadWordsChunkedAsync</code></li>
+<li><code>ReadDWordsChunkedAsync</code></li>
+<li><code>KvHostLinkAddress.Normalize</code></li>
 </ul>
 <p>Raw token-oriented reads, writes, and protocol details are intentionally left to
 the maintainer documentation.</p>
@@ -109,12 +113,13 @@ the maintainer documentation.</p>
 <h2 id="connect-once">Connect Once</h2>
 <pre><code class="lang-csharp">using PlcComm.KvHostLink;
 
-await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync(
-    &quot;192.168.250.100&quot;,
-    8501);
+var options = new KvHostLinkConnectionOptions(&quot;192.168.250.100&quot;, 8501);
+await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 </code></pre>
-<p><code>OpenAndConnectAsync</code> returns an open <code>KvHostLinkClient</code> ready for the helper
-extension methods below.</p>
+<p>The factory returns an open <code>QueuedKvHostLinkClient</code> ready for the helper
+extension methods below. The shortcut <code>OpenAndConnectAsync(host, port)</code> remains
+available, but the factory plus options object is the recommended public entry
+point.</p>
 <h2 id="typed-read-and-write">Typed Read and Write</h2>
 <p>Supported dtype codes:</p>
 <table>
@@ -165,11 +170,17 @@ await client.WriteTypedAsync(&quot;DM14&quot;, &quot;F&quot;, f);
 </code></pre>
 <p><code>F</code> is implemented in the helper layer by converting two <code>.U</code> words as
 float32.</p>
-<h2 id="block-reads">Block Reads</h2>
-<p>Use block helpers for contiguous data in a word area.</p>
-<pre><code class="lang-csharp">ushort[] words = await client.ReadWordsAsync(&quot;DM100&quot;, 8);
-uint[] dwords = await client.ReadDWordsAsync(&quot;DM200&quot;, 4);
+<h2 id="contiguous-blocks">Contiguous Blocks</h2>
+<p>Use explicit single-request helpers when one PLC request is required.</p>
+<pre><code class="lang-csharp">ushort[] words = await client.ReadWordsSingleRequestAsync(&quot;DM100&quot;, 8);
+uint[] dwords = await client.ReadDWordsSingleRequestAsync(&quot;DM200&quot;, 4);
 </code></pre>
+<p>Use explicit chunked helpers only when splitting is acceptable:</p>
+<pre><code class="lang-csharp">ushort[] largeWords = await client.ReadWordsChunkedAsync(&quot;DM1000&quot;, 200, maxWordsPerRequest: 64);
+uint[] largeDwords = await client.ReadDWordsChunkedAsync(&quot;DM2000&quot;, 40, maxDwordsPerRequest: 32);
+</code></pre>
+<p><code>*SingleRequestAsync</code> does not silently split one logical request. If the PLC
+or protocol cannot satisfy that request shape, the helper returns an error.</p>
 <h2 id="bit-in-word">Bit in Word</h2>
 <p>Use <code>WriteBitInWordAsync</code> for bit updates inside word devices such as <code>DM</code>,
 <code>EM</code>, <code>FM</code>, <code>W</code>, or <code>Z</code>.</p>
@@ -222,6 +233,11 @@ unchanged.</p>
     new[] { &quot;DM100&quot;, &quot;DM101:S&quot;, &quot;DM102:D&quot;, &quot;DM104:F&quot;, &quot;DM200.0&quot;, &quot;DM200.A&quot; });
 </code></pre>
 <p>Bit indices use hexadecimal notation from <code>0</code> to <code>F</code>.</p>
+<h2 id="address-normalization">Address Normalization</h2>
+<p>Use <code>KvHostLinkAddress.Normalize</code> when you want one stable string form:</p>
+<pre><code class="lang-csharp">string canonical = KvHostLinkAddress.Normalize(&quot;dm100.a&quot;);
+Console.WriteLine(canonical); // DM100.A
+</code></pre>
 <h2 id="polling">Polling</h2>
 <p><code>PollAsync</code> repeatedly yields the same kind of snapshot dictionary.</p>
 <pre><code class="lang-csharp">using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
@@ -285,14 +301,14 @@ catch (HostLinkError ex)
 </thead>
 <tbody>
 <tr>
-<td><code>OpenAndConnectAsync</code>, <code>ReadTypedAsync</code>, <code>WriteTypedAsync</code>, <code>ReadWordsAsync</code>, <code>ReadDWordsAsync</code>, <code>WriteBitInWordAsync</code>, <code>ReadNamedAsync</code>, <code>PollAsync</code></td>
+<td><code>KvHostLinkClientFactory.OpenAndConnectAsync</code>, <code>KvHostLinkConnectionOptions</code>, <code>KvHostLinkAddress.Normalize</code>, <code>ReadTypedAsync</code>, <code>WriteTypedAsync</code>, <code>ReadWordsSingleRequestAsync</code>, <code>ReadDWordsSingleRequestAsync</code>, <code>ReadWordsChunkedAsync</code>, <code>ReadDWordsChunkedAsync</code>, <code>WriteBitInWordAsync</code>, <code>ReadNamedAsync</code>, <code>PollAsync</code></td>
 <td><code>samples/PlcComm.KvHostLink.HighLevelSample/PlcComm.KvHostLink.HighLevelSample.csproj</code></td>
 <td>Full helper-layer walkthrough</td>
 </tr>
 <tr>
-<td><code>ReadTypedAsync</code>, <code>WriteTypedAsync</code>, <code>ReadWordsAsync</code>, <code>ReadDWordsAsync</code></td>
+<td><code>KvHostLinkClientFactory.OpenAndConnectAsync</code>, <code>KvHostLinkConnectionOptions</code>, <code>ReadTypedAsync</code>, <code>WriteTypedAsync</code>, <code>ReadWordsSingleRequestAsync</code>, <code>ReadDWordsSingleRequestAsync</code></td>
 <td><code>samples/PlcComm.KvHostLink.BasicReadWriteSample/PlcComm.KvHostLink.BasicReadWriteSample.csproj</code></td>
-<td>Focused typed and contiguous block example</td>
+<td>Focused typed and contiguous single-request example</td>
 </tr>
 <tr>
 <td><code>ReadNamedAsync</code>, <code>WriteBitInWordAsync</code>, <code>PollAsync</code></td>

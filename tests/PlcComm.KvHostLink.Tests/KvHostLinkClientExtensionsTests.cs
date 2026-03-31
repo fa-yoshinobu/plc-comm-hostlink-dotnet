@@ -128,6 +128,25 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task WriteDWordsChunkedAsync_AdvancesByWholeDwordBoundaries()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "WRS DM200.U 2 1 1" => "OK",
+            "WRS DM202.U 2 2 2" => "OK",
+            "WRS DM204.U 2 3 3" => "OK",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await client.WriteDWordsChunkedAsync("DM200", new uint[] { 65537, 131074, 196611 }, 1);
+
+        Assert.Equal(
+            ["WRS DM200.U 2 1 1", "WRS DM202.U 2 2 2", "WRS DM204.U 2 3 3"],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task ReadAsync_Rejects32BitDeviceEndCrossingBeforeSend()
     {
         await using var server = new ScriptedHostLinkServer(_ => "OK");

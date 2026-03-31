@@ -337,6 +337,12 @@ public static class KvHostLinkClientExtensions
     /// <summary>
     /// Reads contiguous unsigned 16-bit words using one protocol request or returns an error.
     /// </summary>
+    /// <param name="client">Connected Host Link client.</param>
+    /// <param name="device">Start device address.</param>
+    /// <param name="count">Number of words to read.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The contiguous word values read by one request.</returns>
+    /// <remarks>Use this helper when the logical range must stay atomic.</remarks>
     public static async Task<ushort[]> ReadWordsSingleRequestAsync(
         this KvHostLinkClient client,
         string device,
@@ -366,6 +372,12 @@ public static class KvHostLinkClientExtensions
     /// <summary>
     /// Reads contiguous unsigned 32-bit values using one protocol request or returns an error.
     /// </summary>
+    /// <param name="client">Connected Host Link client.</param>
+    /// <param name="device">Start device address.</param>
+    /// <param name="count">Number of 32-bit values to read.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The contiguous 32-bit values read by one request.</returns>
+    /// <remarks>Use this helper when the logical range must stay atomic.</remarks>
     public static async Task<uint[]> ReadDWordsSingleRequestAsync(
         this KvHostLinkClient client,
         string device,
@@ -454,6 +466,13 @@ public static class KvHostLinkClientExtensions
     /// <summary>
     /// Reads contiguous unsigned 16-bit words using explicit chunking.
     /// </summary>
+    /// <param name="client">Connected Host Link client.</param>
+    /// <param name="device">Start device address.</param>
+    /// <param name="count">Number of words to read.</param>
+    /// <param name="maxWordsPerRequest">Maximum words per protocol request.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The concatenated word values from all explicit chunks.</returns>
+    /// <remarks>Chunking is opt-in and advances only by contiguous word boundaries.</remarks>
     public static async Task<ushort[]> ReadWordsChunkedAsync(
         this KvHostLinkClient client,
         string device,
@@ -492,6 +511,13 @@ public static class KvHostLinkClientExtensions
     /// <summary>
     /// Reads contiguous unsigned 32-bit values using explicit chunking.
     /// </summary>
+    /// <param name="client">Connected Host Link client.</param>
+    /// <param name="device">Start device address.</param>
+    /// <param name="count">Number of 32-bit values to read.</param>
+    /// <param name="maxDwordsPerRequest">Maximum double-words per protocol request.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The concatenated 32-bit values from all explicit chunks.</returns>
+    /// <remarks>Chunking is opt-in and advances only by whole double-word boundaries.</remarks>
     public static async Task<uint[]> ReadDWordsChunkedAsync(
         this KvHostLinkClient client,
         string device,

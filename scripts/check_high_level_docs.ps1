@@ -33,6 +33,10 @@ $expected = @(
         Tags = @("summary", "remarks")
     },
     @{
+        Name = 'T:PlcComm.KvHostLink.KvHostLinkClientFactory'
+        Tags = @("summary")
+    },
+    @{
         Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)'
         Tags = @("summary", "returns", "remarks")
         Params = @("client", "device", "dtype", "ct")
@@ -58,19 +62,29 @@ $expected = @(
         Params = @("client", "addresses", "interval", "ct")
     },
     @{
-        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)'
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsSingleRequestAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)'
         Tags = @("summary", "returns", "remarks")
         Params = @("client", "device", "count", "ct")
     },
     @{
-        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)'
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsChunkedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Int32,System.Threading.CancellationToken)'
+        Tags = @("summary", "returns", "remarks")
+        Params = @("client", "device", "count", "maxWordsPerRequest", "ct")
+    },
+    @{
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsSingleRequestAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)'
         Tags = @("summary", "returns", "remarks")
         Params = @("client", "device", "count", "ct")
     },
     @{
-        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(System.String,System.Int32,System.Threading.CancellationToken)'
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsChunkedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Int32,System.Threading.CancellationToken)'
         Tags = @("summary", "returns", "remarks")
-        Params = @("host", "port", "ct")
+        Params = @("client", "device", "count", "maxDwordsPerRequest", "ct")
+    },
+    @{
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientFactory.OpenAndConnectAsync(PlcComm.KvHostLink.KvHostLinkConnectionOptions,System.Threading.CancellationToken)'
+        Tags = @("summary", "returns")
+        Params = @("options", "cancellationToken")
     }
 )
 

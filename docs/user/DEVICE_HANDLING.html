@@ -143,14 +143,19 @@ await client.WriteTypedAsync(&quot;DM110&quot;, &quot;L&quot;, counter);
 await client.WriteTypedAsync(&quot;DM120&quot;, &quot;F&quot;, temp);
 </code></pre>
 <h2 id="contiguous-areas">Contiguous Areas</h2>
-<p>Use block helpers when the data occupies consecutive word addresses.</p>
-<pre><code class="lang-csharp">ushort[] words = await client.ReadWordsAsync(&quot;DM200&quot;, 8);
-uint[] dwords = await client.ReadDWordsAsync(&quot;DM300&quot;, 4);
+<p>Use explicit single-request helpers when the data occupies consecutive word
+addresses and one PLC request is required.</p>
+<pre><code class="lang-csharp">ushort[] words = await client.ReadWordsSingleRequestAsync(&quot;DM200&quot;, 8);
+uint[] dwords = await client.ReadDWordsSingleRequestAsync(&quot;DM300&quot;, 4);
 </code></pre>
 <ul>
-<li><code>ReadWordsAsync</code> reads contiguous unsigned 16-bit values</li>
-<li><code>ReadDWordsAsync</code> reads contiguous unsigned 32-bit values from adjacent words</li>
+<li><code>ReadWordsSingleRequestAsync</code> reads contiguous unsigned 16-bit values</li>
+<li><code>ReadDWordsSingleRequestAsync</code> reads contiguous unsigned 32-bit values from adjacent words</li>
 </ul>
+<p>Use explicit chunked helpers only when splitting is acceptable:</p>
+<pre><code class="lang-csharp">ushort[] largeWords = await client.ReadWordsChunkedAsync(&quot;DM1000&quot;, 200, maxWordsPerRequest: 64);
+uint[] largeDwords = await client.ReadDWordsChunkedAsync(&quot;DM2000&quot;, 40, maxDwordsPerRequest: 32);
+</code></pre>
 <h2 id="bit-in-word-addresses">Bit-in-Word Addresses</h2>
 <p>Use <code>WriteBitInWordAsync</code> to update a single bit inside a word device without
 disturbing the other bits.</p>
