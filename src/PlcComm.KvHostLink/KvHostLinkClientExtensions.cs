@@ -375,10 +375,10 @@ public static class KvHostLinkClientExtensions
         if (count < 1)
             throw new ArgumentOutOfRangeException(nameof(count), "count must be 1 or greater.");
 
-        var tokens = await client.ReadConsecutiveAsync(device, count, "D", ct).ConfigureAwait(false);
-        var result = new uint[tokens.Length];
-        for (int i = 0; i < tokens.Length; i++)
-            result[i] = uint.Parse(tokens[i], CultureInfo.InvariantCulture);
+        ushort[] words = await client.ReadWordsSingleRequestAsync(device, checked(count * 2), ct).ConfigureAwait(false);
+        var result = new uint[count];
+        for (int i = 0; i < count; i++)
+            result[i] = unchecked((uint)(words[i * 2] | (words[(i * 2) + 1] << 16)));
         return result;
     }
 
@@ -429,7 +429,16 @@ public static class KvHostLinkClientExtensions
         ArgumentNullException.ThrowIfNull(values);
         if (values.Count == 0)
             throw new HostLinkProtocolError("values must not be empty");
-        return client.WriteConsecutiveAsync(device, values, "D", ct);
+
+        var words = new ushort[checked(values.Count * 2)];
+        for (int i = 0; i < values.Count; i++)
+        {
+            uint value = values[i];
+            words[i * 2] = unchecked((ushort)(value & 0xFFFF));
+            words[(i * 2) + 1] = unchecked((ushort)((value >> 16) & 0xFFFF));
+        }
+
+        return client.WriteWordsSingleRequestAsync(device, words, ct);
     }
 
     /// <summary>

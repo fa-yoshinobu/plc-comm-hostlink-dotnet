@@ -112,9 +112,9 @@ public sealed class KvHostLinkClientExtensionsTests
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
-            "RDS DM200.D 1" => "65537",
-            "RDS DM202.D 1" => "131074",
-            "RDS DM204.D 1" => "196611",
+            "RDS DM200.U 2" => "1 1",
+            "RDS DM202.U 2" => "2 2",
+            "RDS DM204.U 2" => "3 3",
             _ => "E1",
         });
 
@@ -123,7 +123,7 @@ public sealed class KvHostLinkClientExtensionsTests
 
         Assert.Equal(new uint[] { 65537, 131074, 196611 }, values);
         Assert.Equal(
-            ["RDS DM200.D 1", "RDS DM202.D 1", "RDS DM204.D 1"],
+            ["RDS DM200.U 2", "RDS DM202.U 2", "RDS DM204.U 2"],
             server.ReceivedCommands.ToArray());
     }
 
