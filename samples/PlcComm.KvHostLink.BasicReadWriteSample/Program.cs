@@ -4,7 +4,8 @@ var host = args.Length > 0 ? args[0] : "192.168.250.100";
 var port = args.Length > 1 ? int.Parse(args[1]) : 8501;
 
 Console.WriteLine($"Connecting to {host}:{port} ...");
-await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync(host, port);
+var options = new KvHostLinkConnectionOptions(host, port);
+await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 ushort dm0 = (ushort)await client.ReadTypedAsync("DM0", "U");
 short dm1 = (short)await client.ReadTypedAsync("DM1", "S");
@@ -22,8 +23,8 @@ await client.WriteTypedAsync("DM102", "D", dm2);
 await client.WriteTypedAsync("DM104", "F", dm4);
 Console.WriteLine("Mirrored source values into DM100/DM101/DM102/DM104");
 
-ushort[] words = await client.ReadWordsAsync("DM200", 6);
-uint[] dwords = await client.ReadDWordsAsync("DM300", 3);
+ushort[] words = await client.ReadWordsSingleRequestAsync("DM200", 6);
+uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM300", 3);
 Console.WriteLine($"DM200-DM205 = [{string.Join(", ", words)}]");
 Console.WriteLine($"DM300-DM305 = [{string.Join(", ", dwords)}]");
 

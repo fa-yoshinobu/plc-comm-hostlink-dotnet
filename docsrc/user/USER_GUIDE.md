@@ -180,6 +180,6 @@ catch (HostLinkError ex)
 
 | API / workflow | Sample | Purpose |
 |---|---|---|
-| `OpenAndConnectAsync`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsAsync`, `ReadDWordsAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync` | `samples/PlcComm.KvHostLink.HighLevelSample/PlcComm.KvHostLink.HighLevelSample.csproj` | Full helper-layer walkthrough |
-| `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsAsync`, `ReadDWordsAsync` | `samples/PlcComm.KvHostLink.BasicReadWriteSample/PlcComm.KvHostLink.BasicReadWriteSample.csproj` | Focused typed and contiguous block example |
+| `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `KvHostLinkAddress.Normalize`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, `ReadWordsChunkedAsync`, `ReadDWordsChunkedAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync` | `samples/PlcComm.KvHostLink.HighLevelSample/PlcComm.KvHostLink.HighLevelSample.csproj` | Full helper-layer walkthrough |
+| `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync` | `samples/PlcComm.KvHostLink.BasicReadWriteSample/PlcComm.KvHostLink.BasicReadWriteSample.csproj` | Focused typed and contiguous single-request example |
 | `ReadNamedAsync`, `WriteBitInWordAsync`, `PollAsync` | `samples/PlcComm.KvHostLink.NamedPollingSample/PlcComm.KvHostLink.NamedPollingSample.csproj` | Mixed snapshot and polling example |

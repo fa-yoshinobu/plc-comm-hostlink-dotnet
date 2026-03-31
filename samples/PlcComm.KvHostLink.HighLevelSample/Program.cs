@@ -1,8 +1,10 @@
 // PlcComm.KvHostLink.HighLevelSample
 // ===================================
 // Demonstrates all high-level KEYENCE KV Host Link APIs:
-//   OpenAndConnectAsync, ReadTypedAsync, WriteTypedAsync, WriteBitInWordAsync,
-//   ReadWordsAsync, ReadDWordsAsync, ReadNamedAsync, and PollAsync.
+//   KvHostLinkClientFactory.OpenAndConnectAsync, ReadTypedAsync,
+//   WriteTypedAsync, WriteBitInWordAsync, ReadWordsSingleRequestAsync,
+//   ReadDWordsSingleRequestAsync, ReadWordsChunkedAsync, ReadDWordsChunkedAsync,
+//   ReadNamedAsync, PollAsync, and KvHostLinkAddress.Normalize.
 //
 // Usage:
 //   dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- [host] [port]
@@ -28,8 +30,12 @@ var port = args.Length > 1 ? int.Parse(args[1]) : 8501;
 // Use case: simplest way to establish a connection for normal application code.
 // -------------------------------------------------------------------------
 Console.WriteLine($"Connecting to {host}:{port} ...");
-await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync(host, port);
+var options = new KvHostLinkConnectionOptions(host, port);
+await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 Console.WriteLine($"[OpenAndConnectAsync] Connected to {host}:{port}");
+
+string normalized = KvHostLinkAddress.Normalize("dm50.a");
+Console.WriteLine($"[Normalize] dm50.a -> {normalized}");
 
 // -------------------------------------------------------------------------
 // Timeout is still configurable on the connected client.
@@ -58,27 +64,33 @@ await client.WriteTypedAsync("DM300", "F", 12.5f);
 Console.WriteLine("[WriteTypedAsync] Wrote 99->DM100, 123456->DM200, 12.5->DM300");
 
 // -------------------------------------------------------------------------
-// 3. ReadWordsAsync
+// 3. ReadWordsSingleRequestAsync
 //
 // Reads count consecutive word devices starting at device.
 // Returns ushort[].
 //
 // Use case: reading a parameter table in DM0-DM9 in one round-trip.
 // -------------------------------------------------------------------------
-ushort[] words = await client.ReadWordsAsync("DM0", 10);
-Console.WriteLine($"[ReadWordsAsync] DM0-DM9 = [{string.Join(", ", words)}]");
+ushort[] words = await client.ReadWordsSingleRequestAsync("DM0", 10);
+Console.WriteLine($"[ReadWordsSingleRequestAsync] DM0-DM9 = [{string.Join(", ", words)}]");
 
 // -------------------------------------------------------------------------
-// 4. ReadDWordsAsync
+// 4. ReadDWordsSingleRequestAsync / ReadWordsChunkedAsync / ReadDWordsChunkedAsync
 //
 // Reads count consecutive DWord (32-bit unsigned) values starting at device.
 // Each DWord is assembled from two consecutive word registers (lo, hi).
 // Returns uint[].
 //
-// Use case: reading a production counter array stored as 32-bit values.
+// Use case: choosing explicitly between one-request reads and multi-request
+//           chunked reads.
 // -------------------------------------------------------------------------
-uint[] dwords = await client.ReadDWordsAsync("DM0", 4);
-Console.WriteLine($"[ReadDWordsAsync] DM0-DM7 as uint32[4] = [{string.Join(", ", dwords)}]");
+uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM0", 4);
+Console.WriteLine($"[ReadDWordsSingleRequestAsync] DM0-DM7 as uint32[4] = [{string.Join(", ", dwords)}]");
+
+ushort[] largeWords = await client.ReadWordsChunkedAsync("DM1000", 200, maxWordsPerRequest: 64);
+uint[] largeDwords = await client.ReadDWordsChunkedAsync("DM2000", 40, maxDwordsPerRequest: 32);
+Console.WriteLine($"[ReadWordsChunkedAsync] DM1000 block words = {largeWords.Length}");
+Console.WriteLine($"[ReadDWordsChunkedAsync] DM2000 block dwords = {largeDwords.Length}");
 
 // -------------------------------------------------------------------------
 // 5. WriteBitInWordAsync

@@ -6,8 +6,8 @@ Buildable sample projects for the recommended high-level API.
 
 | Project | Primary APIs | Description |
 |---|---|---|
-| `PlcComm.KvHostLink.HighLevelSample` | `OpenAndConnectAsync`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsAsync`, `ReadDWordsAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync` | Guided tour of the helper layer and device-string workflows |
-| `PlcComm.KvHostLink.BasicReadWriteSample` | `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsAsync`, `ReadDWordsAsync` | Focused typed read/write and contiguous block example |
+| `PlcComm.KvHostLink.HighLevelSample` | `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `KvHostLinkAddress.Normalize`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, `ReadWordsChunkedAsync`, `ReadDWordsChunkedAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync` | Guided tour of the current helper layer and device-string workflows |
+| `PlcComm.KvHostLink.BasicReadWriteSample` | `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync` | Focused typed read/write and contiguous single-request example |
 | `PlcComm.KvHostLink.NamedPollingSample` | `ReadNamedAsync`, `WriteBitInWordAsync`, `PollAsync` | Mixed snapshot, bit-in-word, and polling example |
 
 ## Quick start

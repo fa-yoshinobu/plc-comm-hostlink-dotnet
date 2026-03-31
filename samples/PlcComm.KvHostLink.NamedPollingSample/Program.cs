@@ -4,7 +4,8 @@ var host = args.Length > 0 ? args[0] : "192.168.250.100";
 var port = args.Length > 1 ? int.Parse(args[1]) : 8501;
 
 Console.WriteLine($"Connecting to {host}:{port} ...");
-await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync(host, port);
+var options = new KvHostLinkConnectionOptions(host, port);
+await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 await client.WriteBitInWordAsync("DM50", bitIndex: 0, value: true);
 await client.WriteBitInWordAsync("DM50", bitIndex: 3, value: false);
