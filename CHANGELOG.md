@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-04-01
+
 ### Changed
 - Refreshed the README, user docs, XML comments, and generated DocFX output to describe the explicit `SingleRequest` and `Chunked` helper split consistently.
 - Extended regression coverage so write-side contiguous helper limits and dword chunking behavior stay locked to the documented high-level contract.
