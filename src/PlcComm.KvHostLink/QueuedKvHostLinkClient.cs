@@ -5,6 +5,10 @@ namespace PlcComm.KvHostLink;
 /// <summary>
 /// A wrapper for <see cref="KvHostLinkClient"/> that serializes multi-step operations with a semaphore.
 /// </summary>
+/// <remarks>
+/// Host Link requests often reuse one TCP session and one framing configuration. This wrapper provides
+/// a documentation-friendly queued surface for those shared-session scenarios.
+/// </remarks>
 public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
 {
     private readonly KvHostLinkClient _client;
@@ -20,6 +24,10 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     }
 
     /// <summary>Gets the underlying low-level client.</summary>
+    /// <remarks>
+    /// Use <see cref="ExecuteAsync{T}(Func{KvHostLinkClient, Task{T}}, CancellationToken)"/> when you need
+    /// direct access while preserving serialized request ordering.
+    /// </remarks>
     public KvHostLinkClient InnerClient => _client;
 
     /// <summary>Gets or sets the communication timeout.</summary>
@@ -47,6 +55,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     public bool IsOpen => _client.IsOpen;
 
     /// <summary>Opens the connection asynchronously with exclusive access.</summary>
+    /// <remarks>Call this once after construction or again after an intentional disconnect.</remarks>
     public async Task OpenAsync(CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -61,6 +70,10 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     }
 
     /// <summary>Executes a custom async operation with exclusive access to the wrapped client.</summary>
+    /// <typeparam name="T">Result type produced by the custom operation.</typeparam>
+    /// <param name="operation">Delegate that receives the wrapped <see cref="KvHostLinkClient"/>.</param>
+    /// <param name="cancellationToken">Cancellation token used while waiting for exclusive access.</param>
+    /// <returns>The value returned by <paramref name="operation"/>.</returns>
     public async Task<T> ExecuteAsync<T>(
         Func<KvHostLinkClient, Task<T>> operation,
         CancellationToken cancellationToken = default)
@@ -78,6 +91,8 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     }
 
     /// <summary>Executes a custom async operation with exclusive access to the wrapped client.</summary>
+    /// <param name="operation">Delegate that receives the wrapped <see cref="KvHostLinkClient"/>.</param>
+    /// <param name="cancellationToken">Cancellation token used while waiting for exclusive access.</param>
     public async Task ExecuteAsync(
         Func<KvHostLinkClient, Task> operation,
         CancellationToken cancellationToken = default)
