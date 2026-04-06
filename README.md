@@ -9,8 +9,7 @@
 
 ![Illustration](https://raw.githubusercontent.com/fa-yoshinobu/plc-comm-hostlink-dotnet/main/docsrc/assets/kv.png)
 
-Modern .NET library for KEYENCE KV series PLCs using the Host Link
-(Upper Link) protocol.
+Modern .NET library for KEYENCE KV series PLCs using the Host Link (Upper Link) protocol.
 
 This README intentionally covers the recommended high-level API only:
 
@@ -25,24 +24,11 @@ This README intentionally covers the recommended high-level API only:
 - `ReadWordsChunkedAsync` / `ReadDWordsChunkedAsync`
 - `KvHostLinkAddress.Normalize`
 
-Low-level token-oriented methods and protocol details are kept in maintainer
-documentation.
-
-## Key Features
-
-- Async-first .NET API
-- Explicit queued-client connection factory
-- High-level typed read/write helpers
-- Mixed snapshots with `ReadNamedAsync`
-- Polling with `PollAsync`
-- Explicit single-request and chunked block helpers for `ushort[]` and `uint[]`
-- Hardware-verified against KV-7500
-
 ## Quick Start
 
 ### Installation
 
-- Package page: https://www.nuget.org/packages/PlcComm.KvHostLink/
+- Package page: <https://www.nuget.org/packages/PlcComm.KvHostLink/>
 
 ```powershell
 dotnet add package PlcComm.KvHostLink
@@ -54,9 +40,7 @@ Or add a package reference directly:
 <PackageReference Include="PlcComm.KvHostLink" Version="0.1.4" />
 ```
 
-You can also reference `src/PlcComm.KvHostLink/PlcComm.KvHostLink.csproj` directly during local development.
-
-### High-level example
+### High-Level Example
 
 ```csharp
 using PlcComm.KvHostLink;
@@ -72,6 +56,30 @@ var snapshot = await client.ReadNamedAsync(
 
 Console.WriteLine(string.Join(", ", snapshot.Select(kv => $"{kv.Key}={kv.Value}")));
 ```
+
+## Supported PLC Registers
+
+Start with these public high-level families first:
+
+- word devices: `DM`, `EM`, `FM`, `W`, `ZF`, `TM`, `Z`
+- bit devices: `R`, `MR`, `LR`, `CR`, `X`, `Y`, `M`, `L`
+- typed forms: `DM100:S`, `DM100:D`, `DM100:L`, `DM100:F`
+- bit-in-word forms: `DM100.3`, `DM100.A`
+- timer/counter scalar forms: `T10:D`, `C10:D`
+
+See the full public table in [Supported PLC Registers](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/SUPPORTED_REGISTERS.md).
+
+## Public Documentation
+
+- [Getting Started](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/GETTING_STARTED.md)
+- [Supported PLC Registers](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/SUPPORTED_REGISTERS.md)
+- [Latest Communication Verification](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/LATEST_COMMUNICATION_VERIFICATION.md)
+- [User Guide](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/USER_GUIDE.md)
+- [Device Handling](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/DEVICE_HANDLING.md)
+- [Sample Projects](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/samples/README.md)
+- [High-Level API Contract](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/HIGH_LEVEL_API_CONTRACT.md)
+
+Maintainer-only notes and retained evidence live under `internal_docs/`.
 
 ## Common Workflows
 
@@ -106,68 +114,12 @@ await foreach (var snapshot in client.PollAsync(
 }
 ```
 
-Connection and address helpers:
-
-```csharp
-string normalized = KvHostLinkAddress.Normalize("dm100.a");
-Console.WriteLine(normalized); // DM100.A
-```
-
-Use `*SingleRequestAsync` when one PLC request is required. Use `*ChunkedAsync`
-only when request splitting is acceptable for the data you are reading or
-writing.
-
-## Sample Projects
-
-Buildable sample projects are under `samples/`:
-
-- `PlcComm.KvHostLink.HighLevelSample`
-- `PlcComm.KvHostLink.BasicReadWriteSample`
-- `PlcComm.KvHostLink.NamedPollingSample`
-
-API and workflow to sample mapping:
-
-| API / workflow | Primary sample | Purpose |
-|---|---|---|
-| `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, `ReadWordsChunkedAsync`, `ReadDWordsChunkedAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync`, `KvHostLinkAddress.Normalize` | `samples/PlcComm.KvHostLink.HighLevelSample/PlcComm.KvHostLink.HighLevelSample.csproj` | End-to-end walkthrough of the current helper surface |
-| `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync` | `samples/PlcComm.KvHostLink.BasicReadWriteSample/PlcComm.KvHostLink.BasicReadWriteSample.csproj` | Focused typed and contiguous single-request example |
-| `ReadNamedAsync`, `WriteBitInWordAsync`, `PollAsync` | `samples/PlcComm.KvHostLink.NamedPollingSample/PlcComm.KvHostLink.NamedPollingSample.csproj` | Mixed snapshot and monitoring example |
-
-Run examples:
-
-```powershell
-dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- 192.168.250.100 8501
-dotnet run --project samples/PlcComm.KvHostLink.BasicReadWriteSample -- 192.168.250.100 8501
-dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- 192.168.250.100 8501
-```
-
-## Documentation
-
-User documentation:
-
-- [User Guide](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/USER_GUIDE.md)
-- [Device Handling](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/DEVICE_HANDLING.md)
-- [Sample Projects](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/samples/README.md)
-- [High-Level API Contract](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/HIGH_LEVEL_API_CONTRACT.md)
-
-Maintainer and QA documentation:
-
-- [QA Reports](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/tree/main/docsrc/validation/reports)
-- [Protocol Specification](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/maintainer/PROTOCOL_SPEC.md)
-- [API Unification Policy](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/maintainer/API_UNIFICATION_POLICY.md)
-
 ## Development and CI
 
 ```powershell
 run_ci.bat
 release_check.bat
 ```
-
-`run_ci.bat` builds the library, tests it, checks formatting, builds all
-user-facing sample projects, verifies XML docs coverage for the public
-high-level API, and checks sample references in the docs.
-
-`release_check.bat` runs `run_ci.bat` and then rebuilds the published docs.
 
 Pack the NuGet package locally:
 
