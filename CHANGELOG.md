@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-04-14
+
+### Changed
+- Refreshed the README and user docs with dedicated Getting Started, Supported Registers, and Latest Communication Verification pages.
+- Separated local and publish docs builds and moved maintainer-only navigation and assets under `internal_docs`.
+
 ## [0.1.5] - 2026-04-01
 
 ### Changed
