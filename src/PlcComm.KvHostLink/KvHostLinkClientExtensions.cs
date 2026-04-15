@@ -23,11 +23,24 @@ public static class KvHostLinkClientExtensions
         Signed32,
         Float32,
         BitInWord,
+        DirectBit,
+    }
+
+    private enum ReadPlanSegmentMode
+    {
+        Words,
+        DirectBits,
     }
 
     private static readonly HashSet<string> OptimizableReadNamedDeviceTypes =
         KvHostLinkModels.DefaultFormatByDeviceType
             .Where(static pair => pair.Value == ".U")
+            .Select(static pair => pair.Key)
+            .ToHashSet(StringComparer.Ordinal);
+
+    private static readonly HashSet<string> DirectBitDeviceTypes =
+        KvHostLinkModels.DefaultFormatByDeviceType
+            .Where(static pair => pair.Value == "")
             .Select(static pair => pair.Key)
             .ToHashSet(StringComparer.Ordinal);
 
@@ -43,6 +56,7 @@ public static class KvHostLinkClientExtensions
         public required KvDeviceAddress StartAddress { get; init; }
         public required int StartNumber { get; init; }
         public required int Count { get; init; }
+        public required ReadPlanSegmentMode Mode { get; init; }
         public required ReadPlanRequest[] Requests { get; init; }
     }
 
@@ -85,16 +99,32 @@ public static class KvHostLinkClientExtensions
         string dtype,
         CancellationToken ct)
     {
-        if (dtype.TrimStart('.').Equals("F", StringComparison.OrdinalIgnoreCase))
+        string normalized = dtype.Trim().TrimStart('.').ToUpperInvariant();
+        if (string.IsNullOrEmpty(normalized))
+        {
+            var addr = KvHostLinkDevice.ParseDevice(device);
+            normalized = string.IsNullOrEmpty(addr.Suffix)
+                ? KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "").TrimStart('.').ToUpperInvariant()
+                : addr.Suffix.TrimStart('.').ToUpperInvariant();
+        }
+
+        if (normalized == "F")
         {
             ushort[] words = await client.ReadWordsAsync(device, 2, ct).ConfigureAwait(false);
             return BitConverter.Int32BitsToSingle(unchecked((int)(words[0] | (words[1] << 16))));
         }
 
-        string fmt = dtype.StartsWith('.') ? dtype : "." + dtype;
+        if (normalized == "")
+        {
+            var bitTokens = await client.ReadAsync(device, dataFormat: null, cancellationToken: ct).ConfigureAwait(false);
+            var bitRaw = bitTokens.FirstOrDefault() ?? "0";
+            return ParseBoolToken(bitRaw);
+        }
+
+        string fmt = "." + normalized;
         var tokens = await client.ReadAsync(device, fmt, ct).ConfigureAwait(false);
         var raw = tokens.FirstOrDefault() ?? "0";
-        return dtype.TrimStart('.').ToUpperInvariant() switch
+        return normalized switch
         {
             "S" => (object)short.Parse(raw, CultureInfo.InvariantCulture),
             "D" => (object)uint.Parse(raw, CultureInfo.InvariantCulture),
@@ -113,6 +143,21 @@ public static class KvHostLinkClientExtensions
         string dtype,
         CancellationToken ct = default)
         => client.ExecuteAsync(inner => ReadTypedCoreAsync(inner, device, dtype, ct), ct);
+
+    /// <summary>
+    /// Reads the configured PLC comment text for one device through the queued helper surface.
+    /// </summary>
+    /// <param name="client">The queued client to use.</param>
+    /// <param name="device">Base device address such as <c>"DM100"</c>.</param>
+    /// <param name="stripPadding">Whether to trim the Host Link fixed-width trailing spaces.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The PLC comment text for <paramref name="device"/>.</returns>
+    public static Task<string> ReadCommentsAsync(
+        this QueuedKvHostLinkClient client,
+        string device,
+        bool stripPadding = true,
+        CancellationToken ct = default)
+        => client.ExecuteAsync(inner => inner.ReadCommentsAsync(device, stripPadding, ct), ct);
 
     /// <summary>
     /// Writes a single device value using a high-level data type code.
@@ -137,7 +182,16 @@ public static class KvHostLinkClientExtensions
         T value,
         CancellationToken ct = default) where T : IFormattable
     {
-        if (dtype.TrimStart('.').Equals("F", StringComparison.OrdinalIgnoreCase))
+        string normalized = dtype.Trim().TrimStart('.').ToUpperInvariant();
+        if (string.IsNullOrEmpty(normalized))
+        {
+            var addr = KvHostLinkDevice.ParseDevice(device);
+            normalized = string.IsNullOrEmpty(addr.Suffix)
+                ? KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "").TrimStart('.').ToUpperInvariant()
+                : addr.Suffix.TrimStart('.').ToUpperInvariant();
+        }
+
+        if (normalized == "F")
         {
             float single = Convert.ToSingle(value, CultureInfo.InvariantCulture);
             int bits = BitConverter.SingleToInt32Bits(single);
@@ -147,7 +201,14 @@ public static class KvHostLinkClientExtensions
             return;
         }
 
-        string fmt = dtype.StartsWith('.') ? dtype : "." + dtype;
+        if (normalized == "")
+        {
+            bool bit = Convert.ToBoolean(value, CultureInfo.InvariantCulture);
+            await client.WriteAsync(device, bit ? 1 : 0, dataFormat: null, cancellationToken: ct).ConfigureAwait(false);
+            return;
+        }
+
+        string fmt = "." + normalized;
         await client.WriteAsync(device, value, fmt, ct).ConfigureAwait(false);
     }
 
@@ -721,6 +782,10 @@ public static class KvHostLinkClientExtensions
                 int w = ushort.Parse(tokens.Length > 0 ? tokens[0] : "0", CultureInfo.InvariantCulture);
                 result[address] = ((w >> (bitIdx ?? 0)) & 1) != 0;
             }
+            else if (dtype == "COMMENT")
+            {
+                result[address] = await client.ReadCommentsAsync(baseAddr, stripPadding: true, ct).ConfigureAwait(false);
+            }
             else
             {
                 result[address] = await client.ReadTypedAsync(baseAddr, dtype, ct).ConfigureAwait(false);
@@ -767,13 +832,16 @@ public static class KvHostLinkClientExtensions
             KvDeviceAddress? currentStart = null;
             int currentStartNumber = 0;
             int currentEndExclusive = 0;
+            ReadPlanSegmentMode currentMode = ReadPlanSegmentMode.Words;
 
             foreach (var request in sorted)
             {
                 int requestStart = request.BaseAddress.Number;
                 int requestEndExclusive = requestStart + GetWordWidth(request.Kind);
+                ReadPlanSegmentMode requestMode =
+                    request.Kind == ReadPlanValueKind.DirectBit ? ReadPlanSegmentMode.DirectBits : ReadPlanSegmentMode.Words;
 
-                if (currentStart is null || requestStart > currentEndExclusive)
+                if (currentStart is null || requestStart > currentEndExclusive || currentMode != requestMode)
                 {
                     if (currentStart is not null)
                     {
@@ -782,6 +850,7 @@ public static class KvHostLinkClientExtensions
                             StartAddress = currentStart,
                             StartNumber = currentStartNumber,
                             Count = currentEndExclusive - currentStartNumber,
+                            Mode = currentMode,
                             Requests = [.. pending],
                         });
                         pending.Clear();
@@ -790,6 +859,7 @@ public static class KvHostLinkClientExtensions
                     currentStart = request.BaseAddress with { Suffix = "" };
                     currentStartNumber = requestStart;
                     currentEndExclusive = requestEndExclusive;
+                    currentMode = requestMode;
                 }
                 else if (requestEndExclusive > currentEndExclusive)
                 {
@@ -806,6 +876,7 @@ public static class KvHostLinkClientExtensions
                     StartAddress = currentStart,
                     StartNumber = currentStartNumber,
                     Count = currentEndExclusive - currentStartNumber,
+                    Mode = currentMode,
                     Requests = [.. pending],
                 });
             }
@@ -828,15 +899,32 @@ public static class KvHostLinkClientExtensions
 
         foreach (var segment in plan.Segments)
         {
-            ushort[] words = await client.ReadWordsAsync(
-                segment.StartAddress.ToText(),
-                segment.Count,
-                ct).ConfigureAwait(false);
-
-            foreach (var request in segment.Requests)
+            if (segment.Mode == ReadPlanSegmentMode.DirectBits)
             {
-                int offset = request.BaseAddress.Number - segment.StartNumber;
-                resolved[request.Index] = ResolvePlannedValue(words, offset, request.Kind, request.BitIndex);
+                string[] tokens = await client.ReadConsecutiveAsync(
+                    segment.StartAddress.ToText(),
+                    segment.Count,
+                    dataFormat: null,
+                    cancellationToken: ct).ConfigureAwait(false);
+
+                foreach (var request in segment.Requests)
+                {
+                    int offset = request.BaseAddress.Number - segment.StartNumber;
+                    resolved[request.Index] = ResolveDirectBitValue(tokens, offset);
+                }
+            }
+            else
+            {
+                ushort[] words = await client.ReadWordsAsync(
+                    segment.StartAddress.ToText(),
+                    segment.Count,
+                    ct).ConfigureAwait(false);
+
+                foreach (var request in segment.Requests)
+                {
+                    int offset = request.BaseAddress.Number - segment.StartNumber;
+                    resolved[request.Index] = ResolvePlannedValue(words, offset, request.Kind, request.BitIndex);
+                }
             }
         }
 
@@ -861,8 +949,16 @@ public static class KvHostLinkClientExtensions
             ReadPlanValueKind.Float32 => BitConverter.Int32BitsToSingle(
                 unchecked((int)(words[offset] | (words[offset + 1] << 16)))),
             ReadPlanValueKind.BitInWord => ((words[offset] >> bitIndex) & 1) != 0,
+            ReadPlanValueKind.DirectBit => throw new HostLinkProtocolError("Direct bit values must be resolved from bit tokens."),
             _ => throw new ArgumentOutOfRangeException(nameof(kind)),
         };
+    }
+
+    private static bool ResolveDirectBitValue(string[] tokens, int offset)
+    {
+        if (offset < 0 || offset >= tokens.Length)
+            throw new HostLinkProtocolError("Batched direct bit response was too short");
+        return ParseBoolToken(tokens[offset]);
     }
 
     private static bool TryParseOptimizableReadNamedRequest(
@@ -875,6 +971,11 @@ public static class KvHostLinkClientExtensions
         {
             var (baseAddr, dtype, bitIdx) = ParseAddress(address);
             var parsed = KvHostLinkDevice.ParseDevice(baseAddr);
+            if (string.IsNullOrEmpty(dtype) && DirectBitDeviceTypes.Contains(parsed.DeviceType))
+            {
+                request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, ReadPlanValueKind.DirectBit, 0);
+                return true;
+            }
             if (!OptimizableReadNamedDeviceTypes.Contains(parsed.DeviceType))
                 return false;
 
@@ -939,6 +1040,23 @@ public static class KvHostLinkClientExtensions
     {
         if (maxPerRequest < 1)
             throw new ArgumentOutOfRangeException(paramName, "Chunk size must be 1 or greater.");
+    }
+
+    private static bool ParseBoolToken(string token)
+    {
+        switch (token.Trim().ToUpperInvariant())
+        {
+            case "1":
+            case "ON":
+            case "TRUE":
+                return true;
+            case "0":
+            case "OFF":
+            case "FALSE":
+                return false;
+            default:
+                throw new HostLinkProtocolError($"Invalid direct bit response token: {token}");
+        }
     }
 
     private static string OffsetDevice(KvDeviceAddress start, int wordOffset)

@@ -133,6 +133,13 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
         CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.ReadConsecutiveAsync(device, count, dataFormat, cancellationToken), cancellationToken);
 
+    /// <inheritdoc cref="KvHostLinkClient.ReadCommentsAsync"/>
+    public Task<string> ReadCommentsAsync(
+        string device,
+        bool stripPadding = true,
+        CancellationToken cancellationToken = default)
+        => ExecuteAsync(client => client.ReadCommentsAsync(device, stripPadding, cancellationToken), cancellationToken);
+
     /// <inheritdoc cref="KvHostLinkClient.WriteAsync{T}"/>
     public Task WriteAsync<T>(
         string device,

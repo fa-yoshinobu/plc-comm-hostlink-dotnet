@@ -66,7 +66,7 @@ internal static class KvHostLinkModels
     public static readonly HashSet<string> ForceDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "VB" };
     public static readonly HashSet<string> MbsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "VB" };
     public static readonly HashSet<string> MwsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "DM", "EM", "FM", "W", "TM", "Z", "TC", "TS", "CC", "CS", "CM", "VM" };
-    public static readonly HashSet<string> RdcDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "C", "CM" };
+    public static readonly HashSet<string> RdcDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "C", "CM", "X", "Y", "M", "L", "D", "E", "F" };
     public static readonly HashSet<string> WsDeviceTypes = new() { "T", "C" };
 
     public static readonly Dictionary<string, string> DefaultFormatByDeviceType = new()

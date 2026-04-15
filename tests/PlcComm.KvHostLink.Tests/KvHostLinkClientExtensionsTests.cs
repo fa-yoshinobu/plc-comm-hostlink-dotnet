@@ -34,6 +34,25 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task ReadNamedAsync_ReadsCommentAddressesThroughSequentialFallback()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD DM100.U" => "1025",
+            "RDC DM101" => "MAIN COMMENT                    ",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        var result = await client.ReadNamedAsync(["DM100", "DM101:COMMENT"]);
+
+        Assert.Equal((ushort)1025, Assert.IsType<ushort>(result["DM100"]));
+        Assert.Equal("MAIN COMMENT", Assert.IsType<string>(result["DM101:COMMENT"]));
+        Assert.Equal(["RD DM100.U", "RDC DM101"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task ReadTypedAsync_And_WriteTypedAsync_SupportFloatSuffix()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
@@ -67,6 +86,41 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.True(client.IsOpen);
         Assert.Equal((ushort)123, Assert.IsType<ushort>(value));
         Assert.Equal(["RD DM10.U"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task QueuedClient_ReadCommentsAsync_UsesRdcCommand()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RDC DM10" => "ALARM TEXT                      ",
+            _ => "E1",
+        });
+
+        await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync("127.0.0.1", server.Port);
+        var comment = await client.ReadCommentsAsync("DM10");
+
+        Assert.Equal("ALARM TEXT", comment);
+        Assert.Equal(["RDC DM10"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task ReadCommentsAsync_AcceptsXymAliasDeviceTypes()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RDC D10" => "DM COMMENT                      ",
+            "RDC M20" => "MR COMMENT                      ",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        var dataMemoryComment = await client.ReadCommentsAsync("D10");
+        var auxiliaryRelayComment = await client.ReadCommentsAsync("M20");
+
+        Assert.Equal("DM COMMENT", dataMemoryComment);
+        Assert.Equal("MR COMMENT", auxiliaryRelayComment);
+        Assert.Equal(["RDC D10", "RDC M20"], server.ReceivedCommands.ToArray());
     }
 
     [Fact]

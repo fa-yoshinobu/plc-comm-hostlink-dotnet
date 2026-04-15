@@ -8,6 +8,7 @@ Use these entry points in normal application code:
 - `KvHostLinkConnectionOptions`
 - `ReadTypedAsync`
 - `WriteTypedAsync`
+- `ReadCommentsAsync`
 - `WriteBitInWordAsync`
 - `ReadNamedAsync`
 - `PollAsync`
@@ -71,6 +72,17 @@ await client.WriteTypedAsync("DM14", "F", f);
 `F` is implemented in the helper layer by converting two `.U` words as
 float32.
 
+## Comments
+
+Use `ReadCommentsAsync` for the PLC comment text stored on supported devices.
+
+```csharp
+string comment = await client.ReadCommentsAsync("DM100");
+Console.WriteLine(comment);
+```
+
+XYM aliases are also accepted for comment reads, for example `D10`, `E20`, `F30`, `M100`, `L200`, `X100`, and `Y100`.
+
 ## Contiguous Blocks
 
 Use explicit single-request helpers when one PLC request is required.
@@ -114,12 +126,13 @@ Supported address notation:
 | `"DM100:D"` | unsigned 32-bit |
 | `"DM100:L"` | signed 32-bit |
 | `"DM100:F"` | float32 |
+| `"DM100:COMMENT"` | comment text |
 | `"DM100.3"` | bit 3 inside the word |
 | `"DM100.A"` | bit 10 inside the word |
 
 ```csharp
 var snapshot = await client.ReadNamedAsync(
-    new[] { "DM100", "DM101:S", "DM102:D", "DM104:F", "DM200.0", "DM200.A" });
+    new[] { "DM100", "DM101:S", "DM102:D", "DM104:F", "DM150:COMMENT", "DM200.0", "DM200.A" });
 ```
 
 Bit indices use hexadecimal notation from `0` to `F`.
@@ -180,6 +193,6 @@ catch (HostLinkError ex)
 
 | API / workflow | Sample | Purpose |
 |---|---|---|
-| `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `KvHostLinkAddress.Normalize`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, `ReadWordsChunkedAsync`, `ReadDWordsChunkedAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync` | `samples/PlcComm.KvHostLink.HighLevelSample/PlcComm.KvHostLink.HighLevelSample.csproj` | Full helper-layer walkthrough |
+| `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `KvHostLinkAddress.Normalize`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadCommentsAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, `ReadWordsChunkedAsync`, `ReadDWordsChunkedAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync` | `samples/PlcComm.KvHostLink.HighLevelSample/PlcComm.KvHostLink.HighLevelSample.csproj` | Full helper-layer walkthrough |
 | `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync` | `samples/PlcComm.KvHostLink.BasicReadWriteSample/PlcComm.KvHostLink.BasicReadWriteSample.csproj` | Focused typed and contiguous single-request example |
 | `ReadNamedAsync`, `WriteBitInWordAsync`, `PollAsync` | `samples/PlcComm.KvHostLink.NamedPollingSample/PlcComm.KvHostLink.NamedPollingSample.csproj` | Mixed snapshot and polling example |

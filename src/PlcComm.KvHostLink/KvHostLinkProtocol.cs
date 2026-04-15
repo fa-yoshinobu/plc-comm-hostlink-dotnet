@@ -8,6 +8,15 @@ internal static class KvHostLinkProtocol
     private static readonly Regex ErrorRegex = new(@"^E[0-9]$", RegexOptions.Compiled);
     private static readonly byte[] Cr = { (byte)'\r' };
     private static readonly byte[] CrLf = { (byte)'\r', (byte)'\n' };
+    private static readonly Encoding Utf8Strict = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+    private static readonly Encoding ShiftJisStrict;
+
+    static KvHostLinkProtocol()
+    {
+        // Shift_JIS decoding needs code pages on .NET (Core).
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        ShiftJisStrict = Encoding.GetEncoding(932, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
+    }
 
     public static byte[] BuildFrame(string body, bool appendLf = false)
     {
@@ -32,13 +41,32 @@ internal static class KvHostLinkProtocol
         if (len == 0)
             throw new HostLinkProtocolError("Malformed response frame");
 
+        bool isAscii = true;
+        for (int i = 0; i < len; i++)
+        {
+            if (raw[i] > 0x7F)
+            {
+                isAscii = false;
+                break;
+            }
+        }
+        if (isAscii)
+            return Encoding.ASCII.GetString(raw, 0, len);
+
         try
         {
-            return Encoding.ASCII.GetString(raw, 0, len);
+            return Utf8Strict.GetString(raw, 0, len);
+        }
+        catch (DecoderFallbackException)
+        {
+        }
+        try
+        {
+            return ShiftJisStrict.GetString(raw, 0, len);
         }
         catch (DecoderFallbackException ex)
         {
-            throw new HostLinkProtocolError("Response is not ASCII", ex);
+            throw new HostLinkProtocolError("Response could not be decoded as UTF-8 or Shift_JIS", ex);
         }
     }
 

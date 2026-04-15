@@ -7,7 +7,7 @@ namespace PlcComm.KvHostLink;
 /// A normalized logical Host Link address used by the high-level helper layer.
 /// </summary>
 /// <param name="BaseAddress">Base word device address without a logical suffix.</param>
-/// <param name="DataType">Logical data type code such as <c>U</c>, <c>S</c>, <c>D</c>, <c>L</c>, or <c>F</c>.</param>
+/// <param name="DataType">Logical data type code such as <c>U</c>, <c>S</c>, <c>D</c>, <c>L</c>, <c>F</c>, or <c>COMMENT</c>.</param>
 /// <param name="BitIndex">Bit index inside the base word when the logical address targets a bit-in-word.</param>
 public readonly record struct KvLogicalAddress(KvDeviceAddress BaseAddress, string DataType, int? BitIndex)
 {
@@ -22,9 +22,9 @@ public readonly record struct KvLogicalAddress(KvDeviceAddress BaseAddress, stri
         if (IsBitInWord)
             return $"{baseText}.{BitIndex.GetValueOrDefault().ToString("X", CultureInfo.InvariantCulture)}";
 
-        return DataType == "U"
-            ? baseText
-            : $"{baseText}:{DataType}";
+        string defaultFormat = KvHostLinkDevice.ResolveEffectiveFormat(BaseAddress.DeviceType, "");
+        string defaultDtype = defaultFormat.StartsWith('.') ? defaultFormat[1..] : defaultFormat;
+        return DataType == defaultDtype ? baseText : $"{baseText}:{DataType}";
     }
 }
 
@@ -82,7 +82,7 @@ public static class KvHostLinkAddress
         return NormalizeLogical(text);
     }
 
-    /// <summary>Parses a logical helper address such as <c>DM100:F</c> or <c>DM100.A</c>.</summary>
+    /// <summary>Parses a logical helper address such as <c>DM100:F</c>, <c>DM100:COMMENT</c>, or <c>DM100.A</c>.</summary>
     /// <param name="text">Logical helper text to parse.</param>
     /// <returns>The normalized logical address.</returns>
     public static KvLogicalAddress ParseLogical(string text)
@@ -105,7 +105,11 @@ public static class KvHostLinkAddress
             return new KvLogicalAddress(Parse(baseText) with { Suffix = string.Empty }, "BIT_IN_WORD", bitIndex);
         }
 
-        return new KvLogicalAddress(Parse(raw) with { Suffix = string.Empty }, "U", null);
+        var parsed = Parse(raw);
+        string defaultDtype = string.IsNullOrEmpty(parsed.Suffix)
+            ? KvHostLinkDevice.ResolveEffectiveFormat(parsed.DeviceType, "").TrimStart('.').ToUpperInvariant()
+            : NormalizeDType(parsed.Suffix);
+        return new KvLogicalAddress(parsed with { Suffix = string.Empty }, defaultDtype, null);
     }
 
     /// <summary>Attempts to parse a logical helper address.</summary>
@@ -141,6 +145,7 @@ public static class KvHostLinkAddress
             "D" => "D",
             "L" => "L",
             "F" => "F",
+            "COMMENT" => "COMMENT",
             _ => throw new HostLinkProtocolError($"Unsupported logical data type '{text}'."),
         };
     }

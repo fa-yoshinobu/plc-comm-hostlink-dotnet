@@ -17,6 +17,7 @@ This README intentionally covers the recommended high-level API only:
 - `KvHostLinkConnectionOptions`
 - `ReadTypedAsync`
 - `WriteTypedAsync`
+- `ReadCommentsAsync`
 - `WriteBitInWordAsync`
 - `ReadNamedAsync`
 - `PollAsync`
@@ -52,7 +53,7 @@ ushort dm0 = (ushort)await client.ReadTypedAsync("DM0", "U");
 await client.WriteTypedAsync("DM10", "U", dm0);
 
 var snapshot = await client.ReadNamedAsync(
-    new[] { "DM0", "DM1:S", "DM2:D", "DM4:F", "DM10.0" });
+    new[] { "DM0", "DM1:S", "DM2:D", "DM4:F", "DM10.0", "DM20:COMMENT" });
 
 Console.WriteLine(string.Join(", ", snapshot.Select(kv => $"{kv.Key}={kv.Value}")));
 ```
@@ -64,6 +65,7 @@ Start with these public high-level families first:
 - word devices: `DM`, `EM`, `FM`, `W`, `ZF`, `TM`, `Z`
 - bit devices: `R`, `MR`, `LR`, `CR`, `X`, `Y`, `M`, `L`
 - typed forms: `DM100:S`, `DM100:D`, `DM100:L`, `DM100:F`
+- comment form: `DM100:COMMENT`
 - bit-in-word forms: `DM100.3`, `DM100.A`
 - timer/counter scalar forms: `T10:D`, `C10:D`
 
@@ -102,6 +104,14 @@ Bit-in-word update:
 ```csharp
 await client.WriteBitInWordAsync("DM50", bitIndex: 3, value: true);
 ```
+
+Comment read:
+
+```csharp
+string comment = await client.ReadCommentsAsync("DM100");
+```
+
+XYM aliases are also accepted for comment reads, for example `D10`, `E20`, `F30`, `M100`, `L200`, `X100`, and `Y100`.
 
 Polling:
 
