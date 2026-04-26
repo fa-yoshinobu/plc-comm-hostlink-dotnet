@@ -10,8 +10,20 @@ public record KvDeviceAddress(string DeviceType, int Number, string Suffix = "")
         if (!KvHostLinkModels.DeviceRanges.TryGetValue(DeviceType, out var range))
             throw new HostLinkProtocolError($"Unsupported device type: {DeviceType}");
 
-        string numberStr = range.Base == 16 ? Number.ToString("X", CultureInfo.InvariantCulture) : Number.ToString(CultureInfo.InvariantCulture);
+        string numberStr = UsesBitBankAddress(DeviceType)
+            ? FormatBitBankNumber(Number)
+            : range.Base == 16 ? Number.ToString("X", CultureInfo.InvariantCulture) : Number.ToString(CultureInfo.InvariantCulture);
         return $"{DeviceType}{numberStr}{Suffix}";
+    }
+
+    private static bool UsesBitBankAddress(string deviceType) =>
+        deviceType is "R" or "MR" or "LR" or "CR";
+
+    private static string FormatBitBankNumber(int number)
+    {
+        int bank = number / 100;
+        int bit = number % 100;
+        return $"{bank}{bit:D2}";
     }
 }
 
@@ -71,6 +83,8 @@ public static class KvHostLinkDevice
             int number = Convert.ToInt32(numberText, range.Base);
             if (number < range.Lo || number > range.Hi)
                 throw new HostLinkProtocolError($"Device number out of range: {deviceType}{numberText} (allowed: {range.Lo}..{range.Hi})");
+            if (UsesBitBankAddress(deviceType) && number % 100 > 15)
+                throw new HostLinkProtocolError($"Invalid bit-bank device number: {deviceType}{numberText} (lower two digits must be 00..15)");
 
             return new KvDeviceAddress(deviceType, number, suffix);
         }
@@ -94,6 +108,9 @@ public static class KvHostLinkDevice
         if (!string.IsNullOrEmpty(suffix)) return suffix;
         return KvHostLinkModels.DefaultFormatByDeviceType.GetValueOrDefault(deviceType, "");
     }
+
+    private static bool UsesBitBankAddress(string deviceType) =>
+        deviceType is "R" or "MR" or "LR" or "CR";
 
     public static void ValidateDeviceType(string command, string deviceType, HashSet<string> allowedTypes)
     {

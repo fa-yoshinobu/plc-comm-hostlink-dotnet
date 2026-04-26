@@ -105,6 +105,25 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task ReadDeviceRangeCatalogAsync_UsesQueryModelResponse()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "?K" => "57",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        var catalog = await client.ReadDeviceRangeCatalogAsync();
+
+        Assert.Equal("KV-8000", catalog.Model);
+        Assert.Equal("57", catalog.ModelCode);
+        Assert.True(catalog.HasModelCode);
+        Assert.Equal("DM00000-DM65534", catalog.Entry("DM")!.AddressRange);
+        Assert.Equal(["?K"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task ReadCommentsAsync_AcceptsXymAliasDeviceTypes()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch

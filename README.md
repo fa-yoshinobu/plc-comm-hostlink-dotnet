@@ -23,6 +23,8 @@ This README intentionally covers the recommended high-level API only:
 - `PollAsync`
 - `ReadWordsSingleRequestAsync` / `ReadDWordsSingleRequestAsync`
 - `ReadWordsChunkedAsync` / `ReadDWordsChunkedAsync`
+- `ReadDeviceRangeCatalogAsync`
+- `KvHostLinkDeviceRanges.DeviceRangeCatalogForModel`
 - `KvHostLinkAddress.Normalize`
 
 ## Quick Start
@@ -38,7 +40,7 @@ dotnet add package PlcComm.KvHostLink
 Or add a package reference directly:
 
 ```xml
-<PackageReference Include="PlcComm.KvHostLink" Version="0.1.4" />
+<PackageReference Include="PlcComm.KvHostLink" Version="0.1.7" />
 ```
 
 ### High-Level Example
@@ -112,6 +114,17 @@ string comment = await client.ReadCommentsAsync("DM100");
 ```
 
 XYM aliases are also accepted for comment reads, for example `D10`, `E20`, `F30`, `M100`, `L200`, `X100`, and `Y100`.
+
+Device range catalog:
+
+```csharp
+var catalog = await client.ReadDeviceRangeCatalogAsync();
+var dm = catalog.Entry("DM");
+
+Console.WriteLine($"{catalog.Model}: {dm?.AddressRange}");
+```
+
+`R`, `MR`, `LR`, and `CR` bit-bank addresses are normalized with a two-digit bit number, for example `R0` becomes `R000`.
 
 Polling:
 

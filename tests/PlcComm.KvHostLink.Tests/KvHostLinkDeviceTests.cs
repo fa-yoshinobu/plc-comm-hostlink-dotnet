@@ -9,6 +9,7 @@ public class KvHostLinkDeviceTests
     [InlineData("100", "R", 100, "")]
     [InlineData("MR500.U", "MR", 500, ".U")]
     [InlineData("B100", "B", 0x100, "")]
+    [InlineData("M63999", "M", 63999, "")]
     public void ParseDevice_ValidInput_ReturnsExpected(string input, string expectedType, int expectedNumber, string expectedSuffix)
     {
         var result = KvHostLinkDevice.ParseDevice(input);
@@ -22,6 +23,7 @@ public class KvHostLinkDeviceTests
     [InlineData("Z13")] // Out of range
     [InlineData("DM100.F")]
     [InlineData("INVALID123")]
+    [InlineData("M64000")]
     public void ParseDevice_InvalidInput_ThrowsException(string input)
     {
         Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ParseDevice(input));
@@ -31,11 +33,26 @@ public class KvHostLinkDeviceTests
     [InlineData("DM100", "DM100")]
     [InlineData("DM100.S", "DM100.S")]
     [InlineData("100", "R100")]
+    [InlineData("R0", "R000")]
+    [InlineData("R1", "R001")]
+    [InlineData("R15", "R015")]
+    [InlineData("MR115", "MR115")]
+    [InlineData("CR0", "CR000")]
     [InlineData("B100", "B100")]
     public void ToText_ReturnsNormalizedString(string input, string expected)
     {
         var addr = KvHostLinkDevice.ParseDevice(input);
         Assert.Equal(expected, addr.ToText());
+    }
+
+    [Theory]
+    [InlineData("R016")]
+    [InlineData("MR116")]
+    [InlineData("LR99916")]
+    [InlineData("CR7916")]
+    public void ParseDevice_InvalidBitBankNumber_ThrowsException(string input)
+    {
+        Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ParseDevice(input));
     }
 
     [Theory]

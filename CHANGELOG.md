@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-04-27
+
+### Added
+- Added a public KV device range catalog API aligned with the Rust Host Link implementation.
+- Added `ReadDeviceRangeCatalogAsync` to both direct and queued clients.
+- Expanded the queued client surface to cover the low-level Host Link commands available on `KvHostLinkClient`.
+
+### Changed
+- Normalized `R`, `MR`, `LR`, and `CR` bit-bank addresses with two-digit bit numbers such as `R000`.
+- Aligned the internal `M` device upper bound with the current Rust Host Link implementation.
+
 ## [0.1.6] - 2026-04-14
 
 ### Changed
