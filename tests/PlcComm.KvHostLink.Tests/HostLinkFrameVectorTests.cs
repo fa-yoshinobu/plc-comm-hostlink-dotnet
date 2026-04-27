@@ -118,6 +118,14 @@ public sealed class HostLinkFrameVectorTests
                     vec.GetProperty("device").GetString()!,
                     vec.GetProperty("count").GetInt32()).ConfigureAwait(false);
                 break;
+            case "register_monitor_bits":
+                await client.RegisterMonitorBitsAsync(
+                    vec.GetProperty("devices").EnumerateArray().Select(item => item.GetString()!)).ConfigureAwait(false);
+                break;
+            case "register_monitor_words":
+                await client.RegisterMonitorWordsAsync(
+                    vec.GetProperty("devices").EnumerateArray().Select(item => item.GetString()!)).ConfigureAwait(false);
+                break;
             case "write_set_value":
                 await client.WriteSetValueAsync(
                     vec.GetProperty("device").GetString()!,

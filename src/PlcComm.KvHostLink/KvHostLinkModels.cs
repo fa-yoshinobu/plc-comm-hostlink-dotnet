@@ -54,8 +54,8 @@ internal static class KvHostLinkModels
         { "AT", (0, 7, 10) },
         { "CM", (0, 7599, 10) },
         { "VM", (0, 589823, 10) },
-        { "X", (0, 0x1999F, 16) },
-        { "Y", (0, 0x63999F, 16) },
+        { "X", (0, 1999 * 16 + 15, 10) },
+        { "Y", (0, 63999 * 16 + 15, 10) },
         { "M", (0, 63999, 10) },
         { "L", (0, 15999, 10) },
         { "D", (0, 65534, 10) },
@@ -64,8 +64,8 @@ internal static class KvHostLinkModels
     };
 
     public static readonly HashSet<string> ForceDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "VB" };
-    public static readonly HashSet<string> MbsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "VB" };
-    public static readonly HashSet<string> MwsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "DM", "EM", "FM", "W", "TM", "Z", "TC", "TS", "CC", "CS", "CM", "VM" };
+    public static readonly HashSet<string> MbsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "VB", "X", "Y", "M", "L" };
+    public static readonly HashSet<string> MwsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "X", "Y", "DM", "EM", "FM", "W", "TM", "Z", "TC", "TS", "CC", "CS", "CM", "VM" };
     public static readonly HashSet<string> RdcDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "C", "CM", "X", "Y", "M", "L", "D", "E", "F" };
     public static readonly HashSet<string> WsDeviceTypes = new() { "T", "C" };
 

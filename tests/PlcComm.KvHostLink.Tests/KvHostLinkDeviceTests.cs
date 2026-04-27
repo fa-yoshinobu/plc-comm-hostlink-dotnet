@@ -9,6 +9,9 @@ public class KvHostLinkDeviceTests
     [InlineData("100", "R", 100, "")]
     [InlineData("MR500.U", "MR", 500, ".U")]
     [InlineData("B100", "B", 0x100, "")]
+    [InlineData("X390", "X", 39 * 16, "")]
+    [InlineData("X400", "X", 40 * 16, "")]
+    [InlineData("Y1999F", "Y", 1999 * 16 + 15, "")]
     [InlineData("M63999", "M", 63999, "")]
     public void ParseDevice_ValidInput_ReturnsExpected(string input, string expectedType, int expectedNumber, string expectedSuffix)
     {
@@ -24,6 +27,9 @@ public class KvHostLinkDeviceTests
     [InlineData("DM100.F")]
     [InlineData("INVALID123")]
     [InlineData("M64000")]
+    [InlineData("X3F0")]
+    [InlineData("X3FF")]
+    [InlineData("Y19A0")]
     public void ParseDevice_InvalidInput_ThrowsException(string input)
     {
         Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ParseDevice(input));
@@ -39,6 +45,9 @@ public class KvHostLinkDeviceTests
     [InlineData("MR115", "MR115")]
     [InlineData("CR0", "CR000")]
     [InlineData("B100", "B100")]
+    [InlineData("X390", "X390")]
+    [InlineData("X39F", "X39F")]
+    [InlineData("X400", "X400")]
     public void ToText_ReturnsNormalizedString(string input, string expected)
     {
         var addr = KvHostLinkDevice.ParseDevice(input);
@@ -90,6 +99,7 @@ public class KvHostLinkDeviceTests
     [InlineData("DM", 65533, ".D", 1)]
     [InlineData("DM", 65534, ".U", 1)]
     [InlineData("B", 0x7FFE, ".U", 2)]
+    [InlineData("X", 39 * 16, "", 32)]
     public void ValidateDeviceSpan_ValidInput_DoesNotThrow(string deviceType, int startNumber, string format, int count)
     {
         KvHostLinkDevice.ValidateDeviceSpan(deviceType, startNumber, format, count);
@@ -100,6 +110,7 @@ public class KvHostLinkDeviceTests
     [InlineData("DM", 65534, ".L", 1)]
     [InlineData("DM", 65534, ".U", 2)]
     [InlineData("B", 0x7FFF, ".U", 2)]
+    [InlineData("X", 1999 * 16 + 15, "", 2)]
     public void ValidateDeviceSpan_InvalidInput_Throws(string deviceType, int startNumber, string format, int count)
     {
         Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ValidateDeviceSpan(deviceType, startNumber, format, count));

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-04-27
+
+### Changed
+- Added X/Y monitor registration support verified on KV-7500.
+- Normalized X/Y bit addresses as decimal bank plus hexadecimal bit notation, rejecting invalid forms such as `X3F0` before sending.
+- Added M/L monitor bit registration support while keeping M/L out of monitor word registration.
+
 ## [0.1.7] - 2026-04-27
 
 ### Added

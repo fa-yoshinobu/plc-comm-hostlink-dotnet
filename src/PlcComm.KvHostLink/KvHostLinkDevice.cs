@@ -12,6 +12,7 @@ public record KvDeviceAddress(string DeviceType, int Number, string Suffix = "")
 
         string numberStr = UsesBitBankAddress(DeviceType)
             ? FormatBitBankNumber(Number)
+            : UsesXymBitAddress(DeviceType) ? FormatXymBitNumber(Number)
             : range.Base == 16 ? Number.ToString("X", CultureInfo.InvariantCulture) : Number.ToString(CultureInfo.InvariantCulture);
         return $"{DeviceType}{numberStr}{Suffix}";
     }
@@ -19,11 +20,21 @@ public record KvDeviceAddress(string DeviceType, int Number, string Suffix = "")
     private static bool UsesBitBankAddress(string deviceType) =>
         deviceType is "R" or "MR" or "LR" or "CR";
 
+    private static bool UsesXymBitAddress(string deviceType) =>
+        deviceType is "X" or "Y";
+
     private static string FormatBitBankNumber(int number)
     {
         int bank = number / 100;
         int bit = number % 100;
         return $"{bank}{bit:D2}";
+    }
+
+    private static string FormatXymBitNumber(int number)
+    {
+        int bank = number / 16;
+        int bit = number % 16;
+        return $"{bank}{bit:X}";
     }
 }
 
@@ -80,9 +91,11 @@ public static class KvHostLinkDevice
 
         try
         {
-            int number = Convert.ToInt32(numberText, range.Base);
+            int number = UsesXymBitAddress(deviceType)
+                ? ParseXymBitNumber(deviceType, numberText)
+                : Convert.ToInt32(numberText, range.Base);
             if (number < range.Lo || number > range.Hi)
-                throw new HostLinkProtocolError($"Device number out of range: {deviceType}{numberText} (allowed: {range.Lo}..{range.Hi})");
+                throw new HostLinkProtocolError($"Device number out of range: {deviceType}{numberText} (allowed: {FormatDeviceNumber(deviceType, range.Lo)}..{FormatDeviceNumber(deviceType, range.Hi)})");
             if (UsesBitBankAddress(deviceType) && number % 100 > 15)
                 throw new HostLinkProtocolError($"Invalid bit-bank device number: {deviceType}{numberText} (lower two digits must be 00..15)");
 
@@ -111,6 +124,48 @@ public static class KvHostLinkDevice
 
     private static bool UsesBitBankAddress(string deviceType) =>
         deviceType is "R" or "MR" or "LR" or "CR";
+
+    private static bool UsesXymBitAddress(string deviceType) =>
+        deviceType is "X" or "Y";
+
+    private static int ParseXymBitNumber(string deviceType, string numberText)
+    {
+        var bankText = numberText.Length == 1 ? "0" : numberText[..^1];
+        if (bankText.Any(character => character is < '0' or > '9'))
+            throw new HostLinkProtocolError($"Invalid X/Y device number: {deviceType}{numberText} (bank digits must be decimal and bit digit must be 0..F)");
+
+        var bank = int.Parse(bankText, NumberStyles.None, CultureInfo.InvariantCulture);
+        var bit = int.Parse(numberText[^1..], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        return checked(bank * 16 + bit);
+    }
+
+    private static string FormatDeviceNumber(string deviceType, int number)
+    {
+        if (UsesBitBankAddress(deviceType))
+            return FormatBitBankNumber(number);
+        if (UsesXymBitAddress(deviceType))
+            return FormatXymBitNumber(number);
+        if (!KvHostLinkModels.DeviceRanges.TryGetValue(deviceType, out var range))
+            return number.ToString(CultureInfo.InvariantCulture);
+
+        return range.Base == 16
+            ? number.ToString("X", CultureInfo.InvariantCulture)
+            : number.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatBitBankNumber(int number)
+    {
+        int bank = number / 100;
+        int bit = number % 100;
+        return $"{bank}{bit:D2}";
+    }
+
+    private static string FormatXymBitNumber(int number)
+    {
+        int bank = number / 16;
+        int bit = number % 16;
+        return $"{bank}{bit:X}";
+    }
 
     public static void ValidateDeviceType(string command, string deviceType, HashSet<string> allowedTypes)
     {
@@ -169,12 +224,8 @@ public static class KvHostLinkDevice
         int endNumber = startNumber + (count * (is32Bit ? 2 : 1)) - 1;
         if (startNumber < range.Lo || startNumber > range.Hi || endNumber > range.Hi)
         {
-            string startText = range.Base == 16
-                ? startNumber.ToString("X", CultureInfo.InvariantCulture)
-                : startNumber.ToString(CultureInfo.InvariantCulture);
-            string endText = range.Base == 16
-                ? endNumber.ToString("X", CultureInfo.InvariantCulture)
-                : endNumber.ToString(CultureInfo.InvariantCulture);
+            string startText = FormatDeviceNumber(deviceType, startNumber);
+            string endText = FormatDeviceNumber(deviceType, endNumber);
             throw new HostLinkProtocolError(
                 $"Device span out of range: {deviceType}{startText}..{deviceType}{endText} " +
                 $"with format '{effectiveFormat}'");
