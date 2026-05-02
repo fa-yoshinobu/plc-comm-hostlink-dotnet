@@ -4,4 +4,4 @@ This file tracks the remaining tasks and issues for the Host Link Communication 
 
 ## 1. Active Follow-Up
 
-- No blocking protocol issues are open right now.
+- [x] **No blocking protocol issues**: No blocking protocol issues are open right now.
