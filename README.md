@@ -85,6 +85,14 @@ See the full public table in [Supported PLC Registers](https://github.com/fa-yos
 
 Maintainer-only notes and retained evidence live under `internal_docs/`.
 
+## Recommended Samples
+
+| Workflow | Sample project |
+| --- | --- |
+| Full high-level helper walkthrough | `samples\PlcComm.KvHostLink.HighLevelSample\PlcComm.KvHostLink.HighLevelSample.csproj` |
+| Focused typed read/write and contiguous block reads | `samples\PlcComm.KvHostLink.BasicReadWriteSample\PlcComm.KvHostLink.BasicReadWriteSample.csproj` |
+| Mixed named snapshots, bit-in-word updates, and polling | `samples\PlcComm.KvHostLink.NamedPollingSample\PlcComm.KvHostLink.NamedPollingSample.csproj` |
+
 ## Common Workflows
 
 Typed block reads:
