@@ -9,6 +9,11 @@
 
 ![Illustration](https://raw.githubusercontent.com/fa-yoshinobu/plc-comm-hostlink-dotnet/main/docsrc/assets/kv.png)
 
+[![Release](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/release.yml/badge.svg)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/release.yml)
+
+[![.NET 9](https://img.shields.io/badge/.NET-9-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![C#](https://img.shields.io/badge/C%23-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
+
 Modern .NET library for KEYENCE KV series PLCs using the Host Link (Upper Link) protocol.
 
 This README intentionally covers the recommended high-level API only:
