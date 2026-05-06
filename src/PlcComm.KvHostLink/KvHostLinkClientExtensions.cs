@@ -824,7 +824,7 @@ public static class KvHostLinkClientExtensions
         foreach (var bucket in requestsByDeviceType.Values)
         {
             var sorted = bucket
-                .OrderBy(static req => req.BaseAddress.Number)
+                .OrderBy(static req => ReadPlanNumber(req))
                 .ThenByDescending(static req => GetWordWidth(req.Kind))
                 .ToArray();
 
@@ -836,7 +836,7 @@ public static class KvHostLinkClientExtensions
 
             foreach (var request in sorted)
             {
-                int requestStart = request.BaseAddress.Number;
+                int requestStart = ReadPlanNumber(request);
                 int requestEndExclusive = requestStart + GetWordWidth(request.Kind);
                 ReadPlanSegmentMode requestMode =
                     request.Kind == ReadPlanValueKind.DirectBit ? ReadPlanSegmentMode.DirectBits : ReadPlanSegmentMode.Words;
@@ -909,7 +909,7 @@ public static class KvHostLinkClientExtensions
 
                 foreach (var request in segment.Requests)
                 {
-                    int offset = request.BaseAddress.Number - segment.StartNumber;
+                    int offset = ReadPlanNumber(request) - segment.StartNumber;
                     resolved[request.Index] = ResolveDirectBitValue(tokens, offset);
                 }
             }
@@ -922,7 +922,7 @@ public static class KvHostLinkClientExtensions
 
                 foreach (var request in segment.Requests)
                 {
-                    int offset = request.BaseAddress.Number - segment.StartNumber;
+                    int offset = ReadPlanNumber(request) - segment.StartNumber;
                     resolved[request.Index] = ResolvePlannedValue(words, offset, request.Kind, request.BitIndex);
                 }
             }
@@ -1025,6 +1025,12 @@ public static class KvHostLinkClientExtensions
     private static int GetWordWidth(ReadPlanValueKind kind)
         => kind is ReadPlanValueKind.Unsigned32 or ReadPlanValueKind.Signed32 or ReadPlanValueKind.Float32 ? 2 : 1;
 
+    private static int ReadPlanNumber(ReadPlanRequest request) =>
+        request.Kind == ReadPlanValueKind.DirectBit &&
+        KvHostLinkDevice.UsesBitBankAddress(request.BaseAddress.DeviceType)
+            ? KvHostLinkDevice.BitBankLogicalNumber(request.BaseAddress.Number)
+            : request.BaseAddress.Number;
+
     // -----------------------------------------------------------------------
     // Internal helpers
     // -----------------------------------------------------------------------
@@ -1060,7 +1066,13 @@ public static class KvHostLinkClientExtensions
     }
 
     private static string OffsetDevice(KvDeviceAddress start, int wordOffset)
-        => KvHostLinkAddress.Format(start with { Number = checked(start.Number + wordOffset), Suffix = string.Empty });
+    {
+        int number = KvHostLinkDevice.UsesBitBankAddress(start.DeviceType)
+            ? KvHostLinkDevice.BitBankNumberFromLogical(
+                checked(KvHostLinkDevice.BitBankLogicalNumber(start.Number) + wordOffset))
+            : checked(start.Number + wordOffset);
+        return KvHostLinkAddress.Format(start with { Number = number, Suffix = string.Empty });
+    }
 
     // "DM100:F" -> ("DM100", "F", null),  "DM100.3" -> ("DM100", "BIT_IN_WORD", 3),  "DM100.A" -> ("DM100", "BIT_IN_WORD", 10)
     // Bit indices are parsed as hexadecimal (0-F). Bits 10-15 must be specified as A-F.

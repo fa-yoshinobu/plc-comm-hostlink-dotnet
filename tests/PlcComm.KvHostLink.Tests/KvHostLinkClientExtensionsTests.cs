@@ -53,6 +53,26 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task ReadNamedAsync_BatchesBitBankDirectBitsAcrossDisplayBankBoundary()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RDS CR3614 4" => "0 1 0 1",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        var result = await client.ReadNamedAsync(["CR3614", "CR3615", "CR3700", "CR3701"]);
+
+        Assert.False(Assert.IsType<bool>(result["CR3614"]));
+        Assert.True(Assert.IsType<bool>(result["CR3615"]));
+        Assert.False(Assert.IsType<bool>(result["CR3700"]));
+        Assert.True(Assert.IsType<bool>(result["CR3701"]));
+        Assert.Equal(["RDS CR3614 4"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task ReadTypedAsync_And_WriteTypedAsync_SupportFloatSuffix()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch

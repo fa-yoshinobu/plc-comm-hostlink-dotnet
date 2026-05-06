@@ -122,7 +122,7 @@ public static class KvHostLinkDevice
         return KvHostLinkModels.DefaultFormatByDeviceType.GetValueOrDefault(deviceType, "");
     }
 
-    private static bool UsesBitBankAddress(string deviceType) =>
+    internal static bool UsesBitBankAddress(string deviceType) =>
         deviceType is "R" or "MR" or "LR" or "CR";
 
     private static bool UsesXymBitAddress(string deviceType) =>
@@ -158,6 +158,22 @@ public static class KvHostLinkDevice
         int bank = number / 100;
         int bit = number % 100;
         return $"{bank}{bit:D2}";
+    }
+
+    internal static int BitBankLogicalNumber(int number)
+    {
+        checked
+        {
+            return (number / 100) * 16 + (number % 100);
+        }
+    }
+
+    internal static int BitBankNumberFromLogical(int number)
+    {
+        checked
+        {
+            return (number / 16) * 100 + (number % 16);
+        }
     }
 
     private static string FormatXymBitNumber(int number)
@@ -221,10 +237,20 @@ public static class KvHostLinkDevice
             throw new HostLinkProtocolError($"count out of range: {count} (allowed: 1..)");
 
         bool is32Bit = effectiveFormat is ".D" or ".L";
-        int endNumber = startNumber + (count * (is32Bit ? 2 : 1)) - 1;
-        if (startNumber < range.Lo || startNumber > range.Hi || endNumber > range.Hi)
+        int wordWidth = is32Bit ? 2 : 1;
+        int startSpanNumber = UsesBitBankAddress(deviceType)
+            ? BitBankLogicalNumber(startNumber)
+            : startNumber;
+        int hiSpanNumber = UsesBitBankAddress(deviceType)
+            ? BitBankLogicalNumber(range.Hi)
+            : range.Hi;
+        int endSpanNumber = checked(startSpanNumber + (count * wordWidth) - 1);
+        if (startNumber < range.Lo || startNumber > range.Hi || endSpanNumber > hiSpanNumber)
         {
             string startText = FormatDeviceNumber(deviceType, startNumber);
+            int endNumber = UsesBitBankAddress(deviceType)
+                ? BitBankNumberFromLogical(endSpanNumber)
+                : endSpanNumber;
             string endText = FormatDeviceNumber(deviceType, endNumber);
             throw new HostLinkProtocolError(
                 $"Device span out of range: {deviceType}{startText}..{deviceType}{endText} " +

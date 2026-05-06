@@ -102,6 +102,7 @@ public class KvHostLinkDeviceTests
     [InlineData("B", 0x7FFE, ".U", 2)]
     [InlineData("X", 39 * 16, "", 32)]
     [InlineData("Y", 1999 * 16 + 15, "", 1)]
+    [InlineData("CR", 7900, "", 16)]
     public void ValidateDeviceSpan_ValidInput_DoesNotThrow(string deviceType, int startNumber, string format, int count)
     {
         KvHostLinkDevice.ValidateDeviceSpan(deviceType, startNumber, format, count);
@@ -114,6 +115,7 @@ public class KvHostLinkDeviceTests
     [InlineData("B", 0x7FFF, ".U", 2)]
     [InlineData("X", 1999 * 16 + 15, "", 2)]
     [InlineData("Y", 1999 * 16 + 15, "", 2)]
+    [InlineData("CR", 7900, "", 17)]
     public void ValidateDeviceSpan_InvalidInput_Throws(string deviceType, int startNumber, string format, int count)
     {
         Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ValidateDeviceSpan(deviceType, startNumber, format, count));
