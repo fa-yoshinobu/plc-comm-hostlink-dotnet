@@ -116,6 +116,8 @@ Treat `.F` as protocol-level reference only until implementation support is enab
 ### Address Format
 
 Devices are identified by type prefix + decimal number (or hex for B, W, VB).
+XYM X/Y addresses use a mixed form: the digits before the low bit are decimal,
+and the low bit digit is hexadecimal (`X1999F` = bank `1999`, bit `F`).
 
 Examples: `R0`, `DM100`, `B1F`, `MR0`
 

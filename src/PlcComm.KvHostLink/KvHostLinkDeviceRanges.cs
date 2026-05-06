@@ -287,9 +287,34 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
             return null;
         }
 
+        if (defaultDevice is "X" or "Y")
+        {
+            return ParseXymSegmentNumber(trimmed);
+        }
+
         return notation == KvDeviceRangeNotation.Hexadecimal
             ? uint.Parse(trimmed, NumberStyles.HexNumber, CultureInfo.InvariantCulture)
             : uint.Parse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture);
+    }
+
+    private static uint? ParseXymSegmentNumber(string text)
+    {
+        var bankText = text.Length == 1 ? string.Empty : text[..^1];
+        if (bankText.Any(character => character is < '0' or > '9'))
+        {
+            return null;
+        }
+
+        var bitText = text[^1..];
+        if (!uint.TryParse(bitText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var bit))
+        {
+            return null;
+        }
+
+        var bank = bankText.Length == 0
+            ? 0
+            : uint.Parse(bankText, NumberStyles.Integer, CultureInfo.InvariantCulture);
+        return checked((bank * 16) + bit);
     }
 
     private static string TrimLeadingAsciiLetters(string value)

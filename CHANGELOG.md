@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Parsed XYM `X`/`Y` range catalog bounds as decimal bank plus hexadecimal low bit, aligning `Y` with the published `Y0-1999F` limit.
+
 ## [0.1.9] - 2026-05-02
 
 ### Changed

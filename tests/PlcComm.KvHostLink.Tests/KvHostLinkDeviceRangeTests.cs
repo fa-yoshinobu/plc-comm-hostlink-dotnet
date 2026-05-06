@@ -45,18 +45,31 @@ public sealed class KvHostLinkDeviceRangeTests
         Assert.True(entry.IsBitDevice);
         Assert.Equal(KvDeviceRangeNotation.Hexadecimal, entry.Notation);
         Assert.Equal((uint)0, entry.LowerBound);
-        Assert.Equal((uint?)0x999F, entry.UpperBound);
-        Assert.Equal((uint?)0x99A0, entry.PointCount);
+        Assert.Equal((uint?)(999 * 16 + 15), entry.UpperBound);
+        Assert.Equal((uint?)(1000 * 16), entry.PointCount);
         Assert.Equal("X0-999F,Y0-999F", entry.AddressRange);
         Assert.Contains("multiple alias devices", Assert.IsType<string>(entry.Notes));
         Assert.Equal(2, entry.Segments.Count);
         Assert.Equal("X", entry.Segments[0].Device);
         Assert.Equal(KvDeviceRangeNotation.Hexadecimal, entry.Segments[0].Notation);
+        Assert.Equal((uint)0, entry.Segments[0].LowerBound);
+        Assert.Equal((uint?)(999 * 16 + 15), entry.Segments[0].UpperBound);
+        Assert.Equal((uint?)(1000 * 16), entry.Segments[0].PointCount);
         Assert.Equal("X0-999F", entry.Segments[0].AddressRange);
         Assert.Equal("Y", entry.Segments[1].Device);
         Assert.Equal(KvDeviceRangeNotation.Hexadecimal, entry.Segments[1].Notation);
+        Assert.Equal((uint)0, entry.Segments[1].LowerBound);
+        Assert.Equal((uint?)(999 * 16 + 15), entry.Segments[1].UpperBound);
+        Assert.Equal((uint?)(1000 * 16), entry.Segments[1].PointCount);
         Assert.Equal("Y0-999F", entry.Segments[1].AddressRange);
         Assert.Equal("R", catalog.Entry("X")!.DeviceType);
+
+        var kv8000 = KvHostLinkDeviceRanges.DeviceRangeCatalogForModel("KV-8000(XYM)");
+        var r = kv8000.Entry("R")!;
+        Assert.Equal((uint?)(1999 * 16 + 15), r.UpperBound);
+        Assert.Equal((uint?)(2000 * 16), r.PointCount);
+        Assert.Equal((uint?)(1999 * 16 + 15), r.Segments[0].UpperBound);
+        Assert.Equal((uint?)(1999 * 16 + 15), r.Segments[1].UpperBound);
 
         var dm = catalog.Entry("DM")!;
         Assert.Equal("D", dm.Device);

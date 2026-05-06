@@ -82,6 +82,7 @@ Console.WriteLine(comment);
 ```
 
 XYM aliases are also accepted for comment reads, for example `D10`, `E20`, `F30`, `M100`, `L200`, `X100`, and `Y100`.
+For XYM `X`/`Y`, the low bit digit is hexadecimal while the digits before it are decimal, so `Y1999F` means bank `1999`, bit `F`.
 
 ## Contiguous Blocks
 
