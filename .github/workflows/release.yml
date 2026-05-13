@@ -41,9 +41,3 @@ jobs:
           $assets = Get-ChildItem out -File | Select-Object -ExpandProperty FullName
           if (gh release view $tag) { gh release upload $tag $assets --clobber }
           else { gh release create $tag $assets --target main --title "Release $tag" --generate-notes }
-      - name: Publish to NuGet
-        if: ${{ secrets.NUGET_API_KEY != '' }}
-        shell: pwsh
-        run: |
-          dotnet nuget push out\*.nupkg --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
-          dotnet nuget push out\*.snupkg --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
