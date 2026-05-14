@@ -252,6 +252,26 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task ExpansionUnitBufferAsync_UsesAddressSuffixCommandForm()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "URD 01 100.U 2" => "123 456",
+            "UWR 02 200.S 2 7 8" => "OK",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        string[] values = await client.ReadExpansionUnitBufferAsync(1, 100, 2);
+        int[] valuesToWrite = [7, 8];
+        await client.WriteExpansionUnitBufferAsync(2, 200, valuesToWrite, ".S");
+
+        Assert.Equal(["123", "456"], values);
+        Assert.Equal(["URD 01 100.U 2", "UWR 02 200.S 2 7 8"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task ReadExpansionUnitBufferAsync_Rejects32BitBufferEndCrossingBeforeSend()
     {
         await using var server = new ScriptedHostLinkServer(_ => "OK");

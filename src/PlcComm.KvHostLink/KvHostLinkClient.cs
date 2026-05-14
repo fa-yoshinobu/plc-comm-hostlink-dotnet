@@ -520,7 +520,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         KvHostLinkDevice.ValidateExpansionBufferCount(suffix, count);
         KvHostLinkDevice.ValidateExpansionBufferSpan(address, suffix, count);
 
-        string cmd = $"URD {unitNo:D2} {address} {suffix} {count}";
+        string cmd = $"URD {unitNo:D2} {address}{suffix} {count}";
         string response = await SendRawAsync(cmd, cancellationToken).ConfigureAwait(false);
         return KvHostLinkProtocol.SplitDataTokens(response);
     }
@@ -551,7 +551,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         KvHostLinkDevice.ValidateExpansionBufferSpan(address, suffix, valList.Count);
 
         string payload = BuildValuePayload(valList, suffix);
-        string cmd = $"UWR {unitNo:D2} {address} {suffix} {valList.Count} {payload}";
+        string cmd = $"UWR {unitNo:D2} {address}{suffix} {valList.Count} {payload}";
         await ExpectOkAsync(cmd, cancellationToken).ConfigureAwait(false);
     }
 
