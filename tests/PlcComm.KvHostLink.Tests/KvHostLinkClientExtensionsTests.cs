@@ -122,6 +122,25 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task SetTimeAsync_UsesSundayBasedWeekday()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        await client.SetTimeAsync(new DateTime(2026, 3, 15, 1, 2, 3));
+        await client.SetTimeAsync(new DateTime(2026, 3, 16, 1, 2, 3));
+        await client.SetTimeAsync(new DateTime(2026, 3, 21, 1, 2, 3));
+
+        Assert.Equal(
+            [
+                "WRT 26 03 15 01 02 03 0",
+                "WRT 26 03 16 01 02 03 1",
+                "WRT 26 03 21 01 02 03 6",
+            ],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task ReadNamedAsync_TimerCounterCompositeReadReturnsSetValue()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
