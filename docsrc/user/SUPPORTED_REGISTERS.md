@@ -28,6 +28,7 @@ This page is the canonical public register table for the .NET high-level API.
 | `W` | word | `W100` | high-level word access |
 | `TM` | word | `TM100` | high-level word access |
 | `Z` | word | `Z10` | high-level word access |
+| `AT` | dword | `AT0` | 32-bit digital trimmer values on supported PLCs |
 | `TC` | word | `TC10` | word access |
 | `TS` | word | `TS10` | word access |
 | `CC` | word | `CC10` | word access |
@@ -50,10 +51,13 @@ This page is the canonical public register table for the .NET high-level API.
 | bit in word | `DM100.3` or `DM100.A` | one bit inside a word |
 | timer scalar | `T10:D` | high-level typed timer value |
 | counter scalar | `C10:D` | high-level typed counter value |
+| digital trimmer scalar | `AT0` or `AT0:D` | 32-bit digital trimmer value |
 
 ## Addressing Notes
 
 - Start with `DM`.
 - Bit-in-word updates belong on word devices, not direct bit families.
+- `AT` is not present on every PLC family. Where supported, `AT0-7` are
+  counted as 32-bit device points, so `AT7:D` is valid.
 - `KvHostLinkAddress.Normalize("dm100.a")` returns the canonical uppercase form.
 - If a family is not listed above, do not treat it as publicly supported by the current high-level API.
