@@ -45,7 +45,7 @@ dotnet add package PlcComm.KvHostLink
 Or add a package reference directly:
 
 ```xml
-<PackageReference Include="PlcComm.KvHostLink" Version="0.1.9" />
+<PackageReference Include="PlcComm.KvHostLink" Version="0.1.10" />
 ```
 
 ### High-Level Example
@@ -150,6 +150,12 @@ await foreach (var snapshot in client.PollAsync(
     Console.WriteLine(snapshot["DM100"]);
 }
 ```
+
+## Verified Hardware
+
+- CPU: `KV-7500`
+- CPU: `KV-X500`
+- Transport: `TCP` and `UDP`
 
 ## Development and CI
 

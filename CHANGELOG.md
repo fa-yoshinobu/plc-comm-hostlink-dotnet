@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-05-14
+
+### Changed
+- Bumped the library revision and added `KV-X500` to the README verified hardware list.
+
 ### Fixed
 - Parsed XYM `X`/`Y` range catalog bounds as decimal bank plus hexadecimal low bit, aligning `Y` with the published `Y0-1999F` limit.
 
