@@ -7,6 +7,9 @@ Use these entry points in normal application code:
 - `KvHostLinkClientFactory.OpenAndConnectAsync`
 - `KvHostLinkConnectionOptions`
 - `ReadTypedAsync`
+- `ReadTimerCounterAsync`
+- `ReadTimerAsync`
+- `ReadCounterAsync`
 - `WriteTypedAsync`
 - `ReadCommentsAsync`
 - `WriteBitInWordAsync`
@@ -72,6 +75,26 @@ await client.WriteTypedAsync("DM14", "F", f);
 `F` is implemented in the helper layer by converting two `.U` words as
 float32.
 
+## Timer and Counter Composite Values
+
+`ReadTypedAsync("T10", "D")` and `ReadNamedAsync(new[] { "T10" })` return the
+preset value for compatibility. When an application needs the full Host Link
+timer/counter response, use `ReadTimerCounterAsync`.
+
+```csharp
+KvTimerCounterValue timer = await client.ReadTimerAsync("T0");
+KvTimerCounterValue counter = await client.ReadCounterAsync("C10");
+KvTimerCounterValue sameCounter = await client.ReadTimerCounterAsync("C10");
+
+Console.WriteLine($"{timer.Status} {timer.Current} {timer.Preset}");
+Console.WriteLine($"{counter.Status} {counter.Current} {counter.Preset}");
+Console.WriteLine($"{sameCounter.Status} {sameCounter.Current} {sameCounter.Preset}");
+```
+
+The fields map directly to the PLC response order: contact/status, current
+value, and preset/set value. Timer/counter devices still depend on the
+corresponding ladder circuit existing in the PLC program.
+
 ## Comments
 
 Use `ReadCommentsAsync` for the PLC comment text stored on supported devices.
@@ -128,6 +151,7 @@ Supported address notation:
 | `"DM100:L"` | signed 32-bit |
 | `"DM100:F"` | float32 |
 | `"DM100:COMMENT"` | comment text |
+| `"T10"` / `"C10"` | timer/counter preset value |
 | `"DM100.3"` | bit 3 inside the word |
 | `"DM100.A"` | bit 10 inside the word |
 

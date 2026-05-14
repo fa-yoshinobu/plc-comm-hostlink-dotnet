@@ -55,6 +55,18 @@ Task<object> ReadTypedAsync(
     string dtype,
     CancellationToken cancellationToken = default);
 
+Task<KvTimerCounterValue> ReadTimerCounterAsync(
+    string address,
+    CancellationToken cancellationToken = default);
+
+Task<KvTimerCounterValue> ReadTimerAsync(
+    string address,
+    CancellationToken cancellationToken = default);
+
+Task<KvTimerCounterValue> ReadCounterAsync(
+    string address,
+    CancellationToken cancellationToken = default);
+
 Task WriteTypedAsync(
     string address,
     string dtype,
@@ -183,6 +195,21 @@ High-level logical address helpers should remain available for:
 - `DM100:L`
 - `DM100:F`
 - `DM100.3`
+- `T10` and `C10` as preset-value reads through `ReadTypedAsync` /
+  `ReadNamedAsync`
+
+Timer/counter composite reads should use a dedicated value type:
+
+```csharp
+public readonly record struct KvTimerCounterValue(
+    uint Status,
+    uint Current,
+    uint Preset);
+```
+
+The dedicated helper avoids changing the compatibility behavior of
+`ReadTypedAsync("T10", "D")` and `ReadNamedAsync(["T10"])`, which return the
+preset value.
 
 ## 7. Error Contract
 

@@ -51,12 +51,16 @@ This page is the canonical public register table for the .NET high-level API.
 | bit in word | `DM100.3` or `DM100.A` | one bit inside a word |
 | timer scalar | `T10:D` | high-level typed timer value |
 | counter scalar | `C10:D` | high-level typed counter value |
+| timer/counter composite | `ReadTimerCounterAsync("T10")` | status, current, and preset fields |
 | digital trimmer scalar | `AT0` or `AT0:D` | 32-bit digital trimmer value |
 
 ## Addressing Notes
 
 - Start with `DM`.
 - Bit-in-word updates belong on word devices, not direct bit families.
+- `ReadTypedAsync` and `ReadNamedAsync` return the timer/counter preset value
+  for `T` / `C`; use `ReadTimerCounterAsync`, `ReadTimerAsync`, or
+  `ReadCounterAsync` for the full contact/current/preset composite.
 - `AT` is not present on every PLC family. Where supported, `AT0-7` are
   counted as 32-bit device points, so `AT7:D` is valid.
 - `KvHostLinkAddress.Normalize("dm100.a")` returns the canonical uppercase form.
