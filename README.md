@@ -46,7 +46,7 @@ dotnet add package PlcComm.KvHostLink
 Or add a package reference directly:
 
 ```xml
-<PackageReference Include="PlcComm.KvHostLink" Version="0.1.10" />
+<PackageReference Include="PlcComm.KvHostLink" Version="0.1.11" />
 ```
 
 ### High-Level Example
