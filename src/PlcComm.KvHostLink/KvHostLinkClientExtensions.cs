@@ -4,6 +4,11 @@ using System.Runtime.CompilerServices;
 namespace PlcComm.KvHostLink;
 
 /// <summary>
+/// Composite timer/counter value returned by Host Link T/C reads.
+/// </summary>
+public readonly record struct KvTimerCounterValue(uint Status, uint Current, uint Preset);
+
+/// <summary>
 /// High-level helper API for <see cref="KvHostLinkClient"/> and <see cref="QueuedKvHostLinkClient"/>.
 /// </summary>
 /// <remarks>
@@ -147,6 +152,83 @@ public static class KvHostLinkClientExtensions
         string dtype,
         CancellationToken ct = default)
         => client.ExecuteAsync(inner => ReadTypedCoreAsync(inner, device, dtype, ct), ct);
+
+    /// <summary>
+    /// Reads a timer/counter composite value as status, current, and preset.
+    /// </summary>
+    public static async Task<KvTimerCounterValue> ReadTimerCounterAsync(
+        this KvHostLinkClient client,
+        string device,
+        CancellationToken ct = default)
+    {
+        var parsed = KvHostLinkDevice.ParseDevice(device);
+        if (parsed.DeviceType is not ("T" or "C"))
+            throw new HostLinkProtocolError("ReadTimerCounterAsync requires a T or C device.");
+
+        string target = (parsed with { Suffix = "" }).ToText();
+        string[] tokens = await client.ReadAsync(target, ".D", ct).ConfigureAwait(false);
+        if (tokens.Length < 3)
+            throw new HostLinkProtocolError(
+                $"Timer/counter response for '{target}' did not contain status/current/preset.");
+
+        return new KvTimerCounterValue(
+            uint.Parse(tokens[0], CultureInfo.InvariantCulture),
+            uint.Parse(tokens[1], CultureInfo.InvariantCulture),
+            uint.Parse(tokens[2], CultureInfo.InvariantCulture));
+    }
+
+    /// <summary>
+    /// Reads a timer/counter composite value as status, current, and preset.
+    /// </summary>
+    public static Task<KvTimerCounterValue> ReadTimerCounterAsync(
+        this QueuedKvHostLinkClient client,
+        string device,
+        CancellationToken ct = default)
+        => client.ExecuteAsync(inner => inner.ReadTimerCounterAsync(device, ct), ct);
+
+    /// <summary>
+    /// Reads a timer composite value.
+    /// </summary>
+    public static Task<KvTimerCounterValue> ReadTimerAsync(
+        this KvHostLinkClient client,
+        string device,
+        CancellationToken ct = default)
+    {
+        if (KvHostLinkDevice.ParseDevice(device).DeviceType != "T")
+            throw new HostLinkProtocolError("ReadTimerAsync requires a T device.");
+        return client.ReadTimerCounterAsync(device, ct);
+    }
+
+    /// <summary>
+    /// Reads a timer composite value.
+    /// </summary>
+    public static Task<KvTimerCounterValue> ReadTimerAsync(
+        this QueuedKvHostLinkClient client,
+        string device,
+        CancellationToken ct = default)
+        => client.ExecuteAsync(inner => inner.ReadTimerAsync(device, ct), ct);
+
+    /// <summary>
+    /// Reads a counter composite value.
+    /// </summary>
+    public static Task<KvTimerCounterValue> ReadCounterAsync(
+        this KvHostLinkClient client,
+        string device,
+        CancellationToken ct = default)
+    {
+        if (KvHostLinkDevice.ParseDevice(device).DeviceType != "C")
+            throw new HostLinkProtocolError("ReadCounterAsync requires a C device.");
+        return client.ReadTimerCounterAsync(device, ct);
+    }
+
+    /// <summary>
+    /// Reads a counter composite value.
+    /// </summary>
+    public static Task<KvTimerCounterValue> ReadCounterAsync(
+        this QueuedKvHostLinkClient client,
+        string device,
+        CancellationToken ct = default)
+        => client.ExecuteAsync(inner => inner.ReadCounterAsync(device, ct), ct);
 
     /// <summary>
     /// Reads the configured PLC comment text for one device through the queued helper surface.

@@ -21,6 +21,7 @@ This README intentionally covers the recommended high-level API only:
 - `KvHostLinkClientFactory.OpenAndConnectAsync`
 - `KvHostLinkConnectionOptions`
 - `ReadTypedAsync`
+- `ReadTimerCounterAsync` / `ReadTimerAsync` / `ReadCounterAsync`
 - `WriteTypedAsync`
 - `ReadCommentsAsync`
 - `WriteBitInWordAsync`
@@ -76,6 +77,11 @@ Start with these public high-level families first:
 - bit-in-word forms: `DM100.3`, `DM100.A`
 - timer/counter scalar forms: `T10:D`, `C10:D`
 - digital trimmer scalar forms on supported PLCs: `AT0:D` / default `AT0`
+
+`ReadTypedAsync("T10", "D")` and `ReadNamedAsync(["T10"])` return the
+timer/counter preset value for compatibility. Use `ReadTimerCounterAsync("T10")`
+when the Host Link composite fields are needed: `Status`, `Current`, and
+`Preset`.
 
 `AT` is not listed in the WR/WRS device table, so write helpers reject AT before
 sending.
