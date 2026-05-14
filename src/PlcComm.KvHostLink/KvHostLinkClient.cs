@@ -313,6 +313,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
         if (string.IsNullOrEmpty(suffix))
             suffix = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
+        KvHostLinkDevice.ValidateDeviceType("WR", addr.DeviceType, KvHostLinkModels.WrDeviceTypes);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix);
 
         var target = addr with { Suffix = suffix };
@@ -331,6 +332,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         if (string.IsNullOrEmpty(suffix))
             suffix = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
 
+        KvHostLinkDevice.ValidateDeviceType("WRS", addr.DeviceType, KvHostLinkModels.WrDeviceTypes);
         KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, suffix, valList.Count);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix, valList.Count);
 
@@ -440,6 +442,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         var addr = KvHostLinkDevice.ParseDevice(device);
         string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
         string effectiveFormat = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, suffix);
+        KvHostLinkDevice.ValidateDeviceType("WRE", addr.DeviceType, KvHostLinkModels.WrDeviceTypes);
         KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, effectiveFormat, valList.Count);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, effectiveFormat, valList.Count);
         var target = addr with { Suffix = effectiveFormat };

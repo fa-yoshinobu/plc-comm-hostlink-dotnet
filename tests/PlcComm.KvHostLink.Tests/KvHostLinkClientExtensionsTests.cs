@@ -9,6 +9,19 @@ namespace PlcComm.KvHostLink.Tests;
 public sealed class KvHostLinkClientExtensionsTests
 {
     [Fact]
+    public async Task ATWrites_AreRejectedBeforeSendingWrOrWrs()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        int[] values = [3533, 5543];
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.WriteAsync("AT0", 3533, "D"));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.WriteConsecutiveAsync("AT0", values, "D"));
+
+        Assert.Empty(server.ReceivedCommands);
+    }
+
+    [Fact]
     public async Task ReadNamedAsync_BatchesContiguousWordReads()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch

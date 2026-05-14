@@ -77,6 +77,9 @@ Start with these public high-level families first:
 - timer/counter scalar forms: `T10:D`, `C10:D`
 - digital trimmer scalar forms on supported PLCs: `AT0:D` / default `AT0`
 
+`AT` is not listed in the WR/WRS device table, so write helpers reject AT before
+sending.
+
 `T` / `C` preset writes use Host Link `WS` / `WSS` only on KV-8000/7000-series
 CPU units. Manuals state that other CPU units do not support those commands
 and return abnormal response `E1` when they are executed.
