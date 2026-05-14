@@ -122,6 +122,25 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task ReadNamedAsync_TimerCounterCompositeReadReturnsSetValue()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD T10.D" => "0,0000000010,0000000020",
+            "RD C10.D" => "0,0000000000,0000000030",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        var result = await client.ReadNamedAsync(["T10", "C10"]);
+
+        Assert.Equal((uint)20, Assert.IsType<uint>(result["T10"]));
+        Assert.Equal((uint)30, Assert.IsType<uint>(result["C10"]));
+        Assert.Equal(["RD T10.D", "RD C10.D"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task OpenAndConnectAsync_ReturnsQueuedClientThatUsesQueuedHelperOverloads()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
