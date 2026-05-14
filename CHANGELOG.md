@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Documented that `WS` / `WSS` timer/counter preset writes are supported only
+  by KV-8000/7000-series CPU units; other CPU units return abnormal response
+  `E1` when those commands are executed.
+
 ### Fixed
 - Corrected `URD` / `UWR` expansion unit buffer command framing so the data
   suffix is attached directly to the buffer address, for example `100.U`.
+- Parse comma-separated timer/counter composite responses and make
+  `ReadTypedAsync()` return the preset value for `T` / `C` `.D` / `.L` reads.
 
 ## [0.1.10] - 2026-05-14
 

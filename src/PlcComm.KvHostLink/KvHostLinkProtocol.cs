@@ -81,6 +81,6 @@ internal static class KvHostLinkProtocol
 
     public static string[] SplitDataTokens(string responseText)
     {
-        return responseText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return responseText.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries);
     }
 }

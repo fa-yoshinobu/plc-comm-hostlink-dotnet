@@ -123,7 +123,11 @@ public static class KvHostLinkClientExtensions
 
         string fmt = "." + normalized;
         var tokens = await client.ReadAsync(device, fmt, ct).ConfigureAwait(false);
-        var raw = tokens.FirstOrDefault() ?? "0";
+        var parsedDevice = KvHostLinkDevice.ParseDevice(device);
+        bool timerCounterComposite = (parsedDevice.DeviceType is "T" or "C") && (normalized is "D" or "L");
+        var raw = timerCounterComposite
+            ? tokens.LastOrDefault() ?? "0"
+            : tokens.FirstOrDefault() ?? "0";
         return normalized switch
         {
             "S" => (object)short.Parse(raw, CultureInfo.InvariantCulture),

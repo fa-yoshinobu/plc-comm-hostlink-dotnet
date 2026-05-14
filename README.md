@@ -76,6 +76,10 @@ Start with these public high-level families first:
 - bit-in-word forms: `DM100.3`, `DM100.A`
 - timer/counter scalar forms: `T10:D`, `C10:D`
 
+`T` / `C` preset writes use Host Link `WS` / `WSS` only on KV-8000/7000-series
+CPU units. Manuals state that other CPU units do not support those commands
+and return abnormal response `E1` when they are executed.
+
 See the full public table in [Supported PLC Registers](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/SUPPORTED_REGISTERS.md).
 
 ## Public Documentation
