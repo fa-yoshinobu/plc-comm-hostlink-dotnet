@@ -14,6 +14,8 @@
 
 Modern .NET library for KEYENCE KV series PLCs using the Host Link (Upper Link) protocol.
 
+Maintainer release steps are documented in [Release Process](RELEASING.md).
+
 This README intentionally covers the recommended high-level API only:
 
 - `KvHostLinkClientFactory.OpenAndConnectAsync`
