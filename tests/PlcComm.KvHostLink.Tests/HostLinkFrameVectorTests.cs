@@ -102,21 +102,59 @@ public sealed class HostLinkFrameVectorTests
             case "clear_error":
                 await client.ClearErrorAsync().ConfigureAwait(false);
                 break;
+            case "check_error_no":
+                await client.CheckErrorNoAsync().ConfigureAwait(false);
+                break;
+            case "query_model":
+                await client.QueryModelAsync().ConfigureAwait(false);
+                break;
+            case "confirm_operating_mode":
+                await client.ConfirmOperatingModeAsync().ConfigureAwait(false);
+                break;
             case "set_time":
                 var dt = DateTime.Parse(
                     vec.GetProperty("dotnet_datetime").GetString()!,
                     CultureInfo.InvariantCulture);
                 await client.SetTimeAsync(dt).ConfigureAwait(false);
                 break;
+            case "forced_set":
+                await client.ForcedSetAsync(vec.GetProperty("device").GetString()!).ConfigureAwait(false);
+                break;
+            case "forced_reset":
+                await client.ForcedResetAsync(vec.GetProperty("device").GetString()!).ConfigureAwait(false);
+                break;
             case "read_format":
                 await client.ReadAsync(
                     vec.GetProperty("device").GetString()!,
                     vec.GetProperty("data_format").GetString()).ConfigureAwait(false);
                 break;
+            case "read_monitor_bits":
+                await client.ReadMonitorBitsAsync().ConfigureAwait(false);
+                break;
+            case "read_monitor_words":
+                await client.ReadMonitorWordsAsync().ConfigureAwait(false);
+                break;
+            case "forced_set_consecutive":
+                await client.ForcedSetConsecutiveAsync(
+                    vec.GetProperty("device").GetString()!,
+                    vec.GetProperty("count").GetInt32()).ConfigureAwait(false);
+                break;
+            case "forced_reset_consecutive":
+                await client.ForcedResetConsecutiveAsync(
+                    vec.GetProperty("device").GetString()!,
+                    vec.GetProperty("count").GetInt32()).ConfigureAwait(false);
+                break;
             case "read_consecutive_legacy":
                 await client.ReadConsecutiveLegacyAsync(
                     vec.GetProperty("device").GetString()!,
                     vec.GetProperty("count").GetInt32()).ConfigureAwait(false);
+                break;
+            case "write_consecutive_legacy":
+                var legacyValues = vec.GetProperty("values").EnumerateArray()
+                    .Select(x => x.GetInt32())
+                    .ToArray();
+                await client.WriteConsecutiveLegacyAsync(
+                    vec.GetProperty("device").GetString()!, legacyValues).ConfigureAwait(false);
                 break;
             case "register_monitor_bits":
                 await client.RegisterMonitorBitsAsync(
@@ -130,6 +168,34 @@ public sealed class HostLinkFrameVectorTests
                 await client.WriteSetValueAsync(
                     vec.GetProperty("device").GetString()!,
                     vec.GetProperty("value").GetInt32()).ConfigureAwait(false);
+                break;
+            case "write_set_value_consecutive":
+                var setValues = vec.GetProperty("values").EnumerateArray()
+                    .Select(x => x.GetInt32())
+                    .ToArray();
+                await client.WriteSetValueConsecutiveAsync(
+                    vec.GetProperty("device").GetString()!, setValues).ConfigureAwait(false);
+                break;
+            case "switch_bank":
+                await client.SwitchBankAsync(vec.GetProperty("bank").GetInt32()).ConfigureAwait(false);
+                break;
+            case "read_expansion_unit_buffer":
+                await client.ReadExpansionUnitBufferAsync(
+                    vec.GetProperty("unit").GetInt32(),
+                    vec.GetProperty("address").GetInt32(),
+                    vec.GetProperty("count").GetInt32()).ConfigureAwait(false);
+                break;
+            case "write_expansion_unit_buffer":
+                var expansionValues = vec.GetProperty("values").EnumerateArray()
+                    .Select(x => x.GetInt32())
+                    .ToArray();
+                await client.WriteExpansionUnitBufferAsync(
+                    vec.GetProperty("unit").GetInt32(),
+                    vec.GetProperty("address").GetInt32(),
+                    expansionValues).ConfigureAwait(false);
+                break;
+            case "read_comments":
+                await client.ReadCommentsAsync(vec.GetProperty("device").GetString()!).ConfigureAwait(false);
                 break;
         }
     }
