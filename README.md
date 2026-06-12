@@ -1,7 +1,7 @@
 # KV Host Link Protocol for .NET
 
 [![CI](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/ci.yml/badge.svg)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/ci.yml)
-[![Release](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/release.yml/badge.svg)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/release.yml)
+[![Release](https://img.shields.io/github/v/release/fa-yoshinobu/plc-comm-hostlink-dotnet?label=release)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/releases/latest)
 [![NuGet](https://img.shields.io/nuget/v/PlcComm.KvHostLink.svg)](https://www.nuget.org/packages/PlcComm.KvHostLink/)
 [![Documentation](https://img.shields.io/badge/docs-GitHub_Pages-blue.svg)](https://fa-yoshinobu.github.io/plc-comm-hostlink-dotnet/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/LICENSE)
