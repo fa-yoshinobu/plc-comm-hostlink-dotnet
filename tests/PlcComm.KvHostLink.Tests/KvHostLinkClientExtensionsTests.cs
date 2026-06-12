@@ -122,6 +122,40 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task ReadTypedAsync_TimerCounter16BitCompositeReadReturnsSetValue()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD T0.U" => "0,00010,00020",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        var value = await client.ReadTypedAsync("T0", "U");
+
+        Assert.Equal((ushort)20, Assert.IsType<ushort>(value));
+        Assert.Equal(["RD T0.U"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task ReadNamedAsync_Native32BitZUsesNativeDwordRead()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD Z1.D" => "0000070000",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        var result = await client.ReadNamedAsync(["Z1:D"]);
+
+        Assert.Equal((uint)70_000, Assert.IsType<uint>(result["Z1:D"]));
+        Assert.Equal(["RD Z1.D"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task SetTimeAsync_UsesSundayBasedWeekday()
     {
         await using var server = new ScriptedHostLinkServer(_ => "OK");
@@ -247,6 +281,75 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.Equal("DM COMMENT", dataMemoryComment);
         Assert.Equal("MR COMMENT", auxiliaryRelayComment);
         Assert.Equal(["RDC D10", "RDC M20"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task CommandDeviceSets_FollowManualAndXymAliases()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "ST X100" => "OK",
+            "RS M100" => "OK",
+            "STS L100 4" => "OK",
+            "MWS D100.U E100.U F100.U M100 L100" => "OK",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        await client.ForcedSetAsync("X100");
+        await client.ForcedResetAsync("M100");
+        await client.ForcedSetConsecutiveAsync("L100", 4);
+        await client.RegisterMonitorWordsAsync(["D100", "E100", "F100", "M100", "L100"]);
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ForcedSetConsecutiveAsync("T100", 4));
+
+        Assert.Equal(
+            ["ST X100", "RS M100", "STS L100 4", "MWS D100.U E100.U F100.U M100 L100"],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task WssTimerCounterCountLimit_IsEnforcedBeforeSend()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(
+            () => client.WriteSetValueConsecutiveAsync("T0", Enumerable.Repeat(0, 121)));
+
+        Assert.Empty(server.ReceivedCommands);
+    }
+
+    [Fact]
+    public async Task HexWrite_FormatsNonIntIntegralTypesAsHex()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "WR DM10.H ABCD" => "OK",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        await client.WriteAsync("DM10", (ushort)0xABCD, ".H");
+
+        Assert.Equal(["WR DM10.H ABCD"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task ConfirmOperatingModeAsync_RejectsUnknownModeValues()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "?M" => "2",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ConfirmOperatingModeAsync());
+
+        Assert.Equal(["?M"], server.ReceivedCommands.ToArray());
     }
 
     [Fact]

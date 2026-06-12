@@ -78,6 +78,15 @@ Start with these public high-level families first:
 - timer/counter scalar forms: `T10:D`, `C10:D`
 - digital trimmer scalar forms on supported PLCs: `AT0:D` / default `AT0`
 
+High-level address syntax is shared across the PLC helper libraries:
+
+- use `:` for data types and special views: `DM100:U`, `DM100:S`, `DM100:D`,
+  `DM100:L`, `DM100:F`, `DM100:H`, `DM100:COMMENT`
+- use `.` only for bit-in-word access: `DM100.0` through `DM100.F`
+- `DM100.D` is bit `0xD` / bit 13, not a 32-bit data type request
+- Host Link frames still use the manual suffix form internally, so
+  `DM100:D` is sent as `RD DM100.D`
+
 `ReadTypedAsync("T10", "D")` and `ReadNamedAsync(["T10"])` return the
 timer/counter preset value for compatibility. Use `ReadTimerCounterAsync("T10")`
 when the Host Link composite fields are needed: `Status`, `Current`, and

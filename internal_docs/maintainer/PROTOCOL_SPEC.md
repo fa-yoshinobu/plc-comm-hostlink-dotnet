@@ -62,8 +62,9 @@ Error responses begin with `E` followed by an error code number.
 | `.H` | 16-bit hexadecimal |
 | `.F` | IEEE 754 32-bit float |
 
-Current library builds validate and document `.U`, `.S`, `.D`, `.L`, and `.H` in user-facing APIs.
-Treat `.F` as protocol-level reference only until implementation support is enabled.
+Low-level Host Link frames use the dotted suffixes above. Public helper-layer
+address strings use `:` for data types, for example `DM100:D`, and reserve `.`
+for bit-in-word access such as `DM100.D` = bit 13.
 
 ## 4. Device Range Table
 

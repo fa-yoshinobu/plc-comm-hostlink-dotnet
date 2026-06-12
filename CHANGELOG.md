@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected `URD` / `UWR` expansion unit buffer command framing so the data
   suffix is attached directly to the buffer address, for example `100.U`.
 - Parse comma-separated timer/counter composite responses and make
-  `ReadTypedAsync()` return the preset value for `T` / `C` `.D` / `.L` reads.
+  `ReadTypedAsync()` return the preset value for `T` / `C` `D` / `L` reads.
 
 ## [0.1.10] - 2026-05-14
 
@@ -89,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated README, user docs, and high-level samples to match the current helper API behavior.
 - Fixed the `WriteTypedAsync` Quick Start parameter order in the README.
 - Removed stale float32 helper examples from the published documentation.
-- Added helper-level `.F` float32 conversion for typed and named reads/writes.
+- Added helper-level `:F` float32 conversion for typed and named reads/writes.
 - Updated `run_ci.bat` to build the library and tests by project, build all user-facing sample projects, and run XML-doc and sample-inventory gates.
 - Expanded the README, user guide, and samples README with API-to-sample mapping tables for the recommended helper workflows.
 - Updated `.gitignore` to ignore binary logs and common coverage artifacts.

@@ -98,6 +98,9 @@ public sealed class KvHostLinkDeviceRangeTests
 
         var xym = KvHostLinkDeviceRanges.DeviceRangeCatalogForModel("KV-3000/5000(XYM)");
         Assert.Equal("CR0000-CR3915", xym.Entry("CR")!.AddressRange);
+
+        var kvx = KvHostLinkDeviceRanges.DeviceRangeCatalogForModel("KV-X500");
+        Assert.Equal("Z1-10", kvx.Entry("Z")!.AddressRange);
     }
 
     [Fact]

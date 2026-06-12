@@ -69,10 +69,19 @@ public class KvHostLinkDeviceTests
     [InlineData("dm100", "DM100")]
     [InlineData("dm100:f", "DM100:F")]
     [InlineData("dm100.a", "DM100.A")]
+    [InlineData("dm100.d", "DM100.D")]
     [InlineData("100", "R100")]
     public void KvHostLinkAddress_Normalize_ReturnsCanonicalText(string input, string expected)
     {
         Assert.Equal(expected, KvHostLinkAddress.Normalize(input));
+    }
+
+    [Theory]
+    [InlineData("DM100.S")]
+    [InlineData("DM100.10")]
+    public void KvHostLinkAddress_Normalize_InvalidPublicDotNotation_Throws(string input)
+    {
+        Assert.Throws<HostLinkProtocolError>(() => KvHostLinkAddress.Normalize(input));
     }
 
     [Theory]
@@ -105,6 +114,15 @@ public class KvHostLinkDeviceTests
     [InlineData("CR", 7900, "", 16)]
     [InlineData("AT", 7, ".D", 1)]
     [InlineData("AT", 0, ".D", 8)]
+    [InlineData("T", 3999, ".D", 1)]
+    [InlineData("TC", 3999, ".D", 1)]
+    [InlineData("TS", 3999, ".D", 1)]
+    [InlineData("C", 3999, ".D", 1)]
+    [InlineData("CC", 3999, ".D", 1)]
+    [InlineData("CS", 3999, ".D", 1)]
+    [InlineData("T", 3880, ".D", 120)]
+    [InlineData("Z", 12, ".D", 1)]
+    [InlineData("Z", 1, ".D", 12)]
     public void ValidateDeviceSpan_ValidInput_DoesNotThrow(string deviceType, int startNumber, string format, int count)
     {
         KvHostLinkDevice.ValidateDeviceSpan(deviceType, startNumber, format, count);
@@ -119,6 +137,8 @@ public class KvHostLinkDeviceTests
     [InlineData("Y", 1999 * 16 + 15, "", 2)]
     [InlineData("CR", 7900, "", 17)]
     [InlineData("AT", 1, ".D", 8)]
+    [InlineData("T", 3881, ".D", 120)]
+    [InlineData("Z", 2, ".D", 12)]
     public void ValidateDeviceSpan_InvalidInput_Throws(string deviceType, int startNumber, string format, int count)
     {
         Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ValidateDeviceSpan(deviceType, startNumber, format, count));
