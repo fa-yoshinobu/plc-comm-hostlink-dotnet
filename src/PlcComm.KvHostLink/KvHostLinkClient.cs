@@ -251,7 +251,12 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     public async Task<KvPlcMode> ConfirmOperatingModeAsync(CancellationToken cancellationToken = default)
     {
         string response = await SendRawAsync("?M", cancellationToken).ConfigureAwait(false);
-        return (KvPlcMode)int.Parse(response, CultureInfo.InvariantCulture);
+        return int.Parse(response, CultureInfo.InvariantCulture) switch
+        {
+            0 => KvPlcMode.Program,
+            1 => KvPlcMode.Run,
+            _ => throw new HostLinkProtocolError($"Unsupported PLC mode response: {response}")
+        };
     }
 
     public async Task SetTimeAsync(DateTime? value = null, CancellationToken cancellationToken = default)
@@ -395,7 +400,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     {
         if (count is < 1 or > 16) throw new ArgumentOutOfRangeException(nameof(count), "count must be 1-16.");
         var addr = KvHostLinkDevice.ParseDevice(device);
-        KvHostLinkDevice.ValidateDeviceType("STS", addr.DeviceType, KvHostLinkModels.ForceDeviceTypes);
+        KvHostLinkDevice.ValidateDeviceType("STS", addr.DeviceType, KvHostLinkModels.ForceConsecutiveDeviceTypes);
         await ExpectOkAsync($"STS {(addr with { Suffix = "" }).ToText()} {count}", cancellationToken)
             .ConfigureAwait(false);
     }
@@ -406,7 +411,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     {
         if (count is < 1 or > 16) throw new ArgumentOutOfRangeException(nameof(count), "count must be 1-16.");
         var addr = KvHostLinkDevice.ParseDevice(device);
-        KvHostLinkDevice.ValidateDeviceType("RSS", addr.DeviceType, KvHostLinkModels.ForceDeviceTypes);
+        KvHostLinkDevice.ValidateDeviceType("RSS", addr.DeviceType, KvHostLinkModels.ForceConsecutiveDeviceTypes);
         await ExpectOkAsync($"RSS {(addr with { Suffix = "" }).ToText()} {count}", cancellationToken)
             .ConfigureAwait(false);
     }
@@ -464,6 +469,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         string suffix = !string.IsNullOrEmpty(addr.Suffix) ? addr.Suffix
             : KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
         if (dataFormat != null) suffix = KvHostLinkDevice.NormalizeSuffix(dataFormat);
+        KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, suffix, 1);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix);
         var target = addr with { Suffix = suffix };
         string valStr = FormatValue(value, suffix);
@@ -485,6 +491,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         string suffix = !string.IsNullOrEmpty(addr.Suffix) ? addr.Suffix
             : KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
         if (dataFormat != null) suffix = KvHostLinkDevice.NormalizeSuffix(dataFormat);
+        KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, suffix, valList.Count);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix, valList.Count);
         var target = addr with { Suffix = suffix };
         string payload = BuildValuePayload(valList, suffix);
@@ -580,9 +587,21 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     // Constrained call on T avoids boxing for value types (int, ushort, float, etc.)
     private static string FormatValue<T>(T value, string dataFormat) where T : IFormattable
     {
-        if (dataFormat == ".H" && value is int i)
+        if (dataFormat == ".H")
         {
-            return (i & 0xFFFF).ToString("X", CultureInfo.InvariantCulture);
+            ushort word = value switch
+            {
+                byte v => v,
+                sbyte v => unchecked((ushort)v),
+                short v => unchecked((ushort)v),
+                ushort v => v,
+                int v => unchecked((ushort)v),
+                uint v => unchecked((ushort)v),
+                long v => unchecked((ushort)v),
+                ulong v => unchecked((ushort)v),
+                _ => unchecked((ushort)Convert.ToInt64(value, CultureInfo.InvariantCulture))
+            };
+            return word.ToString("X", CultureInfo.InvariantCulture);
         }
         return value.ToString(null, CultureInfo.InvariantCulture);
     }

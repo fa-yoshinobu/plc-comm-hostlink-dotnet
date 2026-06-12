@@ -76,9 +76,6 @@ public static class KvHostLinkAddress
     /// <returns>The canonical uppercase helper text.</returns>
     public static string Normalize(string text)
     {
-        if (TryParse(text, out var address))
-            return Format(address);
-
         return NormalizeLogical(text);
     }
 
@@ -104,6 +101,8 @@ public static class KvHostLinkAddress
             string baseText = raw[..dotIndex];
             return new KvLogicalAddress(Parse(baseText) with { Suffix = string.Empty }, "BIT_IN_WORD", bitIndex);
         }
+        if (dotIndex >= 0)
+            throw new HostLinkProtocolError($"Invalid bit-in-word index in '{text}'. Use one hex digit 0-F or ':' for data type.");
 
         var parsed = Parse(raw);
         string defaultDtype = string.IsNullOrEmpty(parsed.Suffix)
@@ -152,7 +151,9 @@ public static class KvHostLinkAddress
 
     private static bool TryParseBitIndex(string text, out int bitIndex)
     {
-        if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out bitIndex) &&
+        var bitText = text.Trim();
+        if (bitText.Length == 1 &&
+            int.TryParse(bitText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out bitIndex) &&
             bitIndex is >= 0 and <= 15)
         {
             return true;

@@ -237,7 +237,7 @@ public static class KvHostLinkDevice
             throw new HostLinkProtocolError($"count out of range: {count} (allowed: 1..)");
 
         bool is32Bit = effectiveFormat is ".D" or ".L";
-        int wordWidth = deviceType == "AT" ? 1 : is32Bit ? 2 : 1;
+        int wordWidth = is32Bit && !KvHostLinkModels.Native32BitDeviceTypes.Contains(deviceType) ? 2 : 1;
         int startSpanNumber = UsesBitBankAddress(deviceType)
             ? BitBankLogicalNumber(startNumber)
             : startNumber;

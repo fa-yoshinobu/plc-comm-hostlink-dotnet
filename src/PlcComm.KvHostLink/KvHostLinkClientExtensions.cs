@@ -129,7 +129,7 @@ public static class KvHostLinkClientExtensions
         string fmt = "." + normalized;
         var tokens = await client.ReadAsync(device, fmt, ct).ConfigureAwait(false);
         var parsedDevice = KvHostLinkDevice.ParseDevice(device);
-        bool timerCounterComposite = (parsedDevice.DeviceType is "T" or "C") && (normalized is "D" or "L");
+        bool timerCounterComposite = (parsedDevice.DeviceType is "T" or "C") && (normalized is "U" or "S" or "D" or "L");
         var raw = timerCounterComposite
             ? tokens.LastOrDefault() ?? "0"
             : tokens.FirstOrDefault() ?? "0";
@@ -1072,6 +1072,9 @@ public static class KvHostLinkClientExtensions
             }
 
             if (!TryMapReadPlanValueKind(dtype, out var kind))
+                return false;
+            if (KvHostLinkModels.Native32BitDeviceTypes.Contains(parsed.DeviceType) &&
+                kind is ReadPlanValueKind.Unsigned32 or ReadPlanValueKind.Signed32)
                 return false;
 
             request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, kind, 0);
