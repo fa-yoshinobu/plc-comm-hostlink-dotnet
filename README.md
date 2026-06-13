@@ -1,198 +1,73 @@
+[![CI](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/ci.yml/badge.svg)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/ci.yml) [![NuGet](https://img.shields.io/nuget/v/PlcComm.KvHostLink.svg)](https://www.nuget.org/packages/PlcComm.KvHostLink/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/LICENSE)
+
 # KV Host Link Protocol for .NET
 
-[![CI](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/ci.yml/badge.svg)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/fa-yoshinobu/plc-comm-hostlink-dotnet?label=release)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/releases/latest)
-[![NuGet](https://img.shields.io/nuget/v/PlcComm.KvHostLink.svg)](https://www.nuget.org/packages/PlcComm.KvHostLink/)
-[![Documentation](https://img.shields.io/badge/docs-GitHub_Pages-blue.svg)](https://fa-yoshinobu.github.io/plc-comm-hostlink-dotnet/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/LICENSE)
+KEYENCE KV series PLC communication library for .NET via the Host Link (Upper Link) protocol.
 
-[![.NET 9](https://img.shields.io/badge/.NET-9-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![C#](https://img.shields.io/badge/C%23-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
-[![Static Analysis: dotnet format](https://img.shields.io/badge/Lint-dotnet%20format-blue.svg)](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-format)
+## Supported PLC models
 
-![Illustration](https://raw.githubusercontent.com/fa-yoshinobu/plc-comm-hostlink-dotnet/main/docsrc/assets/kv.png)
+| Model | Notes |
+|---|---|
+| `keyence:kv-nano` | KV-NANO family profile with standard device names. |
+| `keyence:kv-nano-xym` | KV-NANO family profile with XYM alias names. |
+| `keyence:kv-3000-5000` | KV-3000, KV-5000, and KV-5500 family profile with EM, FM, ZF, VM, VB, CTH, CTC, and AT ranges. |
+| `keyence:kv-3000-5000-xym` | KV-3000, KV-5000, and KV-5500 family profile with XYM alias names. |
+| `keyence:kv-7000` | KV-7000, KV-7300, and KV-7500 family profile with large R, MR, DM, EM, FM, ZF, VM, VB, and AT ranges. |
+| `keyence:kv-7000-xym` | KV-7000, KV-7300, and KV-7500 family profile with XYM alias names. |
+| `keyence:kv-8000` | KV-8000 family profile with the largest VM range in the embedded catalog. |
+| `keyence:kv-8000-xym` | KV-8000 family profile with XYM alias names. |
+| `keyence:kv-x500` | KV-X500, KV-X520, KV-X530, KV-X550, and KV-X310 family profile. AT, VM, VB, CTH, and CTC are not available in this profile. |
+| `keyence:kv-x500-xym` | KV-X500 family profile with XYM alias names. AT, VM, VB, CTH, and CTC are not available in this profile. |
 
-Modern .NET library for KEYENCE KV series PLCs using the Host Link (Upper Link) protocol.
+## Supported device types
 
-Maintainer release steps are documented in [Release Process](RELEASING.md).
+| Device | What you use it for |
+|---|---|
+| `DM` | General data memory words, usually the safest first read target. |
+| `EM` | Extended data memory words on models that provide EM ranges. |
+| `FM` | File memory words on models that provide FM ranges. |
+| `R` | Relay bit devices using KEYENCE two-digit bit notation. |
+| `MR` | Internal relay bit devices using two-digit bit notation. |
+| `T` | Timer current, status, and preset values. |
+| `C` | Counter current, status, and preset values. |
+| `X` / `Y` | Input and output aliases in XYM profiles, using decimal-bank plus hex-bit notation. |
 
-This README intentionally covers the recommended high-level API only:
+See [Supported registers](docsrc/user/SUPPORTED_REGISTERS.md) for the full table.
 
-- `KvHostLinkClientFactory.OpenAndConnectAsync`
-- `KvHostLinkConnectionOptions`
-- `ReadTypedAsync`
-- `ReadTimerCounterAsync` / `ReadTimerAsync` / `ReadCounterAsync`
-- `WriteTypedAsync`
-- `ReadCommentsAsync`
-- `WriteBitInWordAsync`
-- `ReadNamedAsync`
-- `PollAsync`
-- `ReadWordsSingleRequestAsync` / `ReadDWordsSingleRequestAsync`
-- `ReadWordsChunkedAsync` / `ReadDWordsChunkedAsync`
-- `ReadDeviceRangeCatalogAsync`
-- `KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile`
-- `KvHostLinkAddress.Normalize`
-
-## Quick Start
-
-### Installation
-
-- Package page: <https://www.nuget.org/packages/PlcComm.KvHostLink/>
+## Installation
 
 ```powershell
 dotnet add package PlcComm.KvHostLink
 ```
 
-Or add a package reference directly:
-
-```xml
-<PackageReference Include="PlcComm.KvHostLink" Version="0.1.12" />
-```
-
-### High-Level Example
+## Quick example
 
 ```csharp
+using System;
 using PlcComm.KvHostLink;
 
 var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
-
-ushort dm0 = (ushort)await client.ReadTypedAsync("DM0", "U");
-await client.WriteTypedAsync("DM10", "U", dm0);
-
-var snapshot = await client.ReadNamedAsync(
-    new[] { "DM0", "DM1:S", "DM2:D", "DM4:F", "DM10.0", "DM20:COMMENT" });
-
-Console.WriteLine(string.Join(", ", snapshot.Select(kv => $"{kv.Key}={kv.Value}")));
+var value = await client.ReadTypedAsync("DM0", "U");
+Console.WriteLine($"DM0 = {value}");
 ```
 
-## Supported PLC Registers
+## Documentation
 
-Start with these public high-level families first:
+| Page | Use it for |
+|---|---|
+| [Getting started](docsrc/user/GETTING_STARTED.md) | Install the package, connect to your PLC, and run your first read/write. |
+| [Usage guide](docsrc/user/USAGE_GUIDE.md) | Use typed reads, writes, snapshots, blocks, bit-in-word updates, polling, timers, comments, and expansion buffer access. |
+| [Supported registers](docsrc/user/SUPPORTED_REGISTERS.md) | Check supported device families and address forms. |
+| [PLC profiles](docsrc/user/PROFILES.md) | Choose the profile that matches your PLC model and device ranges. |
+| [Examples](samples/README.md) | Run sample projects that exercise the high-level API. |
 
-- word devices: `DM`, `EM`, `FM`, `W`, `ZF`, `TM`, `Z`
-- bit devices: `R`, `MR`, `LR`, `CR`, `X`, `Y`, `M`, `L`
-- typed forms: `DM100:S`, `DM100:D`, `DM100:L`, `DM100:F`
-- comment form: `DM100:COMMENT`
-- bit-in-word forms: `DM100.3`, `DM100.A`
-- timer/counter scalar forms: `T10:D`, `C10:D`
-- digital trimmer scalar forms on supported PLCs: `AT0:D` / default `AT0`
+## Hardware verified
 
-High-level address syntax is shared across the PLC helper libraries:
+Physical communication has been verified with `KV-7500`.
 
-- use `:` for data types and special views: `DM100:U`, `DM100:S`, `DM100:D`,
-  `DM100:L`, `DM100:F`, `DM100:H`, `DM100:COMMENT`
-- use `.` only for bit-in-word access: `DM100.0` through `DM100.F`
-- `DM100.D` is bit `0xD` / bit 13, not a 32-bit data type request
-- Host Link frames still use the manual suffix form internally, so
-  `DM100:D` is sent as `RD DM100.D`
-
-`ReadTypedAsync("T10", "D")` and `ReadNamedAsync(["T10"])` return the
-timer/counter preset value for compatibility. Use `ReadTimerCounterAsync("T10")`
-when the Host Link composite fields are needed: `Status`, `Current`, and
-`Preset`.
-
-`AT` is not listed in the WR/WRS device table, so write helpers reject AT before
-sending.
-
-`T` / `C` preset writes use Host Link `WS` / `WSS` only on KV-8000/7000-series
-CPU units. Manuals state that other CPU units do not support those commands
-and return abnormal response `E1` when they are executed.
-
-See the full public table in [Supported PLC Registers](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/SUPPORTED_REGISTERS.md).
-
-## Public Documentation
-
-- [Getting Started](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/GETTING_STARTED.md)
-- [Supported PLC Registers](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/SUPPORTED_REGISTERS.md)
-- [Latest Communication Verification](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/LATEST_COMMUNICATION_VERIFICATION.md)
-- [User Guide](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/USER_GUIDE.md)
-- [Device Handling](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/docsrc/user/DEVICE_HANDLING.md)
-- [Sample Projects](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/samples/README.md)
-- [High-Level API Contract](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/HIGH_LEVEL_API_CONTRACT.md)
-
-Maintainer-only notes and retained evidence live under `internal_docs/`.
-
-## Recommended Samples
-
-| Workflow | Sample project |
-| --- | --- |
-| Full high-level helper walkthrough | `samples\PlcComm.KvHostLink.HighLevelSample\PlcComm.KvHostLink.HighLevelSample.csproj` |
-| Focused typed read/write and contiguous block reads | `samples\PlcComm.KvHostLink.BasicReadWriteSample\PlcComm.KvHostLink.BasicReadWriteSample.csproj` |
-| Mixed named snapshots, bit-in-word updates, and polling | `samples\PlcComm.KvHostLink.NamedPollingSample\PlcComm.KvHostLink.NamedPollingSample.csproj` |
-
-## Common Workflows
-
-Typed block reads:
-
-```csharp
-ushort[] words = await client.ReadWordsSingleRequestAsync("DM100", 10);
-uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM200", 4);
-```
-
-Explicit chunked reads:
-
-```csharp
-ushort[] longWords = await client.ReadWordsChunkedAsync("DM1000", 200, maxWordsPerRequest: 64);
-uint[] longDwords = await client.ReadDWordsChunkedAsync("DM2000", 40, maxDwordsPerRequest: 32);
-```
-
-Bit-in-word update:
-
-```csharp
-await client.WriteBitInWordAsync("DM50", bitIndex: 3, value: true);
-```
-
-Comment read:
-
-```csharp
-string comment = await client.ReadCommentsAsync("DM100");
-```
-
-XYM aliases are also accepted for comment reads, for example `D10`, `E20`, `F30`, `M100`, `L200`, `X100`, and `Y100`.
-For XYM `X`/`Y`, the low bit digit is hexadecimal while the digits before it are decimal, so `Y1999F` means bank `1999`, bit `F`.
-
-Device range catalog:
-
-```csharp
-var catalog = await client.ReadDeviceRangeCatalogAsync();
-var dm = catalog.Entry("DM");
-
-Console.WriteLine($"{catalog.PlcProfile}: {dm?.AddressRange}");
-```
-
-`R`, `MR`, `LR`, and `CR` bit-bank addresses are normalized with a two-digit bit number, for example `R0` becomes `R000`.
-
-Polling:
-
-```csharp
-await foreach (var snapshot in client.PollAsync(
-    new[] { "DM100", "DM101:L", "DM50.3" },
-    TimeSpan.FromSeconds(1)))
-{
-    Console.WriteLine(snapshot["DM100"]);
-}
-```
-
-## Verified Hardware
-
-- CPU: `KV-7500`
-- CPU: `KV-X500`
-- Transport: `TCP` and `UDP`
-
-## Development and CI
-
-```powershell
-run_ci.bat
-release_check.bat
-```
-
-Pack the NuGet package locally:
-
-```powershell
-dotnet pack src\PlcComm.KvHostLink\PlcComm.KvHostLink.csproj -c Release
-```
-
-## License
+## License and registry
 
 Distributed under the MIT License.
+
+NuGet package: https://www.nuget.org/packages/PlcComm.KvHostLink/
