@@ -1,30 +1,25 @@
-# plc-comm-hostlink-dotnet / samples
+# Samples
 
-Buildable sample projects for the recommended high-level API.
+This directory contains buildable console projects that demonstrate the recommended high-level KEYENCE KV Host Link API. Each sample accepts an optional host and port; the examples below use `192.168.250.100` and `8501`.
 
-## Projects
-
-| Project | Primary APIs | Description |
-|---|---|---|
-| `PlcComm.KvHostLink.HighLevelSample` | `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `KvHostLinkAddress.Normalize`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, `ReadWordsChunkedAsync`, `ReadDWordsChunkedAsync`, `WriteBitInWordAsync`, `ReadNamedAsync`, `PollAsync` | Guided tour of the current helper layer and device-string workflows |
-| `PlcComm.KvHostLink.BasicReadWriteSample` | `KvHostLinkClientFactory.OpenAndConnectAsync`, `KvHostLinkConnectionOptions`, `ReadTypedAsync`, `WriteTypedAsync`, `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync` | Focused typed read/write and contiguous single-request example with readback and restore |
-| `PlcComm.KvHostLink.NamedPollingSample` | `ReadNamedAsync`, `WriteBitInWordAsync`, `PollAsync` | Mixed snapshot, bit-in-word, and polling example with readback and restore |
-
-## Quick start
+## How to run
 
 ```powershell
-dotnet build samples/PlcComm.KvHostLink.HighLevelSample/PlcComm.KvHostLink.HighLevelSample.csproj -c Debug
-dotnet build samples/PlcComm.KvHostLink.BasicReadWriteSample/PlcComm.KvHostLink.BasicReadWriteSample.csproj -c Debug
-dotnet build samples/PlcComm.KvHostLink.NamedPollingSample/PlcComm.KvHostLink.NamedPollingSample.csproj -c Debug
-
 dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- 192.168.250.100 8501
+```
+
+```powershell
 dotnet run --project samples/PlcComm.KvHostLink.BasicReadWriteSample -- 192.168.250.100 8501
+```
+
+```powershell
 dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- 192.168.250.100 8501
 ```
 
-CI validates these projects with explicit `dotnet build` commands and checks
-that the published docs reference every user-facing sample project.
+## Sample index
 
-The newer explicit APIs such as `KvHostLinkClientFactory.OpenAndConnectAsync`,
-`ReadWordsSingleRequestAsync`, and `ReadWordsChunkedAsync` use the same device
-syntax and queued-client model as the samples above.
+| Project | What it demonstrates |
+|---|---|
+| `PlcComm.KvHostLink.HighLevelSample` | A guided tour of connection setup, typed reads/writes, block reads, bit-in-word updates, named snapshots, and polling. |
+| `PlcComm.KvHostLink.BasicReadWriteSample` | Focused typed reads/writes, readback checks, restore logic, and contiguous block reads. |
+| `PlcComm.KvHostLink.NamedPollingSample` | Mixed snapshots, bit-in-word writes, polling, and restoring changed bits. |

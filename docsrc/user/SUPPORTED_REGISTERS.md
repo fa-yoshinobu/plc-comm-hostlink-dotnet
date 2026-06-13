@@ -1,67 +1,55 @@
-# Supported PLC Registers
+# Supported registers
 
-This page is the canonical public register table for the .NET high-level API.
+This page lists device families supported by the .NET (C#) high-level API.
 
-## Supported Bit Devices
-
-| Family | Kind | Example | Notes |
-| --- | --- | --- | --- |
-| `R` | bit | `R200` | direct bit access |
-| `B` | bit | `B10` | direct bit access |
-| `MR` | bit | `MR100` | direct bit access |
-| `LR` | bit | `LR10` | direct bit access |
-| `CR` | bit | `CR0` | direct bit access |
-| `VB` | bit | `VB0` | direct bit access |
-| `X` | bit | `X10` | direct bit access |
-| `Y` | bit | `Y10` | direct bit access |
-| `M` | bit | `M100` | direct bit access |
-| `L` | bit | `L100` | direct bit access |
-
-## Supported Word Devices
+## Word device families
 
 | Family | Kind | Example | Notes |
-| --- | --- | --- | --- |
-| `DM` | word | `DM100` | recommended first test area |
-| `EM` | word | `EM100` | high-level word access |
-| `FM` | word | `FM100` | high-level word access |
-| `ZF` | word | `ZF100` | high-level word access |
-| `W` | word | `W100` | high-level word access |
-| `TM` | word | `TM100` | high-level word access |
-| `Z` | word | `Z10` | high-level word access |
-| `AT` | dword | `AT0` | 32-bit digital trimmer values on supported PLCs |
-| `TC` | word | `TC10` | word access |
-| `TS` | word | `TS10` | word access |
-| `CC` | word | `CC10` | word access |
-| `CS` | word | `CS10` | word access |
-| `CM` | word | `CM10` | word access |
-| `VM` | word | `VM10` | word access |
-| `D` | word | `D10` | word access |
-| `E` | word | `E10` | word access |
-| `F` | word | `F10` | word access |
+|---|---|---|---|
+| `DM` | Word | `DM0` | General data memory. Start here for first reads. |
+| `EM` | Word | `EM0` | Extended data memory on models that provide EM ranges. |
+| `FM` | Word | `FM0` | File memory on models that provide FM ranges. |
+| `ZF` | Word | `ZF0` | File register area on models that provide ZF ranges. |
+| `W` | Word | `W0` | Link register word area. |
+| `CM` | Word | `CM0` | Control memory word area. |
+| `VM` | Word | `VM0` | Variable memory word area; not available on KV-X500 profiles. |
+| `TM` | Word | `TM0` | Timer-related word area. |
+| `T` | Timer/counter | `T0` | Timer status, current value, and preset helpers. |
+| `C` | Timer/counter | `C0` | Counter status, current value, and preset helpers. |
+| `AT` | Word | `AT0` | Digital trimmer; not available on KV-X500. |
 
-## High-Level Views
+## Bit device families
+
+| Family | Kind | Example | Notes |
+|---|---|---|---|
+| `R` | Bit | `R200` | Relay bits using two-digit bit notation. |
+| `B` | Bit | `B0000` | Link relay bits using hexadecimal notation. |
+| `MR` | Bit | `MR100` | Internal relay bits using two-digit bit notation. |
+| `LR` | Bit | `LR100` | Latch relay bits using two-digit bit notation. |
+| `CR` | Bit | `CR100` | Control relay bits using two-digit bit notation. |
+| `VB` | Bit | `VB0` | Variable memory bits; not available on KV-X500 profiles. |
+| `X` | Bit | `X10F` | Input alias in XYM profiles; decimal bank plus hex bit. |
+| `Y` | Bit | `Y10F` | Output alias in XYM profiles; decimal bank plus hex bit. |
+| `M` | Bit | `M0` | Internal relay alias in XYM profiles. |
+| `L` | Bit | `L0` | Latch relay alias in XYM profiles. |
+
+## Type suffixes
 
 | Form | Example | Meaning |
-| --- | --- | --- |
-| plain word | `DM100` | unsigned 16-bit word |
-| signed view | `DM100:S` | signed 16-bit value |
-| dword view | `DM100:D` | unsigned 32-bit value |
-| long view | `DM100:L` | signed 32-bit value |
-| float view | `DM100:F` | float32 value |
-| bit in word | `DM100.3` or `DM100.A` | one bit inside a word |
-| timer scalar | `T10:D` | high-level typed timer value |
-| counter scalar | `C10:D` | high-level typed counter value |
-| timer/counter composite | `ReadTimerCounterAsync("T10")` | status, current, and preset fields |
-| digital trimmer scalar | `AT0` or `AT0:D` | 32-bit digital trimmer value |
+|---|---|---|
+| Plain | `DM100` | Default view for the device family. |
+| `:U` | `DM100:U` | Unsigned 16-bit word. |
+| `:S` | `DM100:S` | Signed 16-bit word. |
+| `:D` | `DM100:D` | Unsigned 32-bit double word. |
+| `:L` | `DM100:L` | Signed 32-bit double word. |
+| `:F` | `DM100:F` | IEEE 754 32-bit floating-point value. |
+| `.n` | `DM100.A` | Bit `n` inside a word, where `n` is hexadecimal `0` to `F`. |
 
-## Addressing Notes
+## Addressing notes
 
-- Start with `DM`.
-- Bit-in-word updates belong on word devices, not direct bit families.
-- `ReadTypedAsync` and `ReadNamedAsync` return the timer/counter preset value
-  for `T` / `C`; use `ReadTimerCounterAsync`, `ReadTimerAsync`, or
-  `ReadCounterAsync` for the full contact/current/preset composite.
-- `AT` is not present on every PLC family. Where supported, `AT0-7` are
-  counted as 32-bit device points, so `AT7:D` is valid.
-- `KvHostLinkAddress.Normalize("dm100.a")` returns the canonical uppercase form.
-- If a family is not listed above, do not treat it as publicly supported by the current high-level API.
+- `X` and `Y` use decimal-bank + hex-bit notation (e.g. `X10F`, meaning bank 10, bit F).
+- `R`/`MR`/`LR`/`CR` use two-digit bit notation (`R200`, `MR100`).
+- `AT` digital trimmer is not available on KV-X500.
+- Default port is `8501`.
+
+See [PLC profiles](PROFILES.md) for per-model range limits.

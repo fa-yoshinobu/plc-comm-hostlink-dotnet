@@ -31,9 +31,11 @@ var port = args.Length > 1 ? int.Parse(args[1]) : 8501;
 // -------------------------------------------------------------------------
 Console.WriteLine($"Connecting to {host}:{port} ...");
 var options = new KvHostLinkConnectionOptions(host, port);
+// This sample uses the command-line host/port, or 192.168.250.100:8501 by default.
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 Console.WriteLine($"[OpenAndConnectAsync] Connected to {host}:{port}");
 
+// Normalize an address before storing or displaying it; see docsrc/user/GOTCHAS.md for address-format pitfalls.
 string normalized = KvHostLinkAddress.Normalize("dm50.a");
 Console.WriteLine($"[Normalize] dm50.a -> {normalized}");
 
@@ -53,11 +55,13 @@ client.Timeout = TimeSpan.FromSeconds(5);
 // Use case: reading a signed 32-bit production counter from DM200-DM201, or writing
 //           a signed 16-bit error reset code to DM100.
 // -------------------------------------------------------------------------
+// Read typed values from individual devices.
 var valU = await client.ReadTypedAsync("DM100", "U");
 var valL = await client.ReadTypedAsync("DM200", "L");
 var valF = await client.ReadTypedAsync("DM300", "F");
 Console.WriteLine($"[ReadTypedAsync] DM100(U)={valU}  DM200(L)={valL}  DM300(F)={valF}");
 
+// Write only to test addresses on your PLC program.
 await client.WriteTypedAsync("DM100", "U", (ushort)99);
 await client.WriteTypedAsync("DM200", "L", 123456);
 await client.WriteTypedAsync("DM300", "F", 12.5f);
@@ -71,6 +75,7 @@ Console.WriteLine("[WriteTypedAsync] Wrote 99->DM100, 123456->DM200, 12.5->DM300
 //
 // Use case: reading a parameter table in DM0-DM9 in one round-trip.
 // -------------------------------------------------------------------------
+// Read consecutive 16-bit words in one PLC request.
 ushort[] words = await client.ReadWordsSingleRequestAsync("DM0", 10);
 Console.WriteLine($"[ReadWordsSingleRequestAsync] DM0-DM9 = [{string.Join(", ", words)}]");
 
@@ -84,9 +89,11 @@ Console.WriteLine($"[ReadWordsSingleRequestAsync] DM0-DM9 = [{string.Join(", ", 
 // Use case: choosing explicitly between one-request reads and multi-request
 //           chunked reads.
 // -------------------------------------------------------------------------
+// Read consecutive 32-bit values in one PLC request.
 uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM0", 4);
 Console.WriteLine($"[ReadDWordsSingleRequestAsync] DM0-DM7 as uint32[4] = [{string.Join(", ", dwords)}]");
 
+// Read larger areas with explicit chunk sizes.
 ushort[] largeWords = await client.ReadWordsChunkedAsync("DM1000", 200, maxWordsPerRequest: 64);
 uint[] largeDwords = await client.ReadDWordsChunkedAsync("DM2000", 40, maxDwordsPerRequest: 32);
 Console.WriteLine($"[ReadWordsChunkedAsync] DM1000 block words = {largeWords.Length}");
@@ -102,6 +109,7 @@ Console.WriteLine($"[ReadDWordsChunkedAsync] DM2000 block dwords = {largeDwords.
 // Use case: toggling an individual machine enable flag in a shared status
 //           word without disturbing the other 15 bits.
 // -------------------------------------------------------------------------
+// See docsrc/user/GOTCHAS.md before adapting bit addresses for X/Y or relay devices.
 await client.WriteBitInWordAsync("DM50", bitIndex: 4, value: true);
 Console.WriteLine("[WriteBitInWordAsync] Set   bit 4 of DM50");
 await client.WriteBitInWordAsync("DM50", bitIndex: 4, value: false);
@@ -125,6 +133,7 @@ Console.WriteLine("[WriteBitInWordAsync] Clear bit 4 of DM50");
 //           error code, bool alarm) in a single dictionary-valued call.
 // -------------------------------------------------------------------------
 string[] snapshotAddresses = ["DM100", "DM200:L", "DM300:F", "DM50.3", "DM50.A"];
+// Read a named mixed-type snapshot.
 var snapshot = await client.ReadNamedAsync(snapshotAddresses);
 foreach (var (addr, value) in snapshot)
     Console.WriteLine($"[ReadNamedAsync] {addr} = {value}");
@@ -142,6 +151,7 @@ Console.WriteLine("\nPolling 3 snapshots (1 s interval):");
 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 var pollCount = 0;
 string[] pollAddresses = ["DM100", "DM200:L", "DM300:F", "DM50.3"];
+// Poll a repeated named snapshot until this sample has printed three rows.
 await foreach (var snap in client.PollAsync(
     pollAddresses,
     TimeSpan.FromSeconds(1),

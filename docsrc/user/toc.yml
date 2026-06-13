@@ -1,10 +1,12 @@
-- name: Getting Started
+- name: Getting started
   href: GETTING_STARTED.md
-- name: Supported PLC Registers
+- name: Usage guide
+  href: USAGE_GUIDE.md
+- name: Supported registers
   href: SUPPORTED_REGISTERS.md
-- name: Latest Communication Verification
+- name: PLC profiles
+  href: PROFILES.md
+- name: Gotchas
+  href: GOTCHAS.md
+- name: Latest communication verification
   href: LATEST_COMMUNICATION_VERIFICATION.md
-- name: User Guide
-  href: USER_GUIDE.md
-- name: Device Data Handling
-  href: DEVICE_HANDLING.md

@@ -8,19 +8,23 @@ string bit3Address = $"{bitWordAddress}.3";
 
 Console.WriteLine($"Connecting to {host}:{port} ...");
 var options = new KvHostLinkConnectionOptions(host, port);
+// This sample uses the command-line host/port, or 192.168.250.100:8501 by default.
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
+// Read the original bit values so the sample can restore them later.
 var originalBits = await client.ReadNamedAsync([bit0Address, bit3Address]);
 bool originalBit0 = (bool)originalBits[bit0Address];
 bool originalBit3 = (bool)originalBits[bit3Address];
 
 try
 {
+    // Set individual bits in a word device; see docsrc/user/GOTCHAS.md before adapting bit address notation.
     await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 0, value: true);
     await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 3, value: false);
     Console.WriteLine($"Updated {bitWordAddress} bit0=True bit3=False");
 
     string[] snapshotAddresses = ["DM0", "DM1:S", "DM2:D", "DM4:F", bit0Address, bit3Address];
+    // Read a mixed snapshot containing word values and bit-in-word values.
     var snapshot = await client.ReadNamedAsync(snapshotAddresses);
 
     if ((bool)snapshot[bit0Address] != true)
@@ -35,6 +39,7 @@ try
     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     var pollCount = 0;
     string[] pollAddresses = ["DM0", "DM1:S", "DM4:F", bit0Address];
+    // Poll a named snapshot once per second.
     await foreach (var snap in client.PollAsync(
         pollAddresses,
         TimeSpan.FromSeconds(1),
@@ -51,6 +56,7 @@ try
 }
 finally
 {
+    // Restore the bits this sample changed.
     await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 0, value: originalBit0);
     await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 3, value: originalBit3);
     Console.WriteLine($"Restored {bit0Address}/{bit3Address}");
