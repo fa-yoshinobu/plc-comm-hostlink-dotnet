@@ -64,10 +64,11 @@ internal static class KvHostLinkModels
     };
 
     public static readonly HashSet<string> Native32BitDeviceTypes = new() { "T", "TC", "TS", "C", "CC", "CS", "Z", "AT" };
+    public static readonly HashSet<string> DirectBitDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "X", "Y", "M", "L" };
     public static readonly HashSet<string> ForceDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "VB", "X", "Y", "M", "L" };
     public static readonly HashSet<string> ForceConsecutiveDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "X", "Y", "M", "L" };
     public static readonly HashSet<string> MbsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "VB", "X", "Y", "M", "L" };
-    public static readonly HashSet<string> MwsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "X", "Y", "M", "L", "DM", "EM", "FM", "D", "E", "F", "W", "TM", "Z", "TC", "TS", "CC", "CS", "CM", "VM" };
+    public static readonly HashSet<string> MwsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "X", "Y", "DM", "EM", "FM", "D", "E", "F", "W", "TM", "Z", "TC", "TS", "CC", "CS", "CM", "VM" };
     public static readonly HashSet<string> RdcDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "C", "CM", "X", "Y", "M", "L", "D", "E", "F" };
     public static readonly HashSet<string> WrDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "TC", "TS", "C", "CC", "CS", "CM", "VM", "X", "Y", "M", "L", "D", "E", "F" };
     public static readonly HashSet<string> WsDeviceTypes = new() { "T", "C" };

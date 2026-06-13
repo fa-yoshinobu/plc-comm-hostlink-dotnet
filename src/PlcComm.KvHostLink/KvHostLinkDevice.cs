@@ -236,15 +236,14 @@ public static class KvHostLinkDevice
         if (count < 1)
             throw new HostLinkProtocolError($"count out of range: {count} (allowed: 1..)");
 
-        bool is32Bit = effectiveFormat is ".D" or ".L";
-        int wordWidth = is32Bit && !KvHostLinkModels.Native32BitDeviceTypes.Contains(deviceType) ? 2 : 1;
+        int deviceWidth = DeviceSpanWidth(deviceType, effectiveFormat);
         int startSpanNumber = UsesBitBankAddress(deviceType)
             ? BitBankLogicalNumber(startNumber)
             : startNumber;
         int hiSpanNumber = UsesBitBankAddress(deviceType)
             ? BitBankLogicalNumber(range.Hi)
             : range.Hi;
-        int endSpanNumber = checked(startSpanNumber + (count * wordWidth) - 1);
+        int endSpanNumber = checked(startSpanNumber + (count * deviceWidth) - 1);
         if (startNumber < range.Lo || startNumber > range.Hi || endSpanNumber > hiSpanNumber)
         {
             string startText = FormatDeviceNumber(deviceType, startNumber);
@@ -256,6 +255,23 @@ public static class KvHostLinkDevice
                 $"Device span out of range: {deviceType}{startText}..{deviceType}{endText} " +
                 $"with format '{effectiveFormat}'");
         }
+    }
+
+    private static int DeviceSpanWidth(string deviceType, string effectiveFormat)
+    {
+        if (KvHostLinkModels.DirectBitDeviceTypes.Contains(deviceType))
+        {
+            return effectiveFormat switch
+            {
+                ".U" or ".S" or ".H" => 16,
+                ".D" or ".L" => 32,
+                _ => 1
+            };
+        }
+
+        return effectiveFormat is ".D" or ".L" && !KvHostLinkModels.Native32BitDeviceTypes.Contains(deviceType)
+            ? 2
+            : 1;
     }
 
     public static void ValidateExpansionBufferCount(string effectiveFormat, int count)

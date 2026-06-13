@@ -30,7 +30,7 @@ This README intentionally covers the recommended high-level API only:
 - `ReadWordsSingleRequestAsync` / `ReadDWordsSingleRequestAsync`
 - `ReadWordsChunkedAsync` / `ReadDWordsChunkedAsync`
 - `ReadDeviceRangeCatalogAsync`
-- `KvHostLinkDeviceRanges.DeviceRangeCatalogForModel`
+- `KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile`
 - `KvHostLinkAddress.Normalize`
 
 ## Quick Start
@@ -158,7 +158,7 @@ Device range catalog:
 var catalog = await client.ReadDeviceRangeCatalogAsync();
 var dm = catalog.Entry("DM");
 
-Console.WriteLine($"{catalog.Model}: {dm?.AddressRange}");
+Console.WriteLine($"{catalog.PlcProfile}: {dm?.AddressRange}");
 ```
 
 `R`, `MR`, `LR`, and `CR` bit-bank addresses are normalized with a two-digit bit number, for example `R0` becomes `R000`.

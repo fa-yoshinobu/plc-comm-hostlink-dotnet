@@ -46,11 +46,11 @@ public sealed record KvDeviceRangeEntry(
     IReadOnlyList<KvDeviceRangeSegment> Segments);
 
 public sealed record KvDeviceRangeCatalog(
-    string Model,
+    string PlcProfile,
     string ModelCode,
     bool HasModelCode,
-    string RequestedModel,
-    string ResolvedModel,
+    string RequestedPlcProfile,
+    string ResolvedPlcProfile,
     IReadOnlyList<KvDeviceRangeEntry> Entries)
 {
     public KvDeviceRangeEntry? Entry(string deviceType)
@@ -94,23 +94,36 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
 
     private static readonly Lazy<RangeTable> ParsedRangeTable = new(ParseRangeTable);
 
-    public static IReadOnlyList<string> AvailableDeviceRangeModels()
+    public static IReadOnlyList<string> AvailablePlcProfiles()
     {
-        return ParsedRangeTable.Value.ModelHeaders.ToArray();
+        return ParsedRangeTable.Value.ModelHeaders.Select(ProfileForModelHeader).ToArray();
     }
 
-    public static KvDeviceRangeCatalog DeviceRangeCatalogForModel(string model)
+    public static KvDeviceRangeCatalog DeviceRangeCatalogForPlcProfile(string plcProfile)
     {
-        return DeviceRangeCatalogForModel(model, modelCode: null);
+        return BuildCatalog(plcProfile, modelCode: null);
     }
 
-    public static KvDeviceRangeCatalog DeviceRangeCatalogForModel(string model, string? modelCode)
+    internal static KvDeviceRangeCatalog DeviceRangeCatalogForQueryModel(KvModelInfo model)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(model);
+        ArgumentNullException.ThrowIfNull(model);
+        if (string.IsNullOrWhiteSpace(model.Model))
+        {
+            throw new HostLinkProtocolError(
+                $"Unsupported model code '{model.Code}'; cannot resolve device range catalog.");
+        }
 
-        var requestedModel = model.Trim();
+        return BuildCatalogFromModel(model.Model, model.Code);
+    }
+
+    private static KvDeviceRangeCatalog BuildCatalog(string plcProfile, string? modelCode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(plcProfile);
+
+        var requestedPlcProfile = NormalizePlcProfile(plcProfile);
         var table = ParsedRangeTable.Value;
-        var resolvedModel = ResolveModelColumn(table, requestedModel);
+        var resolvedModel = ModelHeaderForProfile(table, requestedPlcProfile);
+        var resolvedPlcProfile = ProfileForModelHeader(resolvedModel);
         var modelIndex = table.ModelHeaders.FindIndex(header =>
             string.Equals(header, resolvedModel, StringComparison.Ordinal));
         if (modelIndex < 0)
@@ -124,12 +137,19 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
             .ToArray();
 
         return new KvDeviceRangeCatalog(
-            resolvedModel,
+            resolvedPlcProfile,
             modelCode ?? string.Empty,
             modelCode is not null,
-            requestedModel,
-            resolvedModel,
+            requestedPlcProfile,
+            resolvedPlcProfile,
             entries);
+    }
+
+    private static KvDeviceRangeCatalog BuildCatalogFromModel(string model, string? modelCode)
+    {
+        var table = ParsedRangeTable.Value;
+        var resolvedModel = ResolveQueryModelColumn(table, model);
+        return BuildCatalog(ProfileForModelHeader(resolvedModel), modelCode);
     }
 
     private static KvDeviceRangeEntry BuildEntry(RangeRow row, int modelIndex, string resolvedModel)
@@ -369,7 +389,46 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
             : fallback;
     }
 
-    private static string ResolveModelColumn(RangeTable table, string requestedModel)
+    private static string ModelHeaderForProfile(RangeTable table, string plcProfile)
+    {
+        var normalized = NormalizePlcProfile(plcProfile);
+        var direct = table.ModelHeaders.FirstOrDefault(header =>
+            string.Equals(ProfileForModelHeader(header), normalized, StringComparison.Ordinal));
+        if (direct is not null)
+        {
+            return direct;
+        }
+
+        var supported = string.Join(", ", AvailablePlcProfiles());
+        throw new HostLinkProtocolError(
+            $"Unsupported PLC profile '{plcProfile}'. Supported PLC profiles: {supported}.");
+    }
+
+    private static string ProfileForModelHeader(string modelHeader)
+    {
+        var normalized = NormalizeModelKey(modelHeader);
+        var wantsXym = normalized.EndsWith("(XYM)", StringComparison.Ordinal);
+        var baseModel = wantsXym ? normalized[..^"(XYM)".Length] : normalized;
+        var profileKey = baseModel switch
+        {
+            "KV-NANO" => "kv-nano",
+            "KV-3000/5000" => "kv-3000-5000",
+            "KV-7000" => "kv-7000",
+            "KV-8000" => "kv-8000",
+            "KV-X500" => "kv-x500",
+            _ => throw new HostLinkProtocolError(
+                $"Cannot map model header '{modelHeader}' to a PLC profile."),
+        };
+
+        return $"keyence:{profileKey}{(wantsXym ? "-xym" : string.Empty)}";
+    }
+
+    private static string NormalizePlcProfile(string text)
+    {
+        return text.Trim().TrimEnd('\0');
+    }
+
+    private static string ResolveQueryModelColumn(RangeTable table, string requestedModel)
     {
         var normalized = NormalizeModelKey(requestedModel);
         var direct = DirectModelMatch(table, normalized);

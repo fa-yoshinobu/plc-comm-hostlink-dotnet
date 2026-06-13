@@ -257,7 +257,7 @@ public sealed class KvHostLinkClientExtensionsTests
         await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
         var catalog = await client.ReadDeviceRangeCatalogAsync();
 
-        Assert.Equal("KV-8000", catalog.Model);
+        Assert.Equal("keyence:kv-8000", catalog.PlcProfile);
         Assert.Equal("57", catalog.ModelCode);
         Assert.True(catalog.HasModelCode);
         Assert.Equal("DM00000-DM65534", catalog.Entry("DM")!.AddressRange);
@@ -291,7 +291,7 @@ public sealed class KvHostLinkClientExtensionsTests
             "ST X100" => "OK",
             "RS M100" => "OK",
             "STS L100 4" => "OK",
-            "MWS D100.U E100.U F100.U M100 L100" => "OK",
+            "MWS D100.U E100.U F100.U MR100 LR100" => "OK",
             _ => "E1",
         });
 
@@ -300,11 +300,13 @@ public sealed class KvHostLinkClientExtensionsTests
         await client.ForcedSetAsync("X100");
         await client.ForcedResetAsync("M100");
         await client.ForcedSetConsecutiveAsync("L100", 4);
-        await client.RegisterMonitorWordsAsync(["D100", "E100", "F100", "M100", "L100"]);
+        await client.RegisterMonitorWordsAsync(["D100", "E100", "F100", "MR100", "LR100"]);
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.RegisterMonitorWordsAsync(["M100"]));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.RegisterMonitorWordsAsync(["L100"]));
         await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ForcedSetConsecutiveAsync("T100", 4));
 
         Assert.Equal(
-            ["ST X100", "RS M100", "STS L100 4", "MWS D100.U E100.U F100.U M100 L100"],
+            ["ST X100", "RS M100", "STS L100 4", "MWS D100.U E100.U F100.U MR100 LR100"],
             server.ReceivedCommands.ToArray());
     }
 

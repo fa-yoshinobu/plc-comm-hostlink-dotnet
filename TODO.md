@@ -16,4 +16,4 @@ This file tracks the remaining tasks and issues for the Host Link Communication 
 
 ## 3. Cross-Stack API Alignment
 
-- [ ] **Unify PLC profile naming across libraries**: Review public Host Link model/profile selectors and align them with the cross-library `PlcProfile` naming policy where practical. Standard saved/displayed names should converge on one canonical lowercase form such as `keyence:kv-x500` or `keyence:kv-7000`, with legacy names accepted only as input aliases. Do not collapse models into a broad profile when device ranges can differ.
+- [x] **Unify PLC profile naming across libraries**: Public Host Link catalog selectors now use canonical lowercase `PlcProfile` values such as `keyence:kv-x500` or `keyence:kv-7000`. Legacy KEYENCE model labels such as `KV-X500` are intentionally rejected as public profile input; runtime `?K` model labels remain separate query results used only for internal catalog resolution.
