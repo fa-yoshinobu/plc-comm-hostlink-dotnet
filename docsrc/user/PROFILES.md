@@ -1,6 +1,6 @@
 # PLC profiles
 
-This library supports all KV series models. Device ranges differ by model.
+This library supports all KV series models. Device ranges differ by model. You select the device-range catalog by passing a canonical PLC profile name such as `keyence:kv-7000`; the library does not query the PLC to choose a profile for you.
 
 ## Supported models
 
@@ -17,12 +17,24 @@ This library supports all KV series models. Device ranges differ by model.
 | `keyence:kv-x500` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `Z` | Standard profile for KV-X500, KV-X520, KV-X530, KV-X550, and KV-X310 family models. `AT`, `VM`, `VB`, `CTH`, and `CTC` are not in this profile. |
 | `keyence:kv-x500-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-X500 devices | KV-X500 profile with XYM aliases. `AT`, `VM`, `VB`, `CTH`, and `CTC` are not in this profile. |
 
-## How to connect
+## How to select a catalog
+
+```csharp
+using System;
+using PlcComm.KvHostLink;
+
+var catalog = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-7000");
+Console.WriteLine(catalog.PlcProfile);
+```
+
+Select the canonical profile in your application settings, project file, or UI. Connect separately when you need to read or write PLC data:
 
 ```csharp
 using PlcComm.KvHostLink;
+
 var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
+ushort dm0 = (ushort)await client.ReadTypedAsync("DM0", "U");
 ```
 
 ## Model-specific cautions

@@ -143,10 +143,6 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     public Task<KvModelInfo> QueryModelAsync(CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.QueryModelAsync(cancellationToken), cancellationToken);
 
-    /// <inheritdoc cref="KvHostLinkClient.ReadDeviceRangeCatalogAsync"/>
-    public Task<KvDeviceRangeCatalog> ReadDeviceRangeCatalogAsync(CancellationToken cancellationToken = default)
-        => ExecuteAsync(client => client.ReadDeviceRangeCatalogAsync(cancellationToken), cancellationToken);
-
     /// <inheritdoc cref="KvHostLinkClient.ConfirmOperatingModeAsync"/>
     public Task<KvPlcMode> ConfirmOperatingModeAsync(CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.ConfirmOperatingModeAsync(cancellationToken), cancellationToken);

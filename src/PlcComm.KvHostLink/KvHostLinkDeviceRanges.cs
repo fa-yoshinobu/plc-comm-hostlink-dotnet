@@ -104,18 +104,6 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
         return BuildCatalog(plcProfile, modelCode: null);
     }
 
-    internal static KvDeviceRangeCatalog DeviceRangeCatalogForQueryModel(KvModelInfo model)
-    {
-        ArgumentNullException.ThrowIfNull(model);
-        if (string.IsNullOrWhiteSpace(model.Model))
-        {
-            throw new HostLinkProtocolError(
-                $"Unsupported model code '{model.Code}'; cannot resolve device range catalog.");
-        }
-
-        return BuildCatalogFromModel(model.Model, model.Code);
-    }
-
     private static KvDeviceRangeCatalog BuildCatalog(string plcProfile, string? modelCode)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(plcProfile);
@@ -143,13 +131,6 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
             requestedPlcProfile,
             resolvedPlcProfile,
             entries);
-    }
-
-    private static KvDeviceRangeCatalog BuildCatalogFromModel(string model, string? modelCode)
-    {
-        var table = ParsedRangeTable.Value;
-        var resolvedModel = ResolveQueryModelColumn(table, model);
-        return BuildCatalog(ProfileForModelHeader(resolvedModel), modelCode);
     }
 
     private static KvDeviceRangeEntry BuildEntry(RangeRow row, int modelIndex, string resolvedModel)
@@ -426,51 +407,6 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
     private static string NormalizePlcProfile(string text)
     {
         return text.Trim().TrimEnd('\0');
-    }
-
-    private static string ResolveQueryModelColumn(RangeTable table, string requestedModel)
-    {
-        var normalized = NormalizeModelKey(requestedModel);
-        var direct = DirectModelMatch(table, normalized);
-        if (direct is not null)
-        {
-            return direct;
-        }
-
-        var wantsXym = normalized.EndsWith("(XYM)", StringComparison.Ordinal);
-        var baseModel = wantsXym ? normalized[..^"(XYM)".Length] : normalized;
-        var resolvedFamily = baseModel switch
-        {
-            var value when value.StartsWith("KV-NANO", StringComparison.Ordinal) ||
-                value.StartsWith("KV-N", StringComparison.Ordinal) => "KV-NANO",
-            var value when value.StartsWith("KV-3000", StringComparison.Ordinal) ||
-                value.StartsWith("KV-5000", StringComparison.Ordinal) ||
-                value.StartsWith("KV-5500", StringComparison.Ordinal) => "KV-3000/5000",
-            var value when value.StartsWith("KV-7000", StringComparison.Ordinal) ||
-                value.StartsWith("KV-7300", StringComparison.Ordinal) ||
-                value.StartsWith("KV-7500", StringComparison.Ordinal) => "KV-7000",
-            var value when value.StartsWith("KV-8000", StringComparison.Ordinal) => "KV-8000",
-            var value when value.StartsWith("KV-X5", StringComparison.Ordinal) ||
-                value.StartsWith("KV-X3", StringComparison.Ordinal) => "KV-X500",
-            _ => null,
-        };
-
-        if (resolvedFamily is null)
-        {
-            var supported = string.Join(", ", table.ModelHeaders);
-            throw new HostLinkProtocolError(
-                $"Unsupported model '{requestedModel}'. Supported range models: {supported}.");
-        }
-
-        var resolvedKey = wantsXym ? $"{resolvedFamily}(XYM)" : resolvedFamily;
-        return DirectModelMatch(table, resolvedKey) ??
-            throw new HostLinkProtocolError(
-                $"Resolved model '{resolvedKey}' was not found in the embedded device range table.");
-    }
-
-    private static string? DirectModelMatch(RangeTable table, string normalized)
-    {
-        return table.ModelHeaders.FirstOrDefault(header => NormalizeModelKey(header) == normalized);
     }
 
     private static string NormalizeModelKey(string text)

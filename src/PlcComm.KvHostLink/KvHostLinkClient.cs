@@ -242,12 +242,6 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         return new KvModelInfo(code, KvHostLinkModels.ModelCodes.GetValueOrDefault(code, "Unknown"));
     }
 
-    public async Task<KvDeviceRangeCatalog> ReadDeviceRangeCatalogAsync(CancellationToken cancellationToken = default)
-    {
-        var model = await QueryModelAsync(cancellationToken).ConfigureAwait(false);
-        return KvHostLinkDeviceRanges.DeviceRangeCatalogForQueryModel(model);
-    }
-
     public async Task<KvPlcMode> ConfirmOperatingModeAsync(CancellationToken cancellationToken = default)
     {
         string response = await SendRawAsync("?M", cancellationToken).ConfigureAwait(false);
