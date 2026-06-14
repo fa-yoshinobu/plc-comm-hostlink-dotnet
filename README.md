@@ -35,7 +35,7 @@ Console.WriteLine($"DM0 = {value}");
 | Page | Use it for |
 |---|---|
 | [Getting started](docsrc/user/GETTING_STARTED.md) | Install the package, connect to your PLC, and run your first read/write. |
-| [Usage guide](docsrc/user/USAGE_GUIDE.md) | Use typed reads, writes, snapshots, blocks, bit-in-word updates, polling, timers, comments, and expansion buffer access. |
+| [Usage guide](docsrc/user/USAGE_GUIDE.md) | Use the high-level API and common Host Link workflows. |
 | [Supported registers](docsrc/user/SUPPORTED_REGISTERS.md) | Check supported device families and address forms. |
 | [PLC profiles](docsrc/user/PROFILES.md) | Choose the profile that matches your PLC model and device ranges. |
 | [Gotchas](docsrc/user/GOTCHAS.md) | Troubleshoot common address, profile, port, and timer/counter issues. |
