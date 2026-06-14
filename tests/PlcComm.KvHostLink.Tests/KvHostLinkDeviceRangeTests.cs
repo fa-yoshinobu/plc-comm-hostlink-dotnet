@@ -9,11 +9,22 @@ public sealed class KvHostLinkDeviceRangeTests
     {
         var profiles = KvHostLinkDeviceRanges.AvailablePlcProfiles();
 
-        Assert.Contains("keyence:kv-3000", profiles);
-        Assert.Contains("keyence:kv-5000", profiles);
-        Assert.Contains("keyence:kv-7000", profiles);
-        Assert.Contains("keyence:kv-7000-xym", profiles);
-        Assert.DoesNotContain("keyence:kv-3000-5000", profiles);
+        Assert.Equal(
+            [
+                "keyence:kv-nano",
+                "keyence:kv-nano-xym",
+                "keyence:kv-3000",
+                "keyence:kv-3000-xym",
+                "keyence:kv-5000",
+                "keyence:kv-5000-xym",
+                "keyence:kv-7000",
+                "keyence:kv-7000-xym",
+                "keyence:kv-8000",
+                "keyence:kv-8000-xym",
+                "keyence:kv-x500",
+                "keyence:kv-x500-xym",
+            ],
+            profiles);
     }
 
     [Fact]
@@ -140,8 +151,6 @@ public sealed class KvHostLinkDeviceRangeTests
     {
         Assert.Throws<HostLinkProtocolError>(() =>
             KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-1000"));
-        Assert.Throws<HostLinkProtocolError>(() =>
-            KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-3000-5000"));
         Assert.Throws<HostLinkProtocolError>(() =>
             KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("KV-X500"));
         Assert.Throws<HostLinkProtocolError>(() =>
