@@ -71,11 +71,11 @@ var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 ```
 
-## Symptom: `keyence:kv-3000-5000` is rejected
+## Symptom: KV-3000 and KV-5000 ranges need separate profiles
 
 | Root cause | Fix |
 |---|---|
-| The old combined KV-3000/KV-5000 profile was removed. The ranges are managed separately. | Select `keyence:kv-3000` or `keyence:kv-5000`. Use the matching `-xym` profile only when you need XYM aliases. |
+| KV-3000 and KV-5000 ranges are managed separately. | Select `keyence:kv-3000` or `keyence:kv-5000`. Use the matching `-xym` profile only when you need XYM aliases. |
 
 ```csharp
 using System;
