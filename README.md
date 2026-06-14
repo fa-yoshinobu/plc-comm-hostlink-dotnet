@@ -63,6 +63,7 @@ Console.WriteLine($"DM0 = {value}");
 | [Supported registers](docsrc/user/SUPPORTED_REGISTERS.md) | Check supported device families and address forms. |
 | [PLC profiles](docsrc/user/PROFILES.md) | Choose the profile that matches your PLC model and device ranges. |
 | [Gotchas](docsrc/user/GOTCHAS.md) | Troubleshoot common address, profile, port, and timer/counter issues. |
+| [Full documentation site](https://github.com/fa-yoshinobu/plc-comm-docs-site) | Unified docs for all PLC communication libraries. |
 | [Examples](samples/README.md) | Run `PlcComm.KvHostLink.HighLevelSample`, `PlcComm.KvHostLink.BasicReadWriteSample`, and `PlcComm.KvHostLink.NamedPollingSample`. |
 
 ## Hardware verified
