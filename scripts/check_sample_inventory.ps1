@@ -10,7 +10,7 @@ $sampleProjects = @(
 $docFiles = @(
     "README.md",
     "samples\README.md",
-    "docsrc\user\USER_GUIDE.md"
+    "docsrc\user\USAGE_GUIDE.md"
 )
 
 $errors = New-Object System.Collections.Generic.List[string]
