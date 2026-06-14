@@ -4,9 +4,9 @@
 
 KEYENCE KV series PLC communication library for .NET via the Host Link (Upper Link) protocol.
 
-## Supported PLC models
+## Supported profiles
 
-| Model | Notes |
+| Canonical profile | Notes |
 |---|---|
 | `keyence:kv-nano` | KV-NANO family profile with standard device names. |
 | `keyence:kv-nano-xym` | KV-NANO family profile with XYM alias names. |
@@ -62,6 +62,7 @@ Console.WriteLine($"DM0 = {value}");
 | [Usage guide](docsrc/user/USAGE_GUIDE.md) | Use typed reads, writes, snapshots, blocks, bit-in-word updates, polling, timers, comments, and expansion buffer access. |
 | [Supported registers](docsrc/user/SUPPORTED_REGISTERS.md) | Check supported device families and address forms. |
 | [PLC profiles](docsrc/user/PROFILES.md) | Choose the profile that matches your PLC model and device ranges. |
+| [Gotchas](docsrc/user/GOTCHAS.md) | Troubleshoot common address, profile, port, and timer/counter issues. |
 | [Examples](samples/README.md) | Run sample projects that exercise the high-level API. |
 
 ## Hardware verified
