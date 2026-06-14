@@ -8,8 +8,10 @@ This library supports all KV series models. Device ranges differ by model. You s
 |---|---|---|
 | `keyence:kv-nano` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `W`, `TM`, `VM`, `VB`, `Z`, `CTH`, `CTC` | Standard KV-NANO profile. `EM`, `FM`, `ZF`, and `AT` are not in this profile. |
 | `keyence:kv-nano-xym` | `X`, `Y`, `M`, `L`, `D`, plus standard KV-NANO devices | KV-NANO profile with XYM aliases. `E`, `F`, `ZF`, and `AT` are not in this profile. |
-| `keyence:kv-3000-5000` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `VM`, `VB`, `Z`, `CTH`, `CTC`, `AT` | Standard profile for KV-3000, KV-5000, and KV-5500 family models. |
-| `keyence:kv-3000-5000-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-3000/5000 devices | KV-3000/5000 profile with XYM aliases. |
+| `keyence:kv-3000` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `VM`, `VB`, `Z`, `CTH`, `CTC`, `AT` | Standard KV-3000 profile. |
+| `keyence:kv-3000-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-3000 devices | KV-3000 profile with XYM aliases. |
+| `keyence:kv-5000` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `VM`, `VB`, `Z`, `CTH`, `CTC`, `AT` | Standard KV-5000 profile. |
+| `keyence:kv-5000-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-5000 devices | KV-5000 profile with XYM aliases. |
 | `keyence:kv-7000` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `VM`, `VB`, `Z`, `AT` | Standard profile for KV-7000, KV-7300, and KV-7500 family models. `CTH` and `CTC` are not in this profile. |
 | `keyence:kv-7000-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-7000 devices | KV-7000 profile with XYM aliases. `CTH` and `CTC` are not in this profile. |
 | `keyence:kv-8000` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `VM`, `VB`, `Z`, `AT` | Standard KV-8000 profile. `CTH` and `CTC` are not in this profile. |
@@ -41,7 +43,7 @@ ushort dm0 = (ushort)await client.ReadTypedAsync("DM0", "U");
 
 KV-NANO profiles do not include `EM`, `FM`, `ZF`, or `AT`. Use `DM` for first reads and check the device range catalog before using model-specific areas.
 
-KV-3000/5000 profiles include `AT`, `CTH`, and `CTC`, but timer/counter preset writes (`WS`/`WSS`) are documented for KV-8000/7000-series only.
+KV-3000 and KV-5000 profiles include `AT`, `CTH`, and `CTC`, but timer/counter preset writes (`WS`/`WSS`) are documented for KV-8000/7000-series only.
 
 KV-7000 and KV-8000 profiles are the documented profiles for timer/counter preset writes (`WS`/`WSS`). They do not include `CTH` or `CTC`.
 

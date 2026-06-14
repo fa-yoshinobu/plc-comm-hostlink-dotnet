@@ -9,8 +9,11 @@ public sealed class KvHostLinkDeviceRangeTests
     {
         var profiles = KvHostLinkDeviceRanges.AvailablePlcProfiles();
 
+        Assert.Contains("keyence:kv-3000", profiles);
+        Assert.Contains("keyence:kv-5000", profiles);
         Assert.Contains("keyence:kv-7000", profiles);
         Assert.Contains("keyence:kv-7000-xym", profiles);
+        Assert.DoesNotContain("keyence:kv-3000-5000", profiles);
     }
 
     [Fact]
@@ -37,7 +40,7 @@ public sealed class KvHostLinkDeviceRangeTests
     [Fact]
     public void DeviceRangeCatalogForPlcProfile_XymCatalogSplitsAliasRanges()
     {
-        var catalog = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-3000-5000-xym");
+        var catalog = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-3000-xym");
         var entry = catalog.Entry("R")!;
 
         Assert.Equal("R", entry.Device);
@@ -96,7 +99,7 @@ public sealed class KvHostLinkDeviceRangeTests
         var nano = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-nano");
         Assert.Equal("CM0000-CM8999", nano.Entry("CM")!.AddressRange);
 
-        var xym = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-3000-5000-xym");
+        var xym = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-5000-xym");
         Assert.Equal("CR0000-CR3915", xym.Entry("CR")!.AddressRange);
 
         var kvx = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-x500");
@@ -112,9 +115,13 @@ public sealed class KvHostLinkDeviceRangeTests
         Assert.Equal("VB0-1FFF", nano.Entry("VB")!.AddressRange);
         Assert.Equal("CTC0-7", nano.Entry("CTC")!.AddressRange);
 
-        var kv3000 = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-3000-5000");
+        var kv3000 = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-3000");
         Assert.Equal("AT0-7", kv3000.Entry("AT")!.AddressRange);
         Assert.Equal("CTH0-1", kv3000.Entry("CTH")!.AddressRange);
+
+        var kv5000 = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-5000");
+        Assert.Equal("AT0-7", kv5000.Entry("AT")!.AddressRange);
+        Assert.Equal("CTH0-1", kv5000.Entry("CTH")!.AddressRange);
     }
 
     [Fact]
@@ -133,6 +140,8 @@ public sealed class KvHostLinkDeviceRangeTests
     {
         Assert.Throws<HostLinkProtocolError>(() =>
             KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-1000"));
+        Assert.Throws<HostLinkProtocolError>(() =>
+            KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-3000-5000"));
         Assert.Throws<HostLinkProtocolError>(() =>
             KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("KV-X500"));
         Assert.Throws<HostLinkProtocolError>(() =>

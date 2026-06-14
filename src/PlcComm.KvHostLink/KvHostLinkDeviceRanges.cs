@@ -68,35 +68,52 @@ public sealed record KvDeviceRangeCatalog(
 
 public static class KvHostLinkDeviceRanges
 {
-    private const string RangeCsvData = """
-DeviceType,Base,KV-NANO,KV-NANO(XYM),KV-3000/5000,KV-3000/5000(XYM),KV-7000,KV-7000(XYM),KV-8000,KV-8000(XYM),KV-X500,KV-X500(XYM)
-R,10,R00000-R59915,"X0-599F,Y0-599F",R00000-R99915,"X0-999F,Y0-999F",R00000-R199915,"X0-1999F,Y0-1999F",R00000-R199915,"X0-1999F,Y0-1999F",R00000-R199915,"X0-1999F,Y0-1999F"
-B,16,B0000-B1FFF,B0000-B1FFF,B0000-B3FFF,B0000-B3FFF,B0000-B7FFF,B0000-B7FFF,B0000-B7FFF,B0000-B7FFF,B0000-B7FFF,B0000-B7FFF
-MR,10,MR00000-MR59915,M0-9599,MR00000-MR99915,M0-15999,MR000000-MR399915,M000000-M63999,MR000000-MR399915,M000000-M63999,MR000000-MR399915,M000000-M63999
-LR,10,LR00000-LR19915,L0-3199,LR00000-LR99915,L0-15999,LR00000-LR99915,L00000-L15999,LR00000-LR99915,L00000-L15999,LR00000-LR99915,L00000-L15999
-CR,10,CR0000-CR8915,CR0000-CR8915,CR0000-CR3915,CR0000-CR3915,CR0000-CR7915,CR0000-CR7915,CR0000-CR7915,CR0000-CR7915,CR0000-CR7915,CR0000-CR7915
-CM,10,CM0000-CM8999,CM0000-CM8999,CM0000-CM5999,CM0000-CM5999,CM0000-CM5999,CM0000-CM5999,CM0000-CM7599,CM0000-CM7599,CM0000-CM7599,CM0000-CM7599
-T,10,T0000-T0511,T0000-T0511,T0000-T3999,T0000-T3999,T0000-T3999,T0000-T3999,T0000-T3999,T0000-T3999,T0000-T3999,T0000-T3999
-C,10,C0000-C0255,C0000-C0255,C0000-C3999,C0000-C3999,C0000-C3999,C0000-C3999,C0000-C3999,C0000-C3999,C0000-C3999,C0000-C3999
-DM,10,DM00000-DM32767,D0-32767,DM00000-DM65534,D0-65534,DM00000-DM65534,D00000-D65534,DM00000-DM65534,D00000-D65534,DM00000-DM65534,D00000-D65534
-EM,10,-,-,EM00000-EM65534,E0-65534,EM00000-EM65534,E00000-E65534,EM00000-EM65534,E00000-E65534,EM00000-EM65534,E00000-E65534
-FM,10,-,-,FM00000-FM32767,F0-32767,FM00000-FM32767,F00000-F32767,FM00000-FM32767,F00000-F32767,FM00000-FM32767,F00000-F32767
-ZF,10,-,-,ZF000000-ZF131071,ZF000000-ZF131071,ZF000000-ZF524287,ZF000000-ZF524287,ZF000000-ZF524287,ZF000000-ZF524287,ZF000000-ZF524287,ZF000000-ZF524287
-W,16,W0000-W3FFF,W0000-W3FFF,W0000-W3FFF,W0000-W3FFF,W0000-W7FFF,W0000-W7FFF,W0000-W7FFF,W0000-W7FFF,W0000-W7FFF,W0000-W7FFF
-TM,10,TM000-TM511,TM000-TM511,TM000-TM511,TM000-TM511,TM000-TM511,TM000-TM511,TM000-TM511,TM000-TM511,TM000-TM511,TM000-TM511
-VM,10,VM0-9499,VM0-9499,VM0-49999,VM0-49999,VM0-63999,VM0-63999,VM0-589823,VM0-589823,-,-
-VB,16,VB0-1FFF,VB0-1FFF,VB0-3FFF,VB0-3FFF,VB0-F9FF,VB0-F9FF,VB0-F9FF,VB0-F9FF,-,-
-Z,10,Z1-12,Z1-12,Z1-12,Z1-12,Z1-12,Z1-12,Z1-12,Z1-12,Z1-10,Z1-10
-CTH,10,CTH0-3,CTH0-3,CTH0-1,CTH0-3,-,-,-,-,-,-
-CTC,10,CTC0-7,CTC0-7,CTC0-3,CTC0-3,-,-,-,-,-,-
-AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
-""";
+    private static readonly Lazy<RangeTable> ParsedRangeTable = new(CreateRangeTable);
 
-    private static readonly Lazy<RangeTable> ParsedRangeTable = new(ParseRangeTable);
+    private static RangeTable CreateRangeTable() => new(
+        [
+            new("KV-NANO", "keyence:kv-nano"),
+            new("KV-NANO(XYM)", "keyence:kv-nano-xym"),
+            new("KV-3000", "keyence:kv-3000"),
+            new("KV-3000(XYM)", "keyence:kv-3000-xym"),
+            new("KV-5000", "keyence:kv-5000"),
+            new("KV-5000(XYM)", "keyence:kv-5000-xym"),
+            new("KV-7000", "keyence:kv-7000"),
+            new("KV-7000(XYM)", "keyence:kv-7000-xym"),
+            new("KV-8000", "keyence:kv-8000"),
+            new("KV-8000(XYM)", "keyence:kv-8000-xym"),
+            new("KV-X500", "keyence:kv-x500"),
+            new("KV-X500(XYM)", "keyence:kv-x500-xym"),
+        ],
+        [
+            Row("R", KvDeviceRangeNotation.Decimal, "R00000-R59915", "X0-599F,Y0-599F", "R00000-R99915", "X0-999F,Y0-999F", "R00000-R99915", "X0-999F,Y0-999F", "R00000-R199915", "X0-1999F,Y0-1999F", "R00000-R199915", "X0-1999F,Y0-1999F", "R00000-R199915", "X0-1999F,Y0-1999F"),
+            Row("B", KvDeviceRangeNotation.Hexadecimal, "B0000-B1FFF", "B0000-B1FFF", "B0000-B3FFF", "B0000-B3FFF", "B0000-B3FFF", "B0000-B3FFF", "B0000-B7FFF", "B0000-B7FFF", "B0000-B7FFF", "B0000-B7FFF", "B0000-B7FFF", "B0000-B7FFF"),
+            Row("MR", KvDeviceRangeNotation.Decimal, "MR00000-MR59915", "M0-9599", "MR00000-MR99915", "M0-15999", "MR00000-MR99915", "M0-15999", "MR000000-MR399915", "M000000-M63999", "MR000000-MR399915", "M000000-M63999", "MR000000-MR399915", "M000000-M63999"),
+            Row("LR", KvDeviceRangeNotation.Decimal, "LR00000-LR19915", "L0-3199", "LR00000-LR99915", "L0-15999", "LR00000-LR99915", "L0-15999", "LR00000-LR99915", "L00000-L15999", "LR00000-LR99915", "L00000-L15999", "LR00000-LR99915", "L00000-L15999"),
+            Row("CR", KvDeviceRangeNotation.Decimal, "CR0000-CR8915", "CR0000-CR8915", "CR0000-CR3915", "CR0000-CR3915", "CR0000-CR3915", "CR0000-CR3915", "CR0000-CR7915", "CR0000-CR7915", "CR0000-CR7915", "CR0000-CR7915", "CR0000-CR7915", "CR0000-CR7915"),
+            Row("CM", KvDeviceRangeNotation.Decimal, "CM0000-CM8999", "CM0000-CM8999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM7599", "CM0000-CM7599", "CM0000-CM7599", "CM0000-CM7599"),
+            Row("T", KvDeviceRangeNotation.Decimal, "T0000-T0511", "T0000-T0511", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999"),
+            Row("C", KvDeviceRangeNotation.Decimal, "C0000-C0255", "C0000-C0255", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999"),
+            Row("DM", KvDeviceRangeNotation.Decimal, "DM00000-DM32767", "D0-32767", "DM00000-DM65534", "D0-65534", "DM00000-DM65534", "D0-65534", "DM00000-DM65534", "D00000-D65534", "DM00000-DM65534", "D00000-D65534", "DM00000-DM65534", "D00000-D65534"),
+            Row("EM", KvDeviceRangeNotation.Decimal, "-", "-", "EM00000-EM65534", "E0-65534", "EM00000-EM65534", "E0-65534", "EM00000-EM65534", "E00000-E65534", "EM00000-EM65534", "E00000-E65534", "EM00000-EM65534", "E00000-E65534"),
+            Row("FM", KvDeviceRangeNotation.Decimal, "-", "-", "FM00000-FM32767", "F0-32767", "FM00000-FM32767", "F0-32767", "FM00000-FM32767", "F00000-F32767", "FM00000-FM32767", "F00000-F32767", "FM00000-FM32767", "F00000-F32767"),
+            Row("ZF", KvDeviceRangeNotation.Decimal, "-", "-", "ZF000000-ZF131071", "ZF000000-ZF131071", "ZF000000-ZF131071", "ZF000000-ZF131071", "ZF000000-ZF524287", "ZF000000-ZF524287", "ZF000000-ZF524287", "ZF000000-ZF524287", "ZF000000-ZF524287", "ZF000000-ZF524287"),
+            Row("W", KvDeviceRangeNotation.Hexadecimal, "W0000-W3FFF", "W0000-W3FFF", "W0000-W3FFF", "W0000-W3FFF", "W0000-W3FFF", "W0000-W3FFF", "W0000-W7FFF", "W0000-W7FFF", "W0000-W7FFF", "W0000-W7FFF", "W0000-W7FFF", "W0000-W7FFF"),
+            Row("TM", KvDeviceRangeNotation.Decimal, "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511"),
+            Row("VM", KvDeviceRangeNotation.Decimal, "VM0-9499", "VM0-9499", "VM0-49999", "VM0-49999", "VM0-49999", "VM0-49999", "VM0-63999", "VM0-63999", "VM0-589823", "VM0-589823", "-", "-"),
+            Row("VB", KvDeviceRangeNotation.Hexadecimal, "VB0-1FFF", "VB0-1FFF", "VB0-3FFF", "VB0-3FFF", "VB0-3FFF", "VB0-3FFF", "VB0-F9FF", "VB0-F9FF", "VB0-F9FF", "VB0-F9FF", "-", "-"),
+            Row("Z", KvDeviceRangeNotation.Decimal, "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-10", "Z1-10"),
+            Row("CTH", KvDeviceRangeNotation.Decimal, "CTH0-3", "CTH0-3", "CTH0-1", "CTH0-3", "CTH0-1", "CTH0-3", "-", "-", "-", "-", "-", "-"),
+            Row("CTC", KvDeviceRangeNotation.Decimal, "CTC0-7", "CTC0-7", "CTC0-3", "CTC0-3", "CTC0-3", "CTC0-3", "-", "-", "-", "-", "-", "-"),
+            Row("AT", KvDeviceRangeNotation.Decimal, "-", "-", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "-", "-"),
+        ]);
+
+    private static RangeRow Row(string deviceType, KvDeviceRangeNotation notation, params string[] ranges) =>
+        new(deviceType, notation, ranges);
 
     public static IReadOnlyList<string> AvailablePlcProfiles()
     {
-        return ParsedRangeTable.Value.ModelHeaders.Select(ProfileForModelHeader).ToArray();
+        return ParsedRangeTable.Value.Profiles.Select(profile => profile.PlcProfile).ToArray();
     }
 
     public static KvDeviceRangeCatalog DeviceRangeCatalogForPlcProfile(string plcProfile)
@@ -110,26 +127,19 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
 
         var requestedPlcProfile = NormalizePlcProfile(plcProfile);
         var table = ParsedRangeTable.Value;
-        var resolvedModel = ModelHeaderForProfile(table, requestedPlcProfile);
-        var resolvedPlcProfile = ProfileForModelHeader(resolvedModel);
-        var modelIndex = table.ModelHeaders.FindIndex(header =>
-            string.Equals(header, resolvedModel, StringComparison.Ordinal));
-        if (modelIndex < 0)
-        {
-            throw new HostLinkProtocolError(
-                $"Resolved model column '{resolvedModel}' was not found in the embedded device range table.");
-        }
+        var resolvedProfile = RangeProfileForPlcProfile(table, requestedPlcProfile);
+        var modelIndex = table.Profiles.IndexOf(resolvedProfile);
 
         var entries = table.Rows
-            .Select(row => BuildEntry(row, modelIndex, resolvedModel))
+            .Select(row => BuildEntry(row, modelIndex, resolvedProfile.DisplayName))
             .ToArray();
 
         return new KvDeviceRangeCatalog(
-            resolvedPlcProfile,
+            resolvedProfile.PlcProfile,
             modelCode ?? string.Empty,
             modelCode is not null,
             requestedPlcProfile,
-            resolvedPlcProfile,
+            resolvedProfile.PlcProfile,
             entries);
     }
 
@@ -370,11 +380,11 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
             : fallback;
     }
 
-    private static string ModelHeaderForProfile(RangeTable table, string plcProfile)
+    private static RangeProfile RangeProfileForPlcProfile(RangeTable table, string plcProfile)
     {
         var normalized = NormalizePlcProfile(plcProfile);
-        var direct = table.ModelHeaders.FirstOrDefault(header =>
-            string.Equals(ProfileForModelHeader(header), normalized, StringComparison.Ordinal));
+        var direct = table.Profiles.FirstOrDefault(profile =>
+            string.Equals(profile.PlcProfile, normalized, StringComparison.Ordinal));
         if (direct is not null)
         {
             return direct;
@@ -385,138 +395,14 @@ AT,10,-,-,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,AT0-7,-,-
             $"Unsupported PLC profile '{plcProfile}'. Supported PLC profiles: {supported}.");
     }
 
-    private static string ProfileForModelHeader(string modelHeader)
-    {
-        var normalized = NormalizeModelKey(modelHeader);
-        var wantsXym = normalized.EndsWith("(XYM)", StringComparison.Ordinal);
-        var baseModel = wantsXym ? normalized[..^"(XYM)".Length] : normalized;
-        var profileKey = baseModel switch
-        {
-            "KV-NANO" => "kv-nano",
-            "KV-3000/5000" => "kv-3000-5000",
-            "KV-7000" => "kv-7000",
-            "KV-8000" => "kv-8000",
-            "KV-X500" => "kv-x500",
-            _ => throw new HostLinkProtocolError(
-                $"Cannot map model header '{modelHeader}' to a PLC profile."),
-        };
-
-        return $"keyence:{profileKey}{(wantsXym ? "-xym" : string.Empty)}";
-    }
-
     private static string NormalizePlcProfile(string text)
     {
         return text.Trim().TrimEnd('\0');
     }
 
-    private static string NormalizeModelKey(string text)
-    {
-        var builder = new StringBuilder();
-        foreach (var ch in text.Trim().TrimEnd('\0'))
-        {
-            if (!char.IsWhiteSpace(ch))
-            {
-                builder.Append(char.ToUpperInvariant(ch));
-            }
-        }
+    private sealed record RangeTable(List<RangeProfile> Profiles, List<RangeRow> Rows);
 
-        return builder.ToString();
-    }
-
-    private static RangeTable ParseRangeTable()
-    {
-        var lines = RangeCsvData
-            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (lines.Length == 0)
-        {
-            throw new HostLinkProtocolError("Embedded device range table is empty.");
-        }
-
-        var headers = ParseCsvLine(lines[0]);
-        if (headers.Count < 3)
-        {
-            throw new HostLinkProtocolError(
-                "Embedded device range table must contain at least DeviceType, Base, and one model column.");
-        }
-
-        var modelHeaders = headers.Skip(2).Select(static header => header.Trim()).ToList();
-        var rows = new List<RangeRow>(lines.Length - 1);
-        for (var i = 1; i < lines.Length; i++)
-        {
-            var fields = ParseCsvLine(lines[i]);
-            if (fields.Count != headers.Count)
-            {
-                throw new HostLinkProtocolError(
-                    $"Embedded device range row has {fields.Count} columns but {headers.Count} were expected: {lines[i]}");
-            }
-
-            rows.Add(new RangeRow(
-                fields[0].Trim(),
-                NotationFromBase(fields[1]),
-                fields.Skip(2).Select(static value => value.Trim()).ToArray()));
-        }
-
-        return new RangeTable(modelHeaders, rows);
-    }
-
-    private static List<string> ParseCsvLine(string line)
-    {
-        var fields = new List<string>();
-        var current = new StringBuilder();
-        var inQuote = false;
-
-        for (var i = 0; i < line.Length; i++)
-        {
-            var ch = line[i];
-            if (ch == '"')
-            {
-                if (inQuote && i + 1 < line.Length && line[i + 1] == '"')
-                {
-                    current.Append('"');
-                    i++;
-                }
-                else
-                {
-                    inQuote = !inQuote;
-                }
-            }
-            else if (ch == ',' && !inQuote)
-            {
-                fields.Add(current.ToString());
-                current.Clear();
-            }
-            else
-            {
-                current.Append(ch);
-            }
-        }
-
-        if (inQuote)
-        {
-            throw new HostLinkProtocolError($"Embedded device range table contains an unterminated quoted field: {line}");
-        }
-
-        fields.Add(current.ToString());
-        return fields;
-    }
-
-    private static KvDeviceRangeNotation NotationFromBase(string baseText)
-    {
-        var normalized = baseText.Trim();
-        if (normalized.StartsWith("10", StringComparison.Ordinal))
-        {
-            return KvDeviceRangeNotation.Decimal;
-        }
-
-        if (normalized.StartsWith("16", StringComparison.Ordinal))
-        {
-            return KvDeviceRangeNotation.Hexadecimal;
-        }
-
-        throw new HostLinkProtocolError($"Unsupported base cell '{baseText}' in the embedded device range table.");
-    }
-
-    private sealed record RangeTable(List<string> ModelHeaders, List<RangeRow> Rows);
+    private sealed record RangeProfile(string DisplayName, string PlcProfile);
 
     private sealed record RangeRow(
         string DeviceType,

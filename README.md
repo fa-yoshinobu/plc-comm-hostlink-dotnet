@@ -10,8 +10,10 @@ KEYENCE KV series PLC communication library for .NET via the Host Link (Upper Li
 |---|---|
 | `keyence:kv-nano` | KV-NANO family profile with standard device names. |
 | `keyence:kv-nano-xym` | KV-NANO family profile with XYM alias names. |
-| `keyence:kv-3000-5000` | KV-3000, KV-5000, and KV-5500 family profile with EM, FM, ZF, VM, VB, CTH, CTC, and AT ranges. |
-| `keyence:kv-3000-5000-xym` | KV-3000, KV-5000, and KV-5500 family profile with XYM alias names. |
+| `keyence:kv-3000` | KV-3000 profile with EM, FM, ZF, VM, VB, CTH, CTC, and AT ranges. |
+| `keyence:kv-3000-xym` | KV-3000 profile with XYM alias names. |
+| `keyence:kv-5000` | KV-5000 profile with EM, FM, ZF, VM, VB, CTH, CTC, and AT ranges. |
+| `keyence:kv-5000-xym` | KV-5000 profile with XYM alias names. |
 | `keyence:kv-7000` | KV-7000, KV-7300, and KV-7500 family profile with large R, MR, DM, EM, FM, ZF, VM, VB, and AT ranges. |
 | `keyence:kv-7000-xym` | KV-7000, KV-7300, and KV-7500 family profile with XYM alias names. |
 | `keyence:kv-8000` | KV-8000 family profile with the largest VM range in the embedded catalog. |
