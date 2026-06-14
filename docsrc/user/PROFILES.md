@@ -2,9 +2,9 @@
 
 This library supports all KV series models. Device ranges differ by model. You select the device-range catalog by passing a canonical PLC profile name such as `keyence:kv-7000`; the library does not query the PLC to choose a profile for you.
 
-## Supported models
+## Supported PLC profiles
 
-| Model | Key available devices | Notes |
+| Canonical profile | Key available devices | Notes |
 |---|---|---|
 | `keyence:kv-nano` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `W`, `TM`, `VM`, `VB`, `Z`, `CTH`, `CTC` | Standard KV-NANO profile. `EM`, `FM`, `ZF`, and `AT` are not in this profile. |
 | `keyence:kv-nano-xym` | `X`, `Y`, `M`, `L`, `D`, plus standard KV-NANO devices | KV-NANO profile with XYM aliases. `E`, `F`, `ZF`, and `AT` are not in this profile. |
