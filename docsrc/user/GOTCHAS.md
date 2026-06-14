@@ -71,21 +71,6 @@ var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 ```
 
-## Symptom: KV-3000 and KV-5000 ranges need separate profiles
-
-| Root cause | Fix |
-|---|---|
-| KV-3000 and KV-5000 ranges are managed separately. | Select `keyence:kv-3000` or `keyence:kv-5000`. Use the matching `-xym` profile only when you need XYM aliases. |
-
-```csharp
-using System;
-using PlcComm.KvHostLink;
-
-var kv3000 = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-3000");
-var kv5000 = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-5000");
-Console.WriteLine($"{kv3000.PlcProfile}, {kv5000.PlcProfile}");
-```
-
 ## Symptom: Non-canonical profile string fails immediately
 
 | Root cause | Fix |
