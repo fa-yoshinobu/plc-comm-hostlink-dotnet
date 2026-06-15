@@ -14,9 +14,6 @@ This page lists device families supported by the .NET (C#) high-level API.
 | `CM` | Word | `CM0` | Control memory word area. |
 | `VM` | Word | `VM0` | Variable memory word area; not available on KV-X500 profiles. |
 | `TM` | Word | `TM0` | Timer-related word area. |
-| `T` | Timer/counter | `T0` | Timer status, current value, and preset helpers. |
-| `C` | Timer/counter | `C0` | Counter status, current value, and preset helpers. |
-| `AT` | Word | `AT0` | Digital trimmer; not available on KV-X500. |
 
 ## Bit device families
 
@@ -32,6 +29,17 @@ This page lists device families supported by the .NET (C#) high-level API.
 | `Y` | Bit | `Y10F` | Output alias in XYM profiles; decimal bank plus hex bit. |
 | `M` | Bit | `M0` | Internal relay alias in XYM profiles. |
 | `L` | Bit | `L0` | Latch relay alias in XYM profiles. |
+
+## Timer, counter, and index families
+
+| Family | Kind | Example | Notes |
+|---|---|---|---|
+| `T` | Timer/counter | `T0` | Timer status, current value, and preset helpers. |
+| `C` | Timer/counter | `C0` | Counter status, current value, and preset helpers. |
+| `AT` | Timer/counter catalog category | `AT0` | Digital trimmer; not available on KV-X500. |
+| `CTH` | Timer/counter catalog category | `CTH0` | High-speed counter on KV-NANO, KV-3000, and KV-5000 profiles only. Catalog entry only — not accepted by the address parser. |
+| `CTC` | Timer/counter catalog category | `CTC0` | High-speed counter on KV-NANO, KV-3000, and KV-5000 profiles only. Catalog entry only — not accepted by the address parser. |
+| `Z` | Index | `Z1` | Index registers. KV-X500 profiles expose `Z1` through `Z10`; other profiles expose `Z1` through `Z12`. |
 
 ## Type suffixes
 
@@ -50,6 +58,7 @@ This page lists device families supported by the .NET (C#) high-level API.
 - `X` and `Y` use decimal-bank + hex-bit notation (e.g. `X10F`, meaning bank 10, bit F).
 - `R`/`MR`/`LR`/`CR` use two-digit bit notation (`R200`, `MR100`).
 - `AT` digital trimmer is not available on KV-X500.
+- `CTH` and `CTC` appear in the range catalog but are not accepted by the address parser.
 - Default port is `8501`.
 
 See [PLC profiles](PROFILES.md) for per-model range limits.

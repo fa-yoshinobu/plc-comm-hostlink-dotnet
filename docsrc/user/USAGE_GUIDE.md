@@ -242,3 +242,13 @@ Expansion unit buffer methods access module buffer memory by unit number, buffer
 | `:L` | `DM100:L` | Signed 32-bit view. |
 | `:F` | `DM100:F` | IEEE 754 32-bit float view. |
 | `.n` | `DM100.A` | One bit inside a word; `n` is hexadecimal `0` to `F`. |
+
+## Runnable samples
+
+The `samples/` directory contains ready-to-run projects for the most common high-level workflows.
+
+| Project | What it demonstrates |
+|---|---|
+| `samples\PlcComm.KvHostLink.HighLevelSample\PlcComm.KvHostLink.HighLevelSample.csproj` | Full high-level API: typed reads/writes, block reads, bit-in-word, named snapshots, and polling. |
+| `samples\PlcComm.KvHostLink.BasicReadWriteSample\PlcComm.KvHostLink.BasicReadWriteSample.csproj` | Basic typed read/write for unsigned, signed, double-word, and float values. |
+| `samples\PlcComm.KvHostLink.NamedPollingSample\PlcComm.KvHostLink.NamedPollingSample.csproj` | Named polling with `PollAsync`. |
