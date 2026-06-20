@@ -34,7 +34,7 @@ Select the canonical profile in your application settings, project file, or UI. 
 ```csharp
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 ushort dm0 = (ushort)await client.ReadTypedAsync("DM0", "U");
 ```

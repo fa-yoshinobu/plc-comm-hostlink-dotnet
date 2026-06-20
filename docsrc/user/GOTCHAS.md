@@ -10,7 +10,7 @@
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 KvTimerCounterValue timer = await client.ReadTimerAsync("T0");
@@ -67,7 +67,7 @@ Console.WriteLine(KvHostLinkAddress.Normalize("MR100"));
 ```csharp
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 ```
 
@@ -95,7 +95,7 @@ Console.WriteLine(catalog.PlcProfile);
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 string[] values = await client.ReadExpansionUnitBufferAsync(

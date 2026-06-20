@@ -23,7 +23,7 @@ dotnet add package PlcComm.KvHostLink
 ```csharp
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 ```
 
@@ -35,7 +35,7 @@ This opens a queued client, which is the recommended surface for normal applicat
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 ushort dm0 = (ushort)await client.ReadTypedAsync("DM0", "U");
@@ -56,7 +56,7 @@ Your number will match the current value stored in `DM0` on your PLC.
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 const string testAddress = "DM100";

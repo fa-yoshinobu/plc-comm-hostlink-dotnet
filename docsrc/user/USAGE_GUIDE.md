@@ -33,6 +33,7 @@ using PlcComm.KvHostLink;
 
 var options = new KvHostLinkConnectionOptions(
     Host: "192.168.250.100",
+    PlcProfile: "keyence:kv-8000",
     Port: 8501,
     Timeout: TimeSpan.FromSeconds(3),
     Transport: HostLinkTransportMode.Tcp,
@@ -42,7 +43,7 @@ await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(optio
 Console.WriteLine($"Connected: {client.IsOpen}");
 ```
 
-`KvHostLinkConnectionOptions` defaults to TCP, port `8501`, a 3-second effective timeout, and no LF appended after CR.
+`KvHostLinkConnectionOptions` requires one canonical PLC profile and defaults to TCP, port `8501`, a 3-second effective timeout, and no LF appended after CR.
 
 ## Read a single value
 
@@ -50,7 +51,7 @@ Console.WriteLine($"Connected: {client.IsOpen}");
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 ushort unsignedWord = (ushort)await client.ReadTypedAsync("DM0", "U");
@@ -76,7 +77,7 @@ Console.WriteLine($"{unsignedWord}, {signedWord}, {unsignedDWord}, {signedDWord}
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 const string address = "DM100";
@@ -102,7 +103,7 @@ This is a matched read/write/readback pattern. Keep it on a test address until y
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 string[] addresses = ["DM0", "DM1:S", "DM2:D", "DM4:F", "DM10.A"];
@@ -122,7 +123,7 @@ Use `ReadNamedAsync` when one application snapshot mixes unsigned words, signed 
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 ushort[] words = await client.ReadWordsSingleRequestAsync("DM200", 8);
@@ -142,7 +143,7 @@ Single-request methods send one PLC command. Chunked methods split only where yo
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 await client.WriteBitInWordAsync("DM50", bitIndex: 10, value: true);
@@ -160,7 +161,7 @@ using System;
 using System.Threading;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 string[] addresses = ["DM0", "DM1:S", "DM4:F"];
@@ -185,7 +186,7 @@ await foreach (var snapshot in client.PollAsync(addresses, TimeSpan.FromSeconds(
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 KvTimerCounterValue timer = await client.ReadTimerAsync("T0");
@@ -211,7 +212,7 @@ Use `string label = await client.ReadCommentsAsync("DM0");` after connecting to 
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 string[] bufferWords = await client.ReadExpansionUnitBufferAsync(

@@ -7,14 +7,20 @@
 //   ReadNamedAsync, PollAsync, and KvHostLinkAddress.Normalize.
 //
 // Usage:
-//   dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- [host] [port]
-//
-// Default port: 8501  (KV Ethernet module default, configurable in KV Studio)
+//   dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <plc-profile>
 
 using PlcComm.KvHostLink;
 
-var host = args.Length > 0 ? args[0] : "192.168.250.100";
-var port = args.Length > 1 ? int.Parse(args[1]) : 8501;
+if (args.Length < 3)
+{
+    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <plc-profile>");
+    Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- 192.168.250.100 8501 keyence:kv-8000");
+    return;
+}
+
+var host = args[0];
+var port = int.Parse(args[1]);
+var plcProfile = args[2];
 
 // -------------------------------------------------------------------------
 // 1. OpenAndConnectAsync  (recommended entry point)
@@ -29,11 +35,10 @@ var port = args.Length > 1 ? int.Parse(args[1]) : 8501;
 //
 // Use case: simplest way to establish a connection for normal application code.
 // -------------------------------------------------------------------------
-Console.WriteLine($"Connecting to {host}:{port} ...");
-var options = new KvHostLinkConnectionOptions(host, port);
-// This sample uses the command-line host/port, or 192.168.250.100:8501 by default.
+Console.WriteLine($"Connecting to {host}:{port} ({plcProfile}) ...");
+var options = new KvHostLinkConnectionOptions(host, plcProfile, port);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
-Console.WriteLine($"[OpenAndConnectAsync] Connected to {host}:{port}");
+Console.WriteLine($"[OpenAndConnectAsync] Connected to {host}:{port} ({client.PlcProfile})");
 
 // Normalize an address before storing or displaying it; see docsrc/user/GOTCHAS.md for address-format pitfalls.
 string normalized = KvHostLinkAddress.Normalize("dm50.a");

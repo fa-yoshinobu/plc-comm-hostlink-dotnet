@@ -839,6 +839,7 @@ public static class KvHostLinkClientExtensions
     /// Creates a queued client and opens the connection.
     /// </summary>
     /// <param name="host">PLC IP address or hostname.</param>
+    /// <param name="plcProfile">Canonical KEYENCE KV PLC profile for the session.</param>
     /// <param name="port">KV Host Link TCP/UDP port. Defaults to 8501.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A connected queued client that is safe to share across async callers.</returns>
@@ -849,9 +850,10 @@ public static class KvHostLinkClientExtensions
     /// </remarks>
     public static Task<QueuedKvHostLinkClient> OpenAndConnectAsync(
         string host,
+        string plcProfile,
         int port = 8501,
         CancellationToken ct = default)
-        => KvHostLinkClientFactory.OpenAndConnectAsync(new KvHostLinkConnectionOptions(host, port), ct);
+        => KvHostLinkClientFactory.OpenAndConnectAsync(new KvHostLinkConnectionOptions(host, plcProfile, port), ct);
 
     private static async Task<IReadOnlyDictionary<string, object>> ReadNamedSequentialAsync(
         KvHostLinkClient client,

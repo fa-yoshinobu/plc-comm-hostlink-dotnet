@@ -8,11 +8,13 @@ namespace PlcComm.KvHostLink.Tests;
 
 public sealed class KvHostLinkClientExtensionsTests
 {
+    private const string TestPlcProfile = "keyence:kv-8000";
+
     [Fact]
     public async Task ATWrites_AreRejectedBeforeSendingWrOrWrs()
     {
         await using var server = new ScriptedHostLinkServer(_ => "OK");
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
         int[] values = [3533, 5543];
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.WriteAsync("AT0", 3533, "D"));
@@ -30,7 +32,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var result = await client.ReadNamedAsync(
             ["DM100", "DM100.0", "DM100.A", "DM101:S", "DM102:D", "DM104:L", "DM106:F"]);
@@ -56,7 +58,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var result = await client.ReadNamedAsync(["DM100", "DM101:COMMENT"]);
 
@@ -74,7 +76,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var result = await client.ReadNamedAsync(["CR3614", "CR3615", "CR3700", "CR3701"]);
 
@@ -95,7 +97,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var value = await client.ReadTypedAsync("DM200", "F");
         await client.WriteTypedAsync("DM200", "F", 12.5f);
@@ -113,7 +115,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var value = await client.ReadTypedAsync("T0", "D");
 
@@ -130,7 +132,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var value = await client.ReadTypedAsync("T0", "U");
 
@@ -147,7 +149,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var result = await client.ReadNamedAsync(["Z1:D"]);
 
@@ -159,7 +161,7 @@ public sealed class KvHostLinkClientExtensionsTests
     public async Task SetTimeAsync_UsesSundayBasedWeekday()
     {
         await using var server = new ScriptedHostLinkServer(_ => "OK");
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         await client.SetTimeAsync(new DateTime(2026, 3, 15, 1, 2, 3));
         await client.SetTimeAsync(new DateTime(2026, 3, 16, 1, 2, 3));
@@ -184,7 +186,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var result = await client.ReadNamedAsync(["T10", "C10"]);
 
@@ -202,7 +204,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var result = await client.ReadTimerCounterAsync("T10");
 
@@ -221,7 +223,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync("127.0.0.1", server.Port);
+        await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync("127.0.0.1", TestPlcProfile, server.Port);
         var value = await client.ReadTypedAsync("DM10", "U");
 
         Assert.True(client.IsOpen);
@@ -238,7 +240,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync("127.0.0.1", server.Port);
+        await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync("127.0.0.1", TestPlcProfile, server.Port);
         var comment = await client.ReadCommentsAsync("DM10");
 
         Assert.Equal("ALARM TEXT", comment);
@@ -255,7 +257,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
         var dataMemoryComment = await client.ReadCommentsAsync("D10");
         var auxiliaryRelayComment = await client.ReadCommentsAsync("M20");
 
@@ -276,7 +278,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         await client.ForcedSetAsync("X100");
         await client.ForcedResetAsync("M100");
@@ -295,7 +297,7 @@ public sealed class KvHostLinkClientExtensionsTests
     public async Task WssTimerCounterCountLimit_IsEnforcedBeforeSend()
     {
         await using var server = new ScriptedHostLinkServer(_ => "OK");
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(
             () => client.WriteSetValueConsecutiveAsync("T0", Enumerable.Repeat(0, 121)));
@@ -312,7 +314,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         await client.WriteAsync("DM10", (ushort)0xABCD, ".H");
 
@@ -328,7 +330,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ConfirmOperatingModeAsync());
 
@@ -345,7 +347,7 @@ public sealed class KvHostLinkClientExtensionsTests
             return responses++ == 0 ? "1 0 16320" : "3 0 16416";
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var snapshots = new List<IReadOnlyDictionary<string, object>>();
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
@@ -384,7 +386,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
         var values = await client.ReadDWordsChunkedAsync("DM200", 3, 1);
 
         Assert.Equal(new uint[] { 65537, 131074, 196611 }, values);
@@ -404,7 +406,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
         await client.WriteDWordsChunkedAsync("DM200", new uint[] { 65537, 131074, 196611 }, 1);
 
         Assert.Equal(
@@ -416,7 +418,7 @@ public sealed class KvHostLinkClientExtensionsTests
     public async Task ReadAsync_Rejects32BitDeviceEndCrossingBeforeSend()
     {
         await using var server = new ScriptedHostLinkServer(_ => "OK");
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(
             () => client.ReadAsync("DM65534", ".D"));
@@ -434,7 +436,7 @@ public sealed class KvHostLinkClientExtensionsTests
             _ => "E1",
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         string[] values = await client.ReadExpansionUnitBufferAsync(1, 100, 2);
         int[] valuesToWrite = [7, 8];
@@ -448,7 +450,7 @@ public sealed class KvHostLinkClientExtensionsTests
     public async Task ReadExpansionUnitBufferAsync_Rejects32BitBufferEndCrossingBeforeSend()
     {
         await using var server = new ScriptedHostLinkServer(_ => "OK");
-        await using var client = new KvHostLinkClient("127.0.0.1", server.Port);
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(
             () => client.ReadExpansionUnitBufferAsync(1, 59999, 1, ".D"));

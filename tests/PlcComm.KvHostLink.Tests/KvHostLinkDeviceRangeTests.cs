@@ -5,6 +5,16 @@ namespace PlcComm.KvHostLink.Tests;
 public sealed class KvHostLinkDeviceRangeTests
 {
     [Fact]
+    public void ConnectionOptions_RequiresCanonicalPlcProfile()
+    {
+        var options = new KvHostLinkConnectionOptions("127.0.0.1", "keyence:kv-8000");
+
+        Assert.Equal("keyence:kv-8000", options.PlcProfile);
+        Assert.Throws<ArgumentException>(() => new KvHostLinkConnectionOptions("127.0.0.1", ""));
+        Assert.Throws<HostLinkProtocolError>(() => new KvHostLinkConnectionOptions("127.0.0.1", "KV-8000"));
+    }
+
+    [Fact]
     public void AvailablePlcProfiles_IncludesXymColumns()
     {
         var profiles = KvHostLinkDeviceRanges.AvailablePlcProfiles();
