@@ -14,6 +14,8 @@ namespace PlcComm.KvHostLink.Tests;
 /// </summary>
 public sealed class HostLinkFrameVectorTests
 {
+    private const string TestPlcProfile = "keyence:kv-8000";
+
     private static readonly string VectorsPath = Path.Combine(
         AppDomain.CurrentDomain.BaseDirectory, "vectors", "hostlink_frame_vectors.json");
 
@@ -210,7 +212,7 @@ public sealed class HostLinkFrameVectorTests
         var (server, received) = StartEchoServer();
         var port = ((IPEndPoint)server.LocalEndpoint).Port;
 
-        using var client = new KvHostLinkClient("127.0.0.1", port);
+        using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, port);
         try
         {
             await RunCommandAsync(client, vec);

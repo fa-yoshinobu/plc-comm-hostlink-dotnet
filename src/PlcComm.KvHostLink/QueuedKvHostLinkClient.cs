@@ -30,6 +30,9 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     /// </remarks>
     public KvHostLinkClient InnerClient => _client;
 
+    /// <summary>Gets the canonical KEYENCE KV PLC profile selected for this session.</summary>
+    public string PlcProfile => _client.PlcProfile;
+
     /// <summary>Gets or sets the communication timeout.</summary>
     public TimeSpan Timeout
     {

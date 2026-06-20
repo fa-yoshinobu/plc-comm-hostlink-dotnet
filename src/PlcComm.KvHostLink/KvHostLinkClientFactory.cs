@@ -32,7 +32,7 @@ public static class KvHostLinkClientFactory
         if (options.Port is < 1 or > 65535)
             throw new ArgumentOutOfRangeException(nameof(options), "Port must be in the range 1-65535.");
 
-        var inner = new KvHostLinkClient(options.Host, options.Port, options.Transport)
+        var inner = new KvHostLinkClient(options.Host, options.PlcProfile, options.Port, options.Transport)
         {
             Timeout = options.EffectiveTimeout,
             AppendLfOnSend = options.AppendLfOnSend,

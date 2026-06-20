@@ -1,15 +1,22 @@
 using PlcComm.KvHostLink;
 
-var host = args.Length > 0 ? args[0] : "192.168.250.100";
-var port = args.Length > 1 ? int.Parse(args[1]) : 8501;
+if (args.Length < 3)
+{
+    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.BasicReadWriteSample -- <host> <port> <plc-profile>");
+    Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.BasicReadWriteSample -- 192.168.250.100 8501 keyence:kv-8000");
+    return;
+}
+
+var host = args[0];
+var port = int.Parse(args[1]);
+var plcProfile = args[2];
 const string targetU16 = "DM120";
 const string targetI16 = "DM121";
 const string targetU32 = "DM122";
 const string targetF32 = "DM124";
 
-Console.WriteLine($"Connecting to {host}:{port} ...");
-var options = new KvHostLinkConnectionOptions(host, port);
-// This sample uses the command-line host/port, or 192.168.250.100:8501 by default.
+Console.WriteLine($"Connecting to {host}:{port} ({plcProfile}) ...");
+var options = new KvHostLinkConnectionOptions(host, plcProfile, port);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 // Read source values from DM devices with explicit high-level type suffixes.

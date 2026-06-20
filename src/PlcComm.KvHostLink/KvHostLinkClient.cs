@@ -27,13 +27,19 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private int _rxCount;
     private readonly byte[] _tcpReadBuf = new byte[8192];
 
-    public KvHostLinkClient(string host, int port = 8501, HostLinkTransportMode transportMode = HostLinkTransportMode.Tcp)
+    public KvHostLinkClient(
+        string host,
+        string plcProfile,
+        int port = 8501,
+        HostLinkTransportMode transportMode = HostLinkTransportMode.Tcp)
     {
         _host = host;
         _port = port;
         _transportMode = transportMode;
+        PlcProfile = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile(plcProfile).PlcProfile;
     }
 
+    public string PlcProfile { get; }
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(3);
     public bool AppendLfOnSend { get; set; }
 
