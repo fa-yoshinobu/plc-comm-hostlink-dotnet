@@ -106,7 +106,7 @@ using PlcComm.KvHostLink;
 var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
-string[] addresses = ["DM0", "DM1:S", "DM2:D", "DM4:F", "DM10.A"];
+string[] addresses = ["DM0", "DM1:S", "DM2:D", "DM4:F", "DM10.A", "DM0:COMMENT"];
 var snapshot = await client.ReadNamedAsync(addresses);
 
 foreach (var (address, value) in snapshot)
@@ -115,7 +115,7 @@ foreach (var (address, value) in snapshot)
 }
 ```
 
-Use `ReadNamedAsync` when one application snapshot mixes unsigned words, signed words, double words, floats, and bit-in-word values.
+Use `ReadNamedAsync` when one application snapshot mixes unsigned words, signed words, double words, floats, PLC comment strings, and bit-in-word values.
 
 ## Contiguous block reads
 
@@ -242,6 +242,7 @@ Expansion unit buffer methods access module buffer memory by unit number, buffer
 | `:D` | `DM100:D` | Unsigned 32-bit view. |
 | `:L` | `DM100:L` | Signed 32-bit view. |
 | `:F` | `DM100:F` | IEEE 754 32-bit float view. |
+| `:COMMENT` | `DM100:COMMENT` | PLC device comment text. |
 | `.n` | `DM100.A` | One bit inside a word; `n` is hexadecimal `0` to `F`. |
 
 ## Runnable samples

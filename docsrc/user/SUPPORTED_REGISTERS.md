@@ -51,6 +51,7 @@ This page lists device families supported by the .NET (C#) high-level API.
 | `:D` | `DM100:D` | Unsigned 32-bit double word. |
 | `:L` | `DM100:L` | Signed 32-bit double word. |
 | `:F` | `DM100:F` | IEEE 754 32-bit floating-point value. |
+| `:COMMENT` | `DM100:COMMENT` | PLC device comment text through `ReadNamedAsync`. |
 | `.n` | `DM100.A` | Bit `n` inside a word, where `n` is hexadecimal `0` to `F`. |
 
 ## Addressing notes

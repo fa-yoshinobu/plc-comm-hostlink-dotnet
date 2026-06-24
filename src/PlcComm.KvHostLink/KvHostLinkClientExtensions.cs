@@ -381,6 +381,7 @@ public static class KvHostLinkClientExtensions
     ///   <item><description>"DM100:L" -- signed 32-bit</description></item>
     ///   <item><description>"DM100.3" -- bit 3 within word (bool)</description></item>
     ///   <item><description>"DM100.A" -- bit 10 within word (bool); bits 10-15 use hex digits A-F</description></item>
+    ///   <item><description>"DM100:COMMENT" -- PLC device comment text (string)</description></item>
     /// </list>
     /// <para>
     /// Bit-in-word indices use hexadecimal notation (0-F), matching the KEYENCE address format.
