@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-06-25
+
+### Changed
+- [Library docs] Documented `DM100:COMMENT` named reads in the public .NET XML documentation.
+- [Docs] Refreshed Host Link supported-register and usage guidance.
+- [Samples] Updated the high-level sample to restore the original PLC values after demonstration writes.
+
 ## [1.0.0] - 2026-06-24
 
 ### Changed
