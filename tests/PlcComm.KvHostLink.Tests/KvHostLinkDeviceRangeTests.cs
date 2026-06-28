@@ -1,3 +1,4 @@
+using System.Reflection;
 using PlcComm.KvHostLink;
 
 namespace PlcComm.KvHostLink.Tests;
@@ -125,6 +126,19 @@ public sealed class KvHostLinkDeviceRangeTests
 
         var kvx = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-x500");
         Assert.Equal("Z1-10", kvx.Entry("Z")!.AddressRange);
+    }
+
+    [Fact]
+    public void DeviceRangeCatalogForPlcProfile_InvalidRangeSegmentNumbersAreRejected()
+    {
+        var method = typeof(KvHostLinkDeviceRanges).GetMethod(
+            "ParseSegmentBounds",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        var error = Assert.Throws<TargetInvocationException>(() =>
+            method!.Invoke(null, new object[] { "DMX-DM10", KvDeviceRangeNotation.Decimal, "DM" }));
+        var inner = Assert.IsType<HostLinkProtocolError>(error.InnerException);
+        Assert.Contains("Invalid device range start", inner.Message);
     }
 
     [Fact]

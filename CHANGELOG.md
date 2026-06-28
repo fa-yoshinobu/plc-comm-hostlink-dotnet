@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Tooling`: Developer/operator command-line tools and helper utilities.
 - `CI`: Release checks, workflow scripts, or automation-only changes.
 
-## [Unreleased] - 2026-06-25
+## [Unreleased] - 2026-06-28
 
 ### Changed
 - Library: Multi-targeted the package for `net8.0`, `net9.0`, and `net10.0`.
@@ -23,9 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docs: Refreshed Host Link supported-register and usage guidance.
 - Docs: Updated the SDK prerequisite guidance for the multi-target package.
 - Samples: Updated the high-level sample to restore the original PLC values after demonstration writes.
+- Tests: Updated `Microsoft.NET.Test.Sdk` to `18.7.0`.
 - Tests: Multi-targeted the library test project for `net8.0`, `net9.0`, and `net10.0`.
 - Tooling: Updated the high-level XML documentation coverage check to read the `net10.0` build output.
 - CI: Installed .NET 8, .NET 9, and .NET 10 SDKs in CI, sample-build, and release workflows.
+
+### Fixed
+- Library: Reject malformed embedded device-range segments while building the KV range catalog instead of silently defaulting invalid lower bounds to `0`.
+- Tests: Added coverage for invalid embedded device-range segment parsing.
 
 ## [1.0.0] - 2026-06-24
 

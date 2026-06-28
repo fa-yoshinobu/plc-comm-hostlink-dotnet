@@ -271,16 +271,19 @@ public static class KvHostLinkDeviceRanges
         var parts = segment.Split('-', 2, StringSplitOptions.TrimEntries);
         if (parts.Length != 2)
         {
-            return (0, null, null);
+            throw new HostLinkProtocolError($"Invalid device range segment '{segment}': missing '-' separator.");
         }
 
-        var lower = ParseSegmentNumber(parts[0], notation, defaultDevice);
-        var upper = ParseSegmentNumber(parts[1], notation, defaultDevice);
-        var pointCount = lower.HasValue && upper.HasValue && upper.Value >= lower.Value
-            ? upper.Value - lower.Value + 1
-            : (uint?)null;
+        var lower = ParseSegmentNumber(parts[0], notation, defaultDevice)
+            ?? throw new HostLinkProtocolError($"Invalid device range start '{parts[0]}' in segment '{segment}'.");
+        var upper = ParseSegmentNumber(parts[1], notation, defaultDevice)
+            ?? throw new HostLinkProtocolError($"Invalid device range end '{parts[1]}' in segment '{segment}'.");
+        if (upper < lower || upper - lower == uint.MaxValue)
+        {
+            throw new HostLinkProtocolError($"Invalid device range bounds in segment '{segment}'.");
+        }
 
-        return (lower ?? 0, upper, pointCount);
+        return (lower, upper, upper - lower + 1);
     }
 
     private static uint? ParseSegmentNumber(
@@ -303,9 +306,13 @@ public static class KvHostLinkDeviceRanges
             return ParseXymSegmentNumber(trimmed);
         }
 
-        return notation == KvDeviceRangeNotation.Hexadecimal
-            ? uint.Parse(trimmed, NumberStyles.HexNumber, CultureInfo.InvariantCulture)
-            : uint.Parse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture);
+        return uint.TryParse(
+            trimmed,
+            notation == KvDeviceRangeNotation.Hexadecimal ? NumberStyles.HexNumber : NumberStyles.Integer,
+            CultureInfo.InvariantCulture,
+            out var parsed)
+            ? parsed
+            : null;
     }
 
     private static uint? ParseXymSegmentNumber(string text)
