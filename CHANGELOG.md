@@ -18,9 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - 2026-06-25
 
 ### Changed
+- Library: Multi-targeted the package for `net8.0`, `net9.0`, and `net10.0`.
 - Docs: Documented `DM100:COMMENT` named reads in the public .NET XML documentation.
 - Docs: Refreshed Host Link supported-register and usage guidance.
+- Docs: Updated the SDK prerequisite guidance for the multi-target package.
 - Samples: Updated the high-level sample to restore the original PLC values after demonstration writes.
+- Tests: Multi-targeted the library test project for `net8.0`, `net9.0`, and `net10.0`.
+- Tooling: Updated the high-level XML documentation coverage check to read the `net10.0` build output.
+- CI: Installed .NET 8, .NET 9, and .NET 10 SDKs in CI, sample-build, and release workflows.
 
 ## [1.0.0] - 2026-06-24
 

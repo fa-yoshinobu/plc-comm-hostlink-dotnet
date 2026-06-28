@@ -8,7 +8,7 @@ This page gets you from an empty .NET project to your first KEYENCE KV Host Link
 
 | Requirement | Value |
 |---|---|
-| .NET SDK | .NET 9 SDK, matching the package target framework `net9.0`. |
+| .NET SDK | .NET 8, 9, or 10 SDK for consuming the package; .NET 10 SDK recommended when building this repository. |
 | PLC network | Your KV PLC must be reachable from your PC. |
 | Host Link port | Use port `8501` for TCP or UDP unless your PLC connection node is configured differently. |
 
