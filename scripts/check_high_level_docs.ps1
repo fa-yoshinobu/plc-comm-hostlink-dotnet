@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
-$xmlPath = Join-Path $root "src\PlcComm.KvHostLink\bin\Debug\net9.0\PlcComm.KvHostLink.xml"
+$xmlPath = Join-Path $root "src\PlcComm.KvHostLink\bin\Debug\net10.0\PlcComm.KvHostLink.xml"
 
 if (-not (Test-Path $xmlPath)) {
     Write-Error "XML documentation file not found: $xmlPath"
