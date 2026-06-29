@@ -30,7 +30,7 @@ try
     await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 3, value: false);
     Console.WriteLine($"Updated {bitWordAddress} bit0=True bit3=False");
 
-    string[] snapshotAddresses = ["DM0", "DM1:S", "DM2:D", "DM4:F", bit0Address, bit3Address];
+    string[] snapshotAddresses = ["DM0:U", "DM1:S", "DM2:D", "DM4:F", bit0Address, bit3Address];
     // Read a mixed snapshot containing word values and bit-in-word values.
     var snapshot = await client.ReadNamedAsync(snapshotAddresses);
 
@@ -45,7 +45,7 @@ try
     Console.WriteLine("Polling 3 snapshots ...");
     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     var pollCount = 0;
-    string[] pollAddresses = ["DM0", "DM1:S", "DM4:F", bit0Address];
+    string[] pollAddresses = ["DM0:U", "DM1:S", "DM4:F", bit0Address];
     // Poll a named snapshot once per second.
     await foreach (var snap in client.PollAsync(
         pollAddresses,
@@ -54,7 +54,7 @@ try
     {
         pollCount++;
         Console.WriteLine(
-            $"[{pollCount}] DM0={snap["DM0"]} DM1:S={snap["DM1:S"]} " +
+            $"[{pollCount}] DM0:U={snap["DM0:U"]} DM1:S={snap["DM1:S"]} " +
             $"DM4:F={snap["DM4:F"]} {bit0Address}={snap[bit0Address]}");
 
         if (pollCount >= 3)

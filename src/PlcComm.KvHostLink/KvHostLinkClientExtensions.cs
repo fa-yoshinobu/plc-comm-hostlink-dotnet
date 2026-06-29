@@ -364,7 +364,7 @@ public static class KvHostLinkClientExtensions
     /// <remarks>
     /// Address format examples:
     /// <list type="bullet">
-    ///   <item><description>"DM100" -- unsigned 16-bit (ushort)</description></item>
+    ///   <item><description>"DM100:U" -- unsigned 16-bit (ushort)</description></item>
     ///   <item><description>"DM100:F" -- float</description></item>
     ///   <item><description>"DM100:S" -- signed 16-bit (short)</description></item>
     ///   <item><description>"DM100:D" -- unsigned 32-bit</description></item>

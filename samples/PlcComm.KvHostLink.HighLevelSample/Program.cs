@@ -131,11 +131,11 @@ try
     // -------------------------------------------------------------------------
     // 6. ReadNamedAsync
     //
-    // Reads multiple devices by address string with optional type suffix.
+    // Reads multiple devices by address string with explicit type suffix.
     // Returns IReadOnlyDictionary<string, object>.
     //
     // Address notation:
-    //   "DM100"    unsigned 16-bit (ushort)
+    //   "DM100:U"  unsigned 16-bit (ushort)
     //   "DM100:S"  signed 16-bit (short)
     //   "DM100:D"  unsigned 32-bit (uint)
     //   "DM100:L"  signed 32-bit (int)
@@ -145,7 +145,7 @@ try
     // Use case: reading a mixed-type process snapshot (int32 counter, signed
     //           error code, bool alarm) in a single dictionary-valued call.
     // -------------------------------------------------------------------------
-    string[] snapshotAddresses = ["DM100", "DM200:L", "DM300:F", "DM50.3", "DM50.A"];
+    string[] snapshotAddresses = ["DM100:U", "DM200:L", "DM300:F", "DM50.3", "DM50.A"];
     // Read a named mixed-type snapshot.
     var snapshot = await client.ReadNamedAsync(snapshotAddresses);
     foreach (var (addr, value) in snapshot)
@@ -163,7 +163,7 @@ try
     Console.WriteLine("\nPolling 3 snapshots (1 s interval):");
     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     var pollCount = 0;
-    string[] pollAddresses = ["DM100", "DM200:L", "DM300:F", "DM50.3"];
+    string[] pollAddresses = ["DM100:U", "DM200:L", "DM300:F", "DM50.3"];
     // Poll a repeated named snapshot until this sample has printed three rows.
     await foreach (var snap in client.PollAsync(
         pollAddresses,
@@ -171,7 +171,7 @@ try
         cts.Token))
     {
         Console.WriteLine(
-            $"  [{++pollCount}] DM100={snap["DM100"]}  DM200:L={snap["DM200:L"]}  " +
+            $"  [{++pollCount}] DM100:U={snap["DM100:U"]}  DM200:L={snap["DM200:L"]}  " +
             $"DM300:F={snap["DM300:F"]}  DM50.3={snap["DM50.3"]}");
         if (pollCount >= 3)
             break;

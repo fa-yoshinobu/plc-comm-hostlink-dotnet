@@ -15,7 +15,7 @@ public readonly record struct KvLogicalAddress(KvDeviceAddress BaseAddress, stri
     public bool IsBitInWord => BitIndex.HasValue;
 
     /// <summary>Formats the logical address using the public helper contract.</summary>
-    /// <returns>Canonical helper text such as <c>DM100</c>, <c>DM100:F</c>, or <c>DM100.A</c>.</returns>
+    /// <returns>Canonical helper text such as <c>DM100:U</c>, <c>DM100:F</c>, or <c>DM100.A</c>.</returns>
     public string ToText()
     {
         string baseText = KvHostLinkAddress.Format(BaseAddress with { Suffix = string.Empty });
@@ -79,7 +79,7 @@ public static class KvHostLinkAddress
         return NormalizeLogical(text);
     }
 
-    /// <summary>Parses a logical helper address such as <c>DM100:F</c>, <c>DM100:COMMENT</c>, or <c>DM100.A</c>.</summary>
+    /// <summary>Parses a logical helper address such as <c>DM100:U</c>, <c>DM100:F</c>, <c>DM100:COMMENT</c>, or <c>DM100.A</c>.</summary>
     /// <param name="text">Logical helper text to parse.</param>
     /// <returns>The normalized logical address.</returns>
     public static KvLogicalAddress ParseLogical(string text)

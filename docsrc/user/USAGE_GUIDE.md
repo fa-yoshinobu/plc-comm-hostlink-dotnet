@@ -106,7 +106,7 @@ using PlcComm.KvHostLink;
 var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
-string[] addresses = ["DM0", "DM1:S", "DM2:D", "DM4:F", "DM10.A", "DM0:COMMENT"];
+string[] addresses = ["DM0:U", "DM1:S", "DM2:D", "DM4:F", "DM10.A", "DM0:COMMENT"];
 var snapshot = await client.ReadNamedAsync(addresses);
 
 foreach (var (address, value) in snapshot)
@@ -164,13 +164,13 @@ using PlcComm.KvHostLink;
 var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
-string[] addresses = ["DM0", "DM1:S", "DM4:F"];
+string[] addresses = ["DM0:U", "DM1:S", "DM4:F"];
 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 var count = 0;
 
 await foreach (var snapshot in client.PollAsync(addresses, TimeSpan.FromSeconds(1), cts.Token))
 {
-    Console.WriteLine($"DM0={snapshot["DM0"]}, DM1:S={snapshot["DM1:S"]}, DM4:F={snapshot["DM4:F"]}");
+    Console.WriteLine($"DM0:U={snapshot["DM0:U"]}, DM1:S={snapshot["DM1:S"]}, DM4:F={snapshot["DM4:F"]}");
     if (++count >= 3)
     {
         break;
@@ -236,14 +236,16 @@ Expansion unit buffer methods access module buffer memory by unit number, buffer
 
 | Form | Example | Meaning |
 |---|---|---|
-| Plain | `DM100` | Default type for the device family, usually unsigned word for word devices. |
 | `:U` | `DM100:U` | Unsigned 16-bit view. |
 | `:S` | `DM100:S` | Signed 16-bit view. |
 | `:D` | `DM100:D` | Unsigned 32-bit view. |
 | `:L` | `DM100:L` | Signed 32-bit view. |
 | `:F` | `DM100:F` | IEEE 754 32-bit float view. |
+| `:BIT` | `R200:BIT` | Direct bit device view. |
 | `:COMMENT` | `DM100:COMMENT` | PLC device comment text. |
 | `.n` | `DM100.A` | One bit inside a word; `n` is hexadecimal `0` to `F`. |
+
+For `ReadNamedAsync` and `PollAsync`, include the intended type. Use `DM100:U` instead of plain `DM100` for an unsigned word.
 
 ## Runnable samples
 
