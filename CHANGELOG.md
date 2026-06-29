@@ -15,9 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Tooling`: Developer/operator command-line tools and helper utilities.
 - `CI`: Release checks, workflow scripts, or automation-only changes.
 
-## [Unreleased] - 2026-06-28
+## [Unreleased]
+
+## [1.1.0] - 2026-06-29
 
 ### Changed
+- Release: Bumped package metadata to `1.1.0`.
 - Library: Multi-targeted the package for `net8.0`, `net9.0`, and `net10.0`.
 - Library: Made Host Link device parsing require explicit device areas and value-format suffixes; numeric-only devices no longer default to `R`, and suffixless named addresses no longer infer a default format.
 - Docs: Documented `DM100:COMMENT` named reads in the public .NET XML documentation.
