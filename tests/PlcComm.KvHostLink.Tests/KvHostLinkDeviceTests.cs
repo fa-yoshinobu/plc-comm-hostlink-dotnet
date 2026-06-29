@@ -6,7 +6,6 @@ public class KvHostLinkDeviceTests
     [InlineData("DM100", "DM", 100, "")]
     [InlineData("DM100.S", "DM", 100, ".S")]
     [InlineData("R0", "R", 0, "")]
-    [InlineData("100", "R", 100, "")]
     [InlineData("MR500.U", "MR", 500, ".U")]
     [InlineData("B100", "B", 0x100, "")]
     [InlineData("X390", "X", 39 * 16, "")]
@@ -31,6 +30,7 @@ public class KvHostLinkDeviceTests
     [InlineData("X3FF")]
     [InlineData("Y19A0")]
     [InlineData("Y20000")]
+    [InlineData("100")]
     public void ParseDevice_InvalidInput_ThrowsException(string input)
     {
         Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ParseDevice(input));
@@ -39,7 +39,6 @@ public class KvHostLinkDeviceTests
     [Theory]
     [InlineData("DM100", "DM100")]
     [InlineData("DM100.S", "DM100.S")]
-    [InlineData("100", "R100")]
     [InlineData("R0", "R000")]
     [InlineData("R1", "R001")]
     [InlineData("R15", "R015")]
@@ -66,11 +65,10 @@ public class KvHostLinkDeviceTests
     }
 
     [Theory]
-    [InlineData("dm100", "DM100")]
+    [InlineData("dm100:u", "DM100:U")]
     [InlineData("dm100:f", "DM100:F")]
     [InlineData("dm100.a", "DM100.A")]
     [InlineData("dm100.d", "DM100.D")]
-    [InlineData("100", "R100")]
     public void KvHostLinkAddress_Normalize_ReturnsCanonicalText(string input, string expected)
     {
         Assert.Equal(expected, KvHostLinkAddress.Normalize(input));
@@ -78,6 +76,7 @@ public class KvHostLinkDeviceTests
 
     [Theory]
     [InlineData("DM100.S")]
+    [InlineData("DM100")]
     [InlineData("DM100.10")]
     public void KvHostLinkAddress_Normalize_InvalidPublicDotNotation_Throws(string input)
     {

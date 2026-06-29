@@ -46,7 +46,7 @@ public static class KvHostLinkDevice
     static KvHostLinkDevice()
     {
         var types = KvHostLinkModels.DeviceRanges.Keys.OrderByDescending(k => k.Length);
-        var pattern = $"^(?<type>{string.Join("|", types)})?(?<number>[0-9A-F]+)(?<suffix>\\.[USDLH])?$";
+        var pattern = $"^(?<type>{string.Join("|", types)})(?<number>[0-9A-F]+)(?<suffix>\\.[USDLH])?$";
         DeviceRegex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
 
@@ -67,8 +67,6 @@ public static class KvHostLinkDevice
 
         if (!match.Success)
         {
-            if (allowOmittedType && int.TryParse(raw, out _))
-                return ParseDevice("R" + raw, false);
             var validTypes = string.Join(", ", KvHostLinkModels.DeviceRanges.Keys.OrderBy(k => k));
             throw new HostLinkProtocolError(
                 $"Invalid device string '{text}'. " +
@@ -76,8 +74,6 @@ public static class KvHostLinkDevice
         }
 
         string deviceType = match.Groups["type"].Value;
-        if (string.IsNullOrEmpty(deviceType)) deviceType = "R";
-
         string numberText = match.Groups["number"].Value;
         string suffix = NormalizeSuffix(match.Groups["suffix"].Value);
 
@@ -120,6 +116,23 @@ public static class KvHostLinkDevice
     {
         if (!string.IsNullOrEmpty(suffix)) return suffix;
         return KvHostLinkModels.DefaultFormatByDeviceType.GetValueOrDefault(deviceType, "");
+    }
+
+    public static string RequireExplicitFormat(KvDeviceAddress address, string? dataFormat = null)
+    {
+        string suffix = dataFormat is not null
+            ? NormalizeSuffix(dataFormat)
+            : address.Suffix;
+        if (!string.IsNullOrEmpty(suffix))
+            return suffix;
+
+        string defaultFormat = ResolveEffectiveFormat(address.DeviceType, "");
+        if (string.IsNullOrEmpty(defaultFormat))
+            return "";
+
+        throw new HostLinkProtocolError(
+            $"Data format suffix is required for device '{address.ToText()}'. " +
+            $"Specify a suffix such as '{defaultFormat}' in the device string or dataFormat parameter.");
     }
 
     internal static bool UsesBitBankAddress(string deviceType) =>

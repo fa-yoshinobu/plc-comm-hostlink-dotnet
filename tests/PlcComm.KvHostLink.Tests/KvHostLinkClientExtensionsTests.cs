@@ -35,9 +35,9 @@ public sealed class KvHostLinkClientExtensionsTests
         await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
         var result = await client.ReadNamedAsync(
-            ["DM100", "DM100.0", "DM100.A", "DM101:S", "DM102:D", "DM104:L", "DM106:F"]);
+            ["DM100:U", "DM100.0", "DM100.A", "DM101:S", "DM102:D", "DM104:L", "DM106:F"]);
 
-        Assert.Equal((ushort)1025, Assert.IsType<ushort>(result["DM100"]));
+        Assert.Equal((ushort)1025, Assert.IsType<ushort>(result["DM100:U"]));
         Assert.True(Assert.IsType<bool>(result["DM100.0"]));
         Assert.True(Assert.IsType<bool>(result["DM100.A"]));
         Assert.Equal((short)-1, Assert.IsType<short>(result["DM101:S"]));
@@ -60,9 +60,9 @@ public sealed class KvHostLinkClientExtensionsTests
 
         await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
-        var result = await client.ReadNamedAsync(["DM100", "DM101:COMMENT"]);
+        var result = await client.ReadNamedAsync(["DM100:U", "DM101:COMMENT"]);
 
-        Assert.Equal((ushort)1025, Assert.IsType<ushort>(result["DM100"]));
+        Assert.Equal((ushort)1025, Assert.IsType<ushort>(result["DM100:U"]));
         Assert.Equal("MAIN COMMENT", Assert.IsType<string>(result["DM101:COMMENT"]));
         Assert.Equal(["RD DM100.U", "RDC DM101"], server.ReceivedCommands.ToArray());
     }
@@ -188,10 +188,10 @@ public sealed class KvHostLinkClientExtensionsTests
 
         await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
 
-        var result = await client.ReadNamedAsync(["T10", "C10"]);
+        var result = await client.ReadNamedAsync(["T10:D", "C10:D"]);
 
-        Assert.Equal((uint)20, Assert.IsType<uint>(result["T10"]));
-        Assert.Equal((uint)30, Assert.IsType<uint>(result["C10"]));
+        Assert.Equal((uint)20, Assert.IsType<uint>(result["T10:D"]));
+        Assert.Equal((uint)30, Assert.IsType<uint>(result["C10:D"]));
         Assert.Equal(["RD T10.D", "RD C10.D"], server.ReceivedCommands.ToArray());
     }
 
@@ -283,7 +283,7 @@ public sealed class KvHostLinkClientExtensionsTests
         await client.ForcedSetAsync("X100");
         await client.ForcedResetAsync("M100");
         await client.ForcedSetConsecutiveAsync("L100", 4);
-        await client.RegisterMonitorWordsAsync(["D100", "E100", "F100", "MR100", "LR100"]);
+        await client.RegisterMonitorWordsAsync(["D100.U", "E100.U", "F100.U", "MR100", "LR100"]);
         await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.RegisterMonitorWordsAsync(["M100"]));
         await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.RegisterMonitorWordsAsync(["L100"]));
         await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ForcedSetConsecutiveAsync("T100", 4));
@@ -353,7 +353,7 @@ public sealed class KvHostLinkClientExtensionsTests
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         await foreach (var snapshot in client.PollAsync(
-            ["DM100", "DM100.0", "DM101:F"],
+            ["DM100:U", "DM100.0", "DM101:F"],
             TimeSpan.FromMilliseconds(1),
             cts.Token))
         {
@@ -363,10 +363,10 @@ public sealed class KvHostLinkClientExtensionsTests
         }
 
         Assert.Equal(2, snapshots.Count);
-        Assert.Equal((ushort)1, Assert.IsType<ushort>(snapshots[0]["DM100"]));
+        Assert.Equal((ushort)1, Assert.IsType<ushort>(snapshots[0]["DM100:U"]));
         Assert.True(Assert.IsType<bool>(snapshots[0]["DM100.0"]));
         Assert.Equal(1.5f, Assert.IsType<float>(snapshots[0]["DM101:F"]));
-        Assert.Equal((ushort)3, Assert.IsType<ushort>(snapshots[1]["DM100"]));
+        Assert.Equal((ushort)3, Assert.IsType<ushort>(snapshots[1]["DM100:U"]));
         Assert.True(Assert.IsType<bool>(snapshots[1]["DM100.0"]));
         Assert.Equal(2.5f, Assert.IsType<float>(snapshots[1]["DM101:F"]));
 

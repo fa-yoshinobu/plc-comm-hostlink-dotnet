@@ -19,18 +19,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Library: Multi-targeted the package for `net8.0`, `net9.0`, and `net10.0`.
+- Library: Made Host Link device parsing require explicit device areas and value-format suffixes; numeric-only devices no longer default to `R`, and suffixless named addresses no longer infer a default format.
 - Docs: Documented `DM100:COMMENT` named reads in the public .NET XML documentation.
 - Docs: Refreshed Host Link supported-register and usage guidance.
 - Docs: Updated the SDK prerequisite guidance for the multi-target package.
 - Samples: Updated the high-level sample to restore the original PLC values after demonstration writes.
 - Tests: Updated `Microsoft.NET.Test.Sdk` to `18.7.0`.
+- Tests: Updated Host Link parser, high-level helper, and shared frame-vector coverage for explicit device/value-format requirements.
 - Tests: Multi-targeted the library test project for `net8.0`, `net9.0`, and `net10.0`.
 - Tooling: Updated the high-level XML documentation coverage check to read the `net10.0` build output.
 - CI: Installed .NET 8, .NET 9, and .NET 10 SDKs in CI, sample-build, and release workflows.
 
 ### Fixed
 - Library: Reject malformed embedded device-range segments while building the KV range catalog instead of silently defaulting invalid lower bounds to `0`.
+- Library: Made `BIT_IN_WORD` helper addresses require an explicit bit index such as `DM100.0` through `DM100.F`; `DM100:BIT_IN_WORD` now fails instead of silently reading bit 0.
+- Library: Missing Host Link response tokens now raise a protocol error instead of being treated as value `0`.
 - Tests: Added coverage for invalid embedded device-range segment parsing.
+- Tests: Added coverage for rejecting `BIT_IN_WORD` addresses without an explicit bit index and for missing response tokens.
 
 ## [1.0.0] - 2026-06-24
 

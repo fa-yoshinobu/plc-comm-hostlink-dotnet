@@ -22,9 +22,9 @@ public readonly record struct KvLogicalAddress(KvDeviceAddress BaseAddress, stri
         if (IsBitInWord)
             return $"{baseText}.{BitIndex.GetValueOrDefault().ToString("X", CultureInfo.InvariantCulture)}";
 
-        string defaultFormat = KvHostLinkDevice.ResolveEffectiveFormat(BaseAddress.DeviceType, "");
-        string defaultDtype = defaultFormat.StartsWith('.') ? defaultFormat[1..] : defaultFormat;
-        return DataType == defaultDtype ? baseText : $"{baseText}:{DataType}";
+        if (string.IsNullOrEmpty(DataType))
+            return baseText;
+        return $"{baseText}:{DataType}";
     }
 }
 
@@ -105,8 +105,12 @@ public static class KvHostLinkAddress
             throw new HostLinkProtocolError($"Invalid bit-in-word index in '{text}'. Use one hex digit 0-F or ':' for data type.");
 
         var parsed = Parse(raw);
+        string defaultFormat = KvHostLinkDevice.ResolveEffectiveFormat(parsed.DeviceType, "");
+        if (string.IsNullOrEmpty(parsed.Suffix) && !string.IsNullOrEmpty(defaultFormat))
+            throw new HostLinkProtocolError(
+                $"Logical data type is required for '{text}'. Use ':' syntax such as '{raw}:U'.");
         string defaultDtype = string.IsNullOrEmpty(parsed.Suffix)
-            ? KvHostLinkDevice.ResolveEffectiveFormat(parsed.DeviceType, "").TrimStart('.').ToUpperInvariant()
+            ? ""
             : NormalizeDType(parsed.Suffix);
         return new KvLogicalAddress(parsed with { Suffix = string.Empty }, defaultDtype, null);
     }

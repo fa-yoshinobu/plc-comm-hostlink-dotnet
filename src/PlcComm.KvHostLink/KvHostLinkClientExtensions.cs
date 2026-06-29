@@ -106,12 +106,7 @@ public static class KvHostLinkClientExtensions
     {
         string normalized = dtype.Trim().TrimStart('.').ToUpperInvariant();
         if (string.IsNullOrEmpty(normalized))
-        {
-            var addr = KvHostLinkDevice.ParseDevice(device);
-            normalized = string.IsNullOrEmpty(addr.Suffix)
-                ? KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "").TrimStart('.').ToUpperInvariant()
-                : addr.Suffix.TrimStart('.').ToUpperInvariant();
-        }
+            throw new HostLinkProtocolError("dtype is required.");
 
         if (normalized == "F")
         {
@@ -122,7 +117,7 @@ public static class KvHostLinkClientExtensions
         if (normalized == "")
         {
             var bitTokens = await client.ReadAsync(device, dataFormat: null, cancellationToken: ct).ConfigureAwait(false);
-            var bitRaw = bitTokens.FirstOrDefault() ?? "0";
+            var bitRaw = RequireDataToken(bitTokens, device);
             return ParseBoolToken(bitRaw);
         }
 
@@ -131,8 +126,8 @@ public static class KvHostLinkClientExtensions
         var parsedDevice = KvHostLinkDevice.ParseDevice(device);
         bool timerCounterComposite = (parsedDevice.DeviceType is "T" or "C") && (normalized is "U" or "S" or "D" or "L");
         var raw = timerCounterComposite
-            ? tokens.LastOrDefault() ?? "0"
-            : tokens.FirstOrDefault() ?? "0";
+            ? RequireLastDataToken(tokens, device)
+            : RequireDataToken(tokens, device);
         return normalized switch
         {
             "S" => (object)short.Parse(raw, CultureInfo.InvariantCulture),
@@ -270,12 +265,7 @@ public static class KvHostLinkClientExtensions
     {
         string normalized = dtype.Trim().TrimStart('.').ToUpperInvariant();
         if (string.IsNullOrEmpty(normalized))
-        {
-            var addr = KvHostLinkDevice.ParseDevice(device);
-            normalized = string.IsNullOrEmpty(addr.Suffix)
-                ? KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "").TrimStart('.').ToUpperInvariant()
-                : addr.Suffix.TrimStart('.').ToUpperInvariant();
-        }
+            throw new HostLinkProtocolError("dtype is required.");
 
         if (normalized == "F")
         {
@@ -340,7 +330,7 @@ public static class KvHostLinkClientExtensions
         if (bitIndex is < 0 or > 15)
             throw new ArgumentOutOfRangeException(nameof(bitIndex), "bitIndex must be 0-15.");
         var tokens = await client.ReadAsync(device, ".U", ct).ConfigureAwait(false);
-        int cur = ushort.Parse(tokens.FirstOrDefault() ?? "0", CultureInfo.InvariantCulture);
+        int cur = ushort.Parse(RequireDataToken(tokens, device), CultureInfo.InvariantCulture);
         if (value) cur |= 1 << bitIndex;
         else cur &= ~(1 << bitIndex);
         await client.WriteAsync(device, (ushort)(cur & 0xFFFF), ".U", ct).ConfigureAwait(false);
@@ -867,9 +857,11 @@ public static class KvHostLinkClientExtensions
             var (baseAddr, dtype, bitIdx) = ParseAddress(address);
             if (dtype == "BIT_IN_WORD")
             {
+                if (!bitIdx.HasValue)
+                    throw new HostLinkProtocolError($"Bit index is required for bit-in-word address '{address}'.");
                 var tokens = await client.ReadAsync(baseAddr, ".U", ct).ConfigureAwait(false);
-                int w = ushort.Parse(tokens.Length > 0 ? tokens[0] : "0", CultureInfo.InvariantCulture);
-                result[address] = ((w >> (bitIdx ?? 0)) & 1) != 0;
+                int w = ushort.Parse(RequireDataToken(tokens, baseAddr), CultureInfo.InvariantCulture);
+                result[address] = ((w >> bitIdx.Value) & 1) != 0;
             }
             else if (dtype == "COMMENT")
             {
@@ -1070,7 +1062,9 @@ public static class KvHostLinkClientExtensions
 
             if (dtype == "BIT_IN_WORD")
             {
-                request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, ReadPlanValueKind.BitInWord, bitIdx ?? 0);
+                if (!bitIdx.HasValue)
+                    return false;
+                request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, ReadPlanValueKind.BitInWord, bitIdx.Value);
                 return true;
             }
 
@@ -1155,6 +1149,20 @@ public static class KvHostLinkClientExtensions
             default:
                 throw new HostLinkProtocolError($"Invalid direct bit response token: {token}");
         }
+    }
+
+    private static string RequireDataToken(string[] tokens, string context)
+    {
+        if (tokens.Length == 0)
+            throw new HostLinkProtocolError($"Response for '{context}' did not contain a data token.");
+        return tokens[0];
+    }
+
+    private static string RequireLastDataToken(string[] tokens, string context)
+    {
+        if (tokens.Length == 0)
+            throw new HostLinkProtocolError($"Response for '{context}' did not contain a data token.");
+        return tokens[^1];
     }
 
     private static string OffsetDevice(KvDeviceAddress start, int wordOffset)

@@ -286,9 +286,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     public async Task<string[]> ReadAsync(string device, string? dataFormat = null, CancellationToken cancellationToken = default)
     {
         var addr = KvHostLinkDevice.ParseDevice(device);
-        string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
-        if (string.IsNullOrEmpty(suffix))
-            suffix = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
+        string suffix = KvHostLinkDevice.RequireExplicitFormat(addr, dataFormat);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix);
 
         var target = addr with { Suffix = suffix };
@@ -299,9 +297,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     public async Task<string[]> ReadConsecutiveAsync(string device, int count, string? dataFormat = null, CancellationToken cancellationToken = default)
     {
         var addr = KvHostLinkDevice.ParseDevice(device);
-        string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
-        if (string.IsNullOrEmpty(suffix))
-            suffix = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
+        string suffix = KvHostLinkDevice.RequireExplicitFormat(addr, dataFormat);
 
         KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, suffix, count);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix, count);
@@ -315,9 +311,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         where T : IFormattable
     {
         var addr = KvHostLinkDevice.ParseDevice(device);
-        string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
-        if (string.IsNullOrEmpty(suffix))
-            suffix = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
+        string suffix = KvHostLinkDevice.RequireExplicitFormat(addr, dataFormat);
         KvHostLinkDevice.ValidateDeviceType("WR", addr.DeviceType, KvHostLinkModels.WrDeviceTypes);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix);
 
@@ -333,9 +327,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         if (valList.Count == 0) throw new HostLinkProtocolError("values must not be empty");
 
         var addr = KvHostLinkDevice.ParseDevice(device);
-        string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
-        if (string.IsNullOrEmpty(suffix))
-            suffix = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
+        string suffix = KvHostLinkDevice.RequireExplicitFormat(addr, dataFormat);
 
         KvHostLinkDevice.ValidateDeviceType("WRS", addr.DeviceType, KvHostLinkModels.WrDeviceTypes);
         KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, suffix, valList.Count);
@@ -374,7 +366,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         {
             var addr = KvHostLinkDevice.ParseDevice(device);
             KvHostLinkDevice.ValidateDeviceType("MWS", addr.DeviceType, KvHostLinkModels.MwsDeviceTypes);
-            string suffix = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, addr.Suffix);
+            string suffix = KvHostLinkDevice.RequireExplicitFormat(addr);
             KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix);
             sb.Append(' ');
             sb.Append((addr with { Suffix = suffix }).ToText());
@@ -424,8 +416,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         string device, int count, string? dataFormat = null, CancellationToken cancellationToken = default)
     {
         var addr = KvHostLinkDevice.ParseDevice(device);
-        string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
-        string effectiveFormat = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, suffix);
+        string effectiveFormat = KvHostLinkDevice.RequireExplicitFormat(addr, dataFormat);
         KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, effectiveFormat, count);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, effectiveFormat, count);
         var target = addr with { Suffix = effectiveFormat };
@@ -445,8 +436,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         var valList = values.ToList();
         if (valList.Count == 0) throw new HostLinkProtocolError("values must not be empty");
         var addr = KvHostLinkDevice.ParseDevice(device);
-        string suffix = dataFormat != null ? KvHostLinkDevice.NormalizeSuffix(dataFormat) : addr.Suffix;
-        string effectiveFormat = KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, suffix);
+        string effectiveFormat = KvHostLinkDevice.RequireExplicitFormat(addr, dataFormat);
         KvHostLinkDevice.ValidateDeviceType("WRE", addr.DeviceType, KvHostLinkModels.WrDeviceTypes);
         KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, effectiveFormat, valList.Count);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, effectiveFormat, valList.Count);
@@ -466,9 +456,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     {
         var addr = KvHostLinkDevice.ParseDevice(device);
         KvHostLinkDevice.ValidateDeviceType("WS", addr.DeviceType, KvHostLinkModels.WsDeviceTypes);
-        string suffix = !string.IsNullOrEmpty(addr.Suffix) ? addr.Suffix
-            : KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
-        if (dataFormat != null) suffix = KvHostLinkDevice.NormalizeSuffix(dataFormat);
+        string suffix = KvHostLinkDevice.RequireExplicitFormat(addr, dataFormat);
         KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, suffix, 1);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix);
         var target = addr with { Suffix = suffix };
@@ -488,9 +476,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         if (valList.Count == 0) throw new HostLinkProtocolError("values must not be empty");
         var addr = KvHostLinkDevice.ParseDevice(device);
         KvHostLinkDevice.ValidateDeviceType("WSS", addr.DeviceType, KvHostLinkModels.WsDeviceTypes);
-        string suffix = !string.IsNullOrEmpty(addr.Suffix) ? addr.Suffix
-            : KvHostLinkDevice.ResolveEffectiveFormat(addr.DeviceType, "");
-        if (dataFormat != null) suffix = KvHostLinkDevice.NormalizeSuffix(dataFormat);
+        string suffix = KvHostLinkDevice.RequireExplicitFormat(addr, dataFormat);
         KvHostLinkDevice.ValidateDeviceCount(addr.DeviceType, suffix, valList.Count);
         KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, suffix, valList.Count);
         var target = addr with { Suffix = suffix };
