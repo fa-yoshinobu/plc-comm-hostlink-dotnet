@@ -44,11 +44,6 @@ Console.WriteLine($"DM0 = {value}");
 | [Full documentation site](https://fa-yoshinobu.github.io/plc-comm-docs-site/) | Unified docs for all PLC communication libraries. |
 | [Examples](samples/README.md) | Run maintained .NET samples: `samples\PlcComm.KvHostLink.HighLevelSample\PlcComm.KvHostLink.HighLevelSample.csproj`, `samples\PlcComm.KvHostLink.BasicReadWriteSample\PlcComm.KvHostLink.BasicReadWriteSample.csproj`, `samples\PlcComm.KvHostLink.NamedPollingSample\PlcComm.KvHostLink.NamedPollingSample.csproj`. |
 
-## Hardware verified
-
-Live-device verification is maintained in [Latest communication verification](docsrc/user/LATEST_COMMUNICATION_VERIFICATION.md).
-See that page for verified PLC models, transports, dates, limitations, and retained validation notes.
-
 ## License and registry
 
 | Item | Value |

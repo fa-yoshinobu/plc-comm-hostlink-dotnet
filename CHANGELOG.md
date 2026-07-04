@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Tooling`: Developer/operator command-line tools and helper utilities.
 - `CI`: Release checks, workflow scripts, or automation-only changes.
 
+## [Unreleased]
+
+### Changed
+- Docs: Removed the per-library latest communication verification page and links so user docs stay focused on usage, not verification logs.
+
 ## [1.1.1] - 2026-06-29
 
 ### Changed
