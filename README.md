@@ -38,6 +38,7 @@ Console.WriteLine($"DM0 = {value}");
 |---|---|
 | [Getting started](docsrc/user/GETTING_STARTED.md) | Install the package, connect to your PLC, and run your first read/write. |
 | [Usage guide](docsrc/user/USAGE_GUIDE.md) | Use the high-level API and common Host Link workflows. |
+| [API reference](docsrc/user/API_REFERENCE.md) | Browse generated public .NET signatures and XML documentation comments. |
 | [PLC profiles](docsrc/user/PROFILES.md) | Choose the profile that matches your PLC model and device ranges. |
 | [KV Host Link Device Ranges](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/device-ranges/) | Check shared device families, address notation, and range tables. |
 | [KV Host Link Troubleshooting & Codes](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/troubleshooting-codes/) | Troubleshoot common port, profile, address, write-permission, and PLC error-code symptoms. |
