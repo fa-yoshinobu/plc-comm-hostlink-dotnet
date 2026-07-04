@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Samples: Added read-only multi-PLC monitoring and JSON config polling recipes with independent reconnect loops, dry-run validation, and long-form CSV output.
 - Docs: Added generated .NET API reference from the public assembly surface and XML documentation comments, with CI freshness validation.
 - Docs: Removed the per-library troubleshooting/code page; shared KV Host Link troubleshooting and code guidance now lives in the PLC Setup Guide.
 - Docs: Removed the per-library latest communication verification page and links so user docs stay focused on usage, not verification logs.
