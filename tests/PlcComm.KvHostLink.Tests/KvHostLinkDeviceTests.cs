@@ -67,6 +67,7 @@ public class KvHostLinkDeviceTests
     [Theory]
     [InlineData("dm100:u", "DM100:U")]
     [InlineData("dm100:f", "DM100:F")]
+    [InlineData("dm100:h", "DM100:H")]
     [InlineData("dm100.a", "DM100.A")]
     [InlineData("dm100.d", "DM100.D")]
     public void KvHostLinkAddress_Normalize_ReturnsCanonicalText(string input, string expected)

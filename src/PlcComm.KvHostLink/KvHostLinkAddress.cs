@@ -147,6 +147,7 @@ public static class KvHostLinkAddress
             "S" => "S",
             "D" => "D",
             "L" => "L",
+            "H" => "H",
             "F" => "F",
             "COMMENT" => "COMMENT",
             _ => throw new HostLinkProtocolError($"Unsupported logical data type '{text}'."),

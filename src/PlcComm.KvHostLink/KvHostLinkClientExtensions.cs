@@ -80,12 +80,13 @@ public static class KvHostLinkClientExtensions
     /// High-level data type code: <c>"U"</c> = <see cref="ushort"/>,
     /// <c>"S"</c> = <see cref="short"/>, <c>"D"</c> = <see cref="uint"/>,
     /// <c>"L"</c> = signed 32-bit <see cref="int"/>, <c>"F"</c> = IEEE 754
-    /// float32.
+    /// float32, <c>"H"</c> = hexadecimal 16-bit word text.
     /// </param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>
     /// A boxed CLR value. Integer formats return boxed integral types and
-    /// <c>"F"</c> returns a boxed <see cref="float"/>.
+    /// <c>"F"</c> returns a boxed <see cref="float"/>, and <c>"H"</c>
+    /// returns a <see cref="string"/>.
     /// </returns>
     /// <remarks>
     /// The float helper is implemented at the extension layer by reading two
@@ -124,10 +125,12 @@ public static class KvHostLinkClientExtensions
         string fmt = "." + normalized;
         var tokens = await client.ReadAsync(device, fmt, ct).ConfigureAwait(false);
         var parsedDevice = KvHostLinkDevice.ParseDevice(device);
-        bool timerCounterComposite = (parsedDevice.DeviceType is "T" or "C") && (normalized is "U" or "S" or "D" or "L");
+        bool timerCounterComposite = (parsedDevice.DeviceType is "T" or "C") && (normalized is "U" or "S" or "D" or "L" or "H");
         var raw = timerCounterComposite
             ? RequireLastDataToken(tokens, device)
             : RequireDataToken(tokens, device);
+        if (normalized == "H")
+            return raw.Trim().ToUpperInvariant();
         return normalized switch
         {
             "S" => (object)short.Parse(raw, CultureInfo.InvariantCulture),
@@ -247,7 +250,7 @@ public static class KvHostLinkClientExtensions
     /// <param name="device">Base device address string, for example <c>"DM100"</c>.</param>
     /// <param name="dtype">
     /// High-level data type code: <c>"U"</c>, <c>"S"</c>, <c>"D"</c>,
-    /// <c>"L"</c>, or <c>"F"</c>.
+    /// <c>"L"</c>, <c>"F"</c>, or <c>"H"</c>.
     /// </param>
     /// <param name="value">Value to write.</param>
     /// <param name="ct">Cancellation token.</param>
@@ -289,6 +292,32 @@ public static class KvHostLinkClientExtensions
     }
 
     /// <summary>
+    /// Writes a hexadecimal word text value using the high-level <c>"H"</c>
+    /// data type code.
+    /// </summary>
+    public static async Task WriteTypedAsync(
+        this KvHostLinkClient client,
+        string device,
+        string dtype,
+        string value,
+        CancellationToken ct = default)
+    {
+        string normalized = dtype.Trim().TrimStart('.').ToUpperInvariant();
+        if (normalized != "H")
+            throw new HostLinkProtocolError("String WriteTypedAsync is supported only for dtype 'H'.");
+
+        var addr = KvHostLinkDevice.ParseDevice(device);
+        KvHostLinkDevice.ValidateDeviceType("WR", addr.DeviceType, KvHostLinkModels.WrDeviceTypes);
+        KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, ".H");
+
+        string hex = NormalizeHexWordText(value);
+        string response = await client.SendRawAsync($"WR {(addr with { Suffix = ".H" }).ToText()} {hex}", ct)
+            .ConfigureAwait(false);
+        if (response != "OK")
+            throw new HostLinkProtocolError($"Expected 'OK' but received '{response}' for H write.");
+    }
+
+    /// <summary>
     /// Writes a single device value using a high-level data type code.
     /// </summary>
     public static Task WriteTypedAsync<T>(
@@ -297,6 +326,18 @@ public static class KvHostLinkClientExtensions
         string dtype,
         T value,
         CancellationToken ct = default) where T : IFormattable
+        => client.ExecuteAsync(inner => KvHostLinkClientExtensions.WriteTypedAsync(inner, device, dtype, value, ct), ct);
+
+    /// <summary>
+    /// Writes a hexadecimal word text value using the high-level <c>"H"</c>
+    /// data type code.
+    /// </summary>
+    public static Task WriteTypedAsync(
+        this QueuedKvHostLinkClient client,
+        string device,
+        string dtype,
+        string value,
+        CancellationToken ct = default)
         => client.ExecuteAsync(inner => KvHostLinkClientExtensions.WriteTypedAsync(inner, device, dtype, value, ct), ct);
 
     // -----------------------------------------------------------------------
@@ -1163,6 +1204,14 @@ public static class KvHostLinkClientExtensions
         if (tokens.Length == 0)
             throw new HostLinkProtocolError($"Response for '{context}' did not contain a data token.");
         return tokens[^1];
+    }
+
+    private static string NormalizeHexWordText(string value)
+    {
+        string text = value.Trim().ToUpperInvariant();
+        if (text.Length is 0 or > 4 || text.Any(ch => !Uri.IsHexDigit(ch)))
+            throw new HostLinkProtocolError("H values must be 1 to 4 hexadecimal digits.");
+        return text;
     }
 
     private static string OffsetDevice(KvDeviceAddress start, int wordOffset)

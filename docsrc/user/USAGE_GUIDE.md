@@ -45,6 +45,29 @@ Console.WriteLine($"Connected: {client.IsOpen}");
 
 `KvHostLinkConnectionOptions` requires one canonical PLC profile and defaults to TCP, port `8501`, a 3-second effective timeout, and no LF appended after CR.
 
+## Performance notes
+
+For stable local networks, UDP usually has the lowest latency. TCP is the safer
+default for remote or less predictable networks because the OS handles
+retransmission. The TCP transport disables Nagle buffering for small Host Link
+command frames.
+
+Reuse one connected client for repeated reads and writes. Prefer
+`ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, or
+`ReadNamedAsync` over many individual `ReadTypedAsync` calls when one
+application snapshot can be read as one request.
+
+## Connection reuse and concurrent requests
+
+Keep one `QueuedKvHostLinkClient` open for repeated reads, writes, and polling.
+The factory returns a queued client, so multiple async callers can share that
+client without interleaving Host Link frames on the same PLC connection.
+
+Do not call `InnerClient` concurrently. When custom access is needed, use
+`ExecuteAsync` so the operation stays inside the same queue. Use `CloseAsync`
+and `OpenAsync` for an intentional reconnect; after a persistent connection
+failure, dispose the current client and create a new one with the same options.
+
 ## Read a single value
 
 ```csharp
@@ -70,6 +93,7 @@ Console.WriteLine($"{unsignedWord}, {signedWord}, {unsignedDWord}, {signedDWord}
 | `D` | Unsigned 32-bit double word | `uint` |
 | `L` | Signed 32-bit double word | `int` |
 | `F` | IEEE 754 32-bit floating point | `float` |
+| `H` | Hexadecimal 16-bit word text | `string` |
 
 ## Write a single value
 

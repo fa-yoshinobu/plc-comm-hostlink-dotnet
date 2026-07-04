@@ -107,6 +107,32 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task ReadTypedAsync_WriteTypedAsync_And_ReadNamedAsync_SupportHexSuffix()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD DM210.H" => "00ff",
+            "WR DM210.H FF" => "OK",
+            "WR DM211.H 00AA" => "OK",
+            "RD DM212.H" => "ABCD",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
+
+        var value = await client.ReadTypedAsync("DM210", "H");
+        await client.WriteTypedAsync("DM210", "H", (ushort)0x00FF);
+        await client.WriteTypedAsync("DM211", "H", "00aa");
+        var named = await client.ReadNamedAsync(["DM212:H"]);
+
+        Assert.Equal("00FF", Assert.IsType<string>(value));
+        Assert.Equal("ABCD", Assert.IsType<string>(named["DM212:H"]));
+        Assert.Equal(
+            ["RD DM210.H", "WR DM210.H FF", "WR DM211.H 00AA", "RD DM212.H"],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task ReadTypedAsync_TimerCounterCompositeReadReturnsSetValue()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
