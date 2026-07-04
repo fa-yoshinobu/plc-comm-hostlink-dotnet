@@ -88,6 +88,25 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task ReadNamedAsync_AcceptsExplicitBitLogicalTypeForDirectBits()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RDS R5000 3" => "0 1 0",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, server.Port);
+
+        var result = await client.ReadNamedAsync(["R5000:BIT", "R5001:BIT", "R5002:BIT"]);
+
+        Assert.False(Assert.IsType<bool>(result["R5000:BIT"]));
+        Assert.True(Assert.IsType<bool>(result["R5001:BIT"]));
+        Assert.False(Assert.IsType<bool>(result["R5002:BIT"]));
+        Assert.Equal(["RDS R5000 3"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task ReadTypedAsync_And_WriteTypedAsync_SupportFloatSuffix()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch

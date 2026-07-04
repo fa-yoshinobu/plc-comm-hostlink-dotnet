@@ -547,7 +547,7 @@ Parameters:
 public static KvLogicalAddress ParseLogical(string text)
 ```
 
-Parses a logical helper address such as `DM100:U`, `DM100:F`, `DM100:COMMENT`, or `DM100.A`.
+Parses a logical helper address such as `DM100:U`, `DM100:F`, `R100:BIT`, `DM100:COMMENT`, or `DM100.A`.
 
 Returns: The normalized logical address.
 
@@ -1551,7 +1551,7 @@ A normalized logical Host Link address used by the high-level helper layer.
 
 Parameters:
 - `BaseAddress`: Base word device address without a logical suffix.
-- `DataType`: Logical data type code such as `U`, `S`, `D`, `L`, `F`, or `COMMENT`.
+- `DataType`: Logical data type code such as `U`, `S`, `D`, `L`, `F`, `BIT`, or `COMMENT`.
 - `BitIndex`: Bit index inside the base word when the logical address targets a bit-in-word.
 
 ##### ToText
@@ -1578,7 +1578,7 @@ Base word device address without a logical suffix.
 public string DataType { get; set; }
 ```
 
-Logical data type code such as `U`, `S`, `D`, `L`, `F`, or `COMMENT`.
+Logical data type code such as `U`, `S`, `D`, `L`, `F`, `BIT`, or `COMMENT`.
 
 ##### BitIndex
 

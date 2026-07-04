@@ -904,6 +904,15 @@ public static class KvHostLinkClientExtensions
                 int w = ushort.Parse(RequireDataToken(tokens, baseAddr), CultureInfo.InvariantCulture);
                 result[address] = ((w >> bitIdx.Value) & 1) != 0;
             }
+            else if (dtype == "BIT")
+            {
+                var parsed = KvHostLinkDevice.ParseDevice(baseAddr);
+                if (!DirectBitDeviceTypes.Contains(parsed.DeviceType))
+                    throw new HostLinkProtocolError($"Logical data type BIT is only valid for direct bit devices: '{address}'.");
+
+                var tokens = await client.ReadAsync(baseAddr, dataFormat: null, cancellationToken: ct).ConfigureAwait(false);
+                result[address] = ParseBoolToken(RequireDataToken(tokens, baseAddr));
+            }
             else if (dtype == "COMMENT")
             {
                 result[address] = await client.ReadCommentsAsync(baseAddr, stripPadding: true, ct).ConfigureAwait(false);
@@ -1094,6 +1103,11 @@ public static class KvHostLinkClientExtensions
             var (baseAddr, dtype, bitIdx) = ParseAddress(address);
             var parsed = KvHostLinkDevice.ParseDevice(baseAddr);
             if (string.IsNullOrEmpty(dtype) && DirectBitDeviceTypes.Contains(parsed.DeviceType))
+            {
+                request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, ReadPlanValueKind.DirectBit, 0);
+                return true;
+            }
+            if (dtype == "BIT" && DirectBitDeviceTypes.Contains(parsed.DeviceType))
             {
                 request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, ReadPlanValueKind.DirectBit, 0);
                 return true;

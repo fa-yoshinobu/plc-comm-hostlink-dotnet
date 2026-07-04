@@ -7,7 +7,7 @@ namespace PlcComm.KvHostLink;
 /// A normalized logical Host Link address used by the high-level helper layer.
 /// </summary>
 /// <param name="BaseAddress">Base word device address without a logical suffix.</param>
-/// <param name="DataType">Logical data type code such as <c>U</c>, <c>S</c>, <c>D</c>, <c>L</c>, <c>F</c>, or <c>COMMENT</c>.</param>
+/// <param name="DataType">Logical data type code such as <c>U</c>, <c>S</c>, <c>D</c>, <c>L</c>, <c>F</c>, <c>BIT</c>, or <c>COMMENT</c>.</param>
 /// <param name="BitIndex">Bit index inside the base word when the logical address targets a bit-in-word.</param>
 public readonly record struct KvLogicalAddress(KvDeviceAddress BaseAddress, string DataType, int? BitIndex)
 {
@@ -79,7 +79,7 @@ public static class KvHostLinkAddress
         return NormalizeLogical(text);
     }
 
-    /// <summary>Parses a logical helper address such as <c>DM100:U</c>, <c>DM100:F</c>, <c>DM100:COMMENT</c>, or <c>DM100.A</c>.</summary>
+    /// <summary>Parses a logical helper address such as <c>DM100:U</c>, <c>DM100:F</c>, <c>R100:BIT</c>, <c>DM100:COMMENT</c>, or <c>DM100.A</c>.</summary>
     /// <param name="text">Logical helper text to parse.</param>
     /// <returns>The normalized logical address.</returns>
     public static KvLogicalAddress ParseLogical(string text)
@@ -149,6 +149,7 @@ public static class KvHostLinkAddress
             "L" => "L",
             "H" => "H",
             "F" => "F",
+            "BIT" => "BIT",
             "COMMENT" => "COMMENT",
             _ => throw new HostLinkProtocolError($"Unsupported logical data type '{text}'."),
         };
