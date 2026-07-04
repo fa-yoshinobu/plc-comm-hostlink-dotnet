@@ -2,6 +2,12 @@
 
 This library supports all KV series models. Device ranges differ by model. You select the device-range catalog by passing a canonical PLC profile name such as `keyence:kv-7000`; the library does not query the PLC to choose a profile for you.
 
+## Device families and ranges
+
+Device-family notation, type suffixes, XYM aliases, and static range tables are shared across the KV Host Link libraries. Use the common [KV Host Link Device Ranges](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/device-ranges/) page for those details.
+
+The tables below only identify the canonical profile names and the major device families enabled by each profile.
+
 ## Supported PLC profiles
 
 | Canonical profile | Key available devices | Notes |
@@ -49,4 +55,4 @@ KV-3000 and KV-5000 profiles include `AT`, but timer/counter preset writes (`WS`
 
 KV-7000 and KV-8000 profiles are the documented profiles for timer/counter preset writes (`WS`/`WSS`). They do not include `CTH` or `CTC`.
 
-KV-X500 profiles do not include `AT`, `VM`, `VB`, `CTH`, or `CTC`. Check [Gotchas](GOTCHAS.md) before using `AT` or XYM-style addresses.
+KV-X500 profiles do not include `AT`, `VM`, `VB`, `CTH`, or `CTC`. Use the shared [KV Host Link Error Codes](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/error-codes/) page for common address-shape and unsupported-device symptoms.

@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Docs: Removed the per-library Error Codes page; shared KV Host Link error-code guidance now lives in the PLC Setup Guide.
 - Docs: Removed the per-library latest communication verification page and links so user docs stay focused on usage, not verification logs.
+- Docs: Removed the manual page-navigation block from Getting Started and rely on site navigation instead.
+- Docs: Removed the thin per-library Troubleshooting page after moving common KV Host Link troubleshooting to the PLC Setup Guide.
+- Docs: Moved shared KV Host Link gotcha and troubleshooting items to the common PLC Setup Guide and standardized the Gotchas page structure with SLMP.
+- Docs: Moved shared supported-register and device-range guidance to the common KV Host Link Device Ranges page and kept the user docs to Getting Started, Usage Guide, PLC Profiles, and Gotchas.
 
 ## [1.1.1] - 2026-06-29
 
