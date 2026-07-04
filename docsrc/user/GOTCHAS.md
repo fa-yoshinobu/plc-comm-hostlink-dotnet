@@ -85,6 +85,20 @@ var catalog = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv
 Console.WriteLine(catalog.PlcProfile);
 ```
 
+## Symptom: CTH or CTC address is rejected
+
+| Root cause | Fix |
+|---|---|
+| `CTH` and `CTC` are catalog metadata rows for supported profiles. The address parser does not accept them as device addresses. | Treat them as catalog metadata only. |
+
+```csharp
+using System;
+using PlcComm.KvHostLink;
+
+var catalog = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-5000");
+Console.WriteLine(catalog.Entry("CTH"));
+```
+
 ## Symptom: Expansion unit buffer read fails
 
 | Root cause | Fix |

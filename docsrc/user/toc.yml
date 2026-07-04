@@ -8,5 +8,9 @@
   href: PROFILES.md
 - name: Gotchas
   href: GOTCHAS.md
+- name: Error codes
+  href: ERROR_CODES.md
+- name: Troubleshooting
+  href: TROUBLESHOOTING.md
 - name: Latest communication verification
   href: LATEST_COMMUNICATION_VERIFICATION.md

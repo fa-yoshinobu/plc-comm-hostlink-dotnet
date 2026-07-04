@@ -18,7 +18,3 @@ This page keeps the current public summary only. Older detailed notes are not ke
 
 - keep large chunked reads out of the first smoke test
 - use only the families in the current public register table
-
-## Where Older Evidence Went
-
-This public page keeps only the current summary. Detailed historical evidence is retained as maintainer notes.
