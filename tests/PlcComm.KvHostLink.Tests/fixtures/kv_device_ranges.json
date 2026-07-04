@@ -1,0 +1,473 @@
+{
+  "schema_version": 1,
+  "date": "2026-07-05",
+  "scope": "keyence-kv-hostlink",
+  "description": "Canonical KEYENCE KV Host Link profile and device range catalog shared by the plc-comm-hostlink libraries.",
+  "policy": {
+    "range_semantics": "Ranges are catalog data for profile selection, UI address pickers, and application-layer checks. They are not a production guarantee that every address can be read or written on a connected PLC.",
+    "unsupported_marker": "-"
+  },
+  "evidence_files": {
+    "catalog": "evidence/hostlink_device_ranges_source_20260705.md"
+  },
+  "profiles": {
+    "keyence:kv-nano": {
+      "display_name": "KEYENCE KV-NANO",
+      "source_label": "KV-NANO",
+      "vendor": "KEYENCE",
+      "family": "KV-NANO",
+      "address_notation": "native"
+    },
+    "keyence:kv-nano-xym": {
+      "display_name": "KEYENCE KV-NANO (XYM notation)",
+      "source_label": "KV-NANO(XYM)",
+      "vendor": "KEYENCE",
+      "family": "KV-NANO",
+      "address_notation": "xym",
+      "base_profile": "keyence:kv-nano",
+      "variant": "xym"
+    },
+    "keyence:kv-3000": {
+      "display_name": "KEYENCE KV-3000",
+      "source_label": "KV-3000",
+      "vendor": "KEYENCE",
+      "family": "KV-3000",
+      "address_notation": "native"
+    },
+    "keyence:kv-3000-xym": {
+      "display_name": "KEYENCE KV-3000 (XYM notation)",
+      "source_label": "KV-3000(XYM)",
+      "vendor": "KEYENCE",
+      "family": "KV-3000",
+      "address_notation": "xym",
+      "base_profile": "keyence:kv-3000",
+      "variant": "xym"
+    },
+    "keyence:kv-5000": {
+      "display_name": "KEYENCE KV-5000",
+      "source_label": "KV-5000",
+      "vendor": "KEYENCE",
+      "family": "KV-5000",
+      "address_notation": "native"
+    },
+    "keyence:kv-5000-xym": {
+      "display_name": "KEYENCE KV-5000 (XYM notation)",
+      "source_label": "KV-5000(XYM)",
+      "vendor": "KEYENCE",
+      "family": "KV-5000",
+      "address_notation": "xym",
+      "base_profile": "keyence:kv-5000",
+      "variant": "xym"
+    },
+    "keyence:kv-7000": {
+      "display_name": "KEYENCE KV-7000",
+      "source_label": "KV-7000",
+      "vendor": "KEYENCE",
+      "family": "KV-7000",
+      "address_notation": "native"
+    },
+    "keyence:kv-7000-xym": {
+      "display_name": "KEYENCE KV-7000 (XYM notation)",
+      "source_label": "KV-7000(XYM)",
+      "vendor": "KEYENCE",
+      "family": "KV-7000",
+      "address_notation": "xym",
+      "base_profile": "keyence:kv-7000",
+      "variant": "xym"
+    },
+    "keyence:kv-8000": {
+      "display_name": "KEYENCE KV-8000",
+      "source_label": "KV-8000",
+      "vendor": "KEYENCE",
+      "family": "KV-8000",
+      "address_notation": "native"
+    },
+    "keyence:kv-8000-xym": {
+      "display_name": "KEYENCE KV-8000 (XYM notation)",
+      "source_label": "KV-8000(XYM)",
+      "vendor": "KEYENCE",
+      "family": "KV-8000",
+      "address_notation": "xym",
+      "base_profile": "keyence:kv-8000",
+      "variant": "xym"
+    },
+    "keyence:kv-x500": {
+      "display_name": "KEYENCE KV-X500",
+      "source_label": "KV-X500",
+      "vendor": "KEYENCE",
+      "family": "KV-X500",
+      "address_notation": "native"
+    },
+    "keyence:kv-x500-xym": {
+      "display_name": "KEYENCE KV-X500 (XYM notation)",
+      "source_label": "KV-X500(XYM)",
+      "vendor": "KEYENCE",
+      "family": "KV-X500",
+      "address_notation": "xym",
+      "base_profile": "keyence:kv-x500",
+      "variant": "xym"
+    }
+  },
+  "device_range_rows": [
+    {
+      "device_type": "R",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "R00000-R59915",
+        "keyence:kv-nano-xym": "X0-599F,Y0-599F",
+        "keyence:kv-3000": "R00000-R99915",
+        "keyence:kv-3000-xym": "X0-999F,Y0-999F",
+        "keyence:kv-5000": "R00000-R99915",
+        "keyence:kv-5000-xym": "X0-999F,Y0-999F",
+        "keyence:kv-7000": "R00000-R199915",
+        "keyence:kv-7000-xym": "X0-1999F,Y0-1999F",
+        "keyence:kv-8000": "R00000-R199915",
+        "keyence:kv-8000-xym": "X0-1999F,Y0-1999F",
+        "keyence:kv-x500": "R00000-R199915",
+        "keyence:kv-x500-xym": "X0-1999F,Y0-1999F"
+      }
+    },
+    {
+      "device_type": "B",
+      "notation": "hexadecimal",
+      "ranges": {
+        "keyence:kv-nano": "B0000-B1FFF",
+        "keyence:kv-nano-xym": "B0000-B1FFF",
+        "keyence:kv-3000": "B0000-B3FFF",
+        "keyence:kv-3000-xym": "B0000-B3FFF",
+        "keyence:kv-5000": "B0000-B3FFF",
+        "keyence:kv-5000-xym": "B0000-B3FFF",
+        "keyence:kv-7000": "B0000-B7FFF",
+        "keyence:kv-7000-xym": "B0000-B7FFF",
+        "keyence:kv-8000": "B0000-B7FFF",
+        "keyence:kv-8000-xym": "B0000-B7FFF",
+        "keyence:kv-x500": "B0000-B7FFF",
+        "keyence:kv-x500-xym": "B0000-B7FFF"
+      }
+    },
+    {
+      "device_type": "MR",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "MR00000-MR59915",
+        "keyence:kv-nano-xym": "M0-9599",
+        "keyence:kv-3000": "MR00000-MR99915",
+        "keyence:kv-3000-xym": "M0-15999",
+        "keyence:kv-5000": "MR00000-MR99915",
+        "keyence:kv-5000-xym": "M0-15999",
+        "keyence:kv-7000": "MR000000-MR399915",
+        "keyence:kv-7000-xym": "M000000-M63999",
+        "keyence:kv-8000": "MR000000-MR399915",
+        "keyence:kv-8000-xym": "M000000-M63999",
+        "keyence:kv-x500": "MR000000-MR399915",
+        "keyence:kv-x500-xym": "M000000-M63999"
+      }
+    },
+    {
+      "device_type": "LR",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "LR00000-LR19915",
+        "keyence:kv-nano-xym": "L0-3199",
+        "keyence:kv-3000": "LR00000-LR99915",
+        "keyence:kv-3000-xym": "L0-15999",
+        "keyence:kv-5000": "LR00000-LR99915",
+        "keyence:kv-5000-xym": "L0-15999",
+        "keyence:kv-7000": "LR00000-LR99915",
+        "keyence:kv-7000-xym": "L00000-L15999",
+        "keyence:kv-8000": "LR00000-LR99915",
+        "keyence:kv-8000-xym": "L00000-L15999",
+        "keyence:kv-x500": "LR00000-LR99915",
+        "keyence:kv-x500-xym": "L00000-L15999"
+      }
+    },
+    {
+      "device_type": "CR",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "CR0000-CR8915",
+        "keyence:kv-nano-xym": "CR0000-CR8915",
+        "keyence:kv-3000": "CR0000-CR3915",
+        "keyence:kv-3000-xym": "CR0000-CR3915",
+        "keyence:kv-5000": "CR0000-CR3915",
+        "keyence:kv-5000-xym": "CR0000-CR3915",
+        "keyence:kv-7000": "CR0000-CR7915",
+        "keyence:kv-7000-xym": "CR0000-CR7915",
+        "keyence:kv-8000": "CR0000-CR7915",
+        "keyence:kv-8000-xym": "CR0000-CR7915",
+        "keyence:kv-x500": "CR0000-CR7915",
+        "keyence:kv-x500-xym": "CR0000-CR7915"
+      }
+    },
+    {
+      "device_type": "CM",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "CM0000-CM8999",
+        "keyence:kv-nano-xym": "CM0000-CM8999",
+        "keyence:kv-3000": "CM0000-CM5999",
+        "keyence:kv-3000-xym": "CM0000-CM5999",
+        "keyence:kv-5000": "CM0000-CM5999",
+        "keyence:kv-5000-xym": "CM0000-CM5999",
+        "keyence:kv-7000": "CM0000-CM5999",
+        "keyence:kv-7000-xym": "CM0000-CM5999",
+        "keyence:kv-8000": "CM0000-CM7599",
+        "keyence:kv-8000-xym": "CM0000-CM7599",
+        "keyence:kv-x500": "CM0000-CM7599",
+        "keyence:kv-x500-xym": "CM0000-CM7599"
+      }
+    },
+    {
+      "device_type": "T",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "T0000-T0511",
+        "keyence:kv-nano-xym": "T0000-T0511",
+        "keyence:kv-3000": "T0000-T3999",
+        "keyence:kv-3000-xym": "T0000-T3999",
+        "keyence:kv-5000": "T0000-T3999",
+        "keyence:kv-5000-xym": "T0000-T3999",
+        "keyence:kv-7000": "T0000-T3999",
+        "keyence:kv-7000-xym": "T0000-T3999",
+        "keyence:kv-8000": "T0000-T3999",
+        "keyence:kv-8000-xym": "T0000-T3999",
+        "keyence:kv-x500": "T0000-T3999",
+        "keyence:kv-x500-xym": "T0000-T3999"
+      }
+    },
+    {
+      "device_type": "C",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "C0000-C0255",
+        "keyence:kv-nano-xym": "C0000-C0255",
+        "keyence:kv-3000": "C0000-C3999",
+        "keyence:kv-3000-xym": "C0000-C3999",
+        "keyence:kv-5000": "C0000-C3999",
+        "keyence:kv-5000-xym": "C0000-C3999",
+        "keyence:kv-7000": "C0000-C3999",
+        "keyence:kv-7000-xym": "C0000-C3999",
+        "keyence:kv-8000": "C0000-C3999",
+        "keyence:kv-8000-xym": "C0000-C3999",
+        "keyence:kv-x500": "C0000-C3999",
+        "keyence:kv-x500-xym": "C0000-C3999"
+      }
+    },
+    {
+      "device_type": "DM",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "DM00000-DM32767",
+        "keyence:kv-nano-xym": "D0-32767",
+        "keyence:kv-3000": "DM00000-DM65534",
+        "keyence:kv-3000-xym": "D0-65534",
+        "keyence:kv-5000": "DM00000-DM65534",
+        "keyence:kv-5000-xym": "D0-65534",
+        "keyence:kv-7000": "DM00000-DM65534",
+        "keyence:kv-7000-xym": "D00000-D65534",
+        "keyence:kv-8000": "DM00000-DM65534",
+        "keyence:kv-8000-xym": "D00000-D65534",
+        "keyence:kv-x500": "DM00000-DM65534",
+        "keyence:kv-x500-xym": "D00000-D65534"
+      }
+    },
+    {
+      "device_type": "EM",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "-",
+        "keyence:kv-nano-xym": "-",
+        "keyence:kv-3000": "EM00000-EM65534",
+        "keyence:kv-3000-xym": "E0-65534",
+        "keyence:kv-5000": "EM00000-EM65534",
+        "keyence:kv-5000-xym": "E0-65534",
+        "keyence:kv-7000": "EM00000-EM65534",
+        "keyence:kv-7000-xym": "E00000-E65534",
+        "keyence:kv-8000": "EM00000-EM65534",
+        "keyence:kv-8000-xym": "E00000-E65534",
+        "keyence:kv-x500": "EM00000-EM65534",
+        "keyence:kv-x500-xym": "E00000-E65534"
+      }
+    },
+    {
+      "device_type": "FM",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "-",
+        "keyence:kv-nano-xym": "-",
+        "keyence:kv-3000": "FM00000-FM32767",
+        "keyence:kv-3000-xym": "F0-32767",
+        "keyence:kv-5000": "FM00000-FM32767",
+        "keyence:kv-5000-xym": "F0-32767",
+        "keyence:kv-7000": "FM00000-FM32767",
+        "keyence:kv-7000-xym": "F00000-F32767",
+        "keyence:kv-8000": "FM00000-FM32767",
+        "keyence:kv-8000-xym": "F00000-F32767",
+        "keyence:kv-x500": "FM00000-FM32767",
+        "keyence:kv-x500-xym": "F00000-F32767"
+      }
+    },
+    {
+      "device_type": "ZF",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "-",
+        "keyence:kv-nano-xym": "-",
+        "keyence:kv-3000": "ZF000000-ZF131071",
+        "keyence:kv-3000-xym": "ZF000000-ZF131071",
+        "keyence:kv-5000": "ZF000000-ZF131071",
+        "keyence:kv-5000-xym": "ZF000000-ZF131071",
+        "keyence:kv-7000": "ZF000000-ZF524287",
+        "keyence:kv-7000-xym": "ZF000000-ZF524287",
+        "keyence:kv-8000": "ZF000000-ZF524287",
+        "keyence:kv-8000-xym": "ZF000000-ZF524287",
+        "keyence:kv-x500": "ZF000000-ZF524287",
+        "keyence:kv-x500-xym": "ZF000000-ZF524287"
+      }
+    },
+    {
+      "device_type": "W",
+      "notation": "hexadecimal",
+      "ranges": {
+        "keyence:kv-nano": "W0000-W3FFF",
+        "keyence:kv-nano-xym": "W0000-W3FFF",
+        "keyence:kv-3000": "W0000-W3FFF",
+        "keyence:kv-3000-xym": "W0000-W3FFF",
+        "keyence:kv-5000": "W0000-W3FFF",
+        "keyence:kv-5000-xym": "W0000-W3FFF",
+        "keyence:kv-7000": "W0000-W7FFF",
+        "keyence:kv-7000-xym": "W0000-W7FFF",
+        "keyence:kv-8000": "W0000-W7FFF",
+        "keyence:kv-8000-xym": "W0000-W7FFF",
+        "keyence:kv-x500": "W0000-W7FFF",
+        "keyence:kv-x500-xym": "W0000-W7FFF"
+      }
+    },
+    {
+      "device_type": "TM",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "TM000-TM511",
+        "keyence:kv-nano-xym": "TM000-TM511",
+        "keyence:kv-3000": "TM000-TM511",
+        "keyence:kv-3000-xym": "TM000-TM511",
+        "keyence:kv-5000": "TM000-TM511",
+        "keyence:kv-5000-xym": "TM000-TM511",
+        "keyence:kv-7000": "TM000-TM511",
+        "keyence:kv-7000-xym": "TM000-TM511",
+        "keyence:kv-8000": "TM000-TM511",
+        "keyence:kv-8000-xym": "TM000-TM511",
+        "keyence:kv-x500": "TM000-TM511",
+        "keyence:kv-x500-xym": "TM000-TM511"
+      }
+    },
+    {
+      "device_type": "VM",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "VM0-9499",
+        "keyence:kv-nano-xym": "VM0-9499",
+        "keyence:kv-3000": "VM0-49999",
+        "keyence:kv-3000-xym": "VM0-49999",
+        "keyence:kv-5000": "VM0-49999",
+        "keyence:kv-5000-xym": "VM0-49999",
+        "keyence:kv-7000": "VM0-63999",
+        "keyence:kv-7000-xym": "VM0-63999",
+        "keyence:kv-8000": "VM0-589823",
+        "keyence:kv-8000-xym": "VM0-589823",
+        "keyence:kv-x500": "-",
+        "keyence:kv-x500-xym": "-"
+      }
+    },
+    {
+      "device_type": "VB",
+      "notation": "hexadecimal",
+      "ranges": {
+        "keyence:kv-nano": "VB0-1FFF",
+        "keyence:kv-nano-xym": "VB0-1FFF",
+        "keyence:kv-3000": "VB0-3FFF",
+        "keyence:kv-3000-xym": "VB0-3FFF",
+        "keyence:kv-5000": "VB0-3FFF",
+        "keyence:kv-5000-xym": "VB0-3FFF",
+        "keyence:kv-7000": "VB0-F9FF",
+        "keyence:kv-7000-xym": "VB0-F9FF",
+        "keyence:kv-8000": "VB0-F9FF",
+        "keyence:kv-8000-xym": "VB0-F9FF",
+        "keyence:kv-x500": "-",
+        "keyence:kv-x500-xym": "-"
+      }
+    },
+    {
+      "device_type": "Z",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "Z1-12",
+        "keyence:kv-nano-xym": "Z1-12",
+        "keyence:kv-3000": "Z1-12",
+        "keyence:kv-3000-xym": "Z1-12",
+        "keyence:kv-5000": "Z1-12",
+        "keyence:kv-5000-xym": "Z1-12",
+        "keyence:kv-7000": "Z1-12",
+        "keyence:kv-7000-xym": "Z1-12",
+        "keyence:kv-8000": "Z1-12",
+        "keyence:kv-8000-xym": "Z1-12",
+        "keyence:kv-x500": "Z1-10",
+        "keyence:kv-x500-xym": "Z1-10"
+      }
+    },
+    {
+      "device_type": "CTH",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "CTH0-3",
+        "keyence:kv-nano-xym": "CTH0-3",
+        "keyence:kv-3000": "CTH0-1",
+        "keyence:kv-3000-xym": "CTH0-3",
+        "keyence:kv-5000": "CTH0-1",
+        "keyence:kv-5000-xym": "CTH0-3",
+        "keyence:kv-7000": "-",
+        "keyence:kv-7000-xym": "-",
+        "keyence:kv-8000": "-",
+        "keyence:kv-8000-xym": "-",
+        "keyence:kv-x500": "-",
+        "keyence:kv-x500-xym": "-"
+      }
+    },
+    {
+      "device_type": "CTC",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "CTC0-7",
+        "keyence:kv-nano-xym": "CTC0-7",
+        "keyence:kv-3000": "CTC0-3",
+        "keyence:kv-3000-xym": "CTC0-3",
+        "keyence:kv-5000": "CTC0-3",
+        "keyence:kv-5000-xym": "CTC0-3",
+        "keyence:kv-7000": "-",
+        "keyence:kv-7000-xym": "-",
+        "keyence:kv-8000": "-",
+        "keyence:kv-8000-xym": "-",
+        "keyence:kv-x500": "-",
+        "keyence:kv-x500-xym": "-"
+      }
+    },
+    {
+      "device_type": "AT",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "-",
+        "keyence:kv-nano-xym": "-",
+        "keyence:kv-3000": "AT0-7",
+        "keyence:kv-3000-xym": "AT0-7",
+        "keyence:kv-5000": "AT0-7",
+        "keyence:kv-5000-xym": "AT0-7",
+        "keyence:kv-7000": "AT0-7",
+        "keyence:kv-7000-xym": "AT0-7",
+        "keyence:kv-8000": "AT0-7",
+        "keyence:kv-8000-xym": "AT0-7",
+        "keyence:kv-x500": "-",
+        "keyence:kv-x500-xym": "-"
+      }
+    }
+  ]
+}

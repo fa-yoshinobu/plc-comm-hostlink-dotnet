@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using PlcComm.KvHostLink;
 
 namespace PlcComm.KvHostLink.Tests;
@@ -36,6 +37,45 @@ public sealed class KvHostLinkDeviceRangeTests
                 "keyence:kv-x500-xym",
             ],
             profiles);
+    }
+
+    [Fact]
+    public void DeviceRangeCatalogForPlcProfile_MatchesCanonicalFixture()
+    {
+        var fixturePath = Path.Combine(AppContext.BaseDirectory, "fixtures", "kv_device_ranges.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(fixturePath));
+        var profiles = document.RootElement.GetProperty("profiles");
+        var expectedProfileIds = profiles.EnumerateObject().Select(static property => property.Name).ToArray();
+
+        Assert.Equal(expectedProfileIds, KvHostLinkDeviceRanges.AvailablePlcProfiles());
+        foreach (var profileProperty in profiles.EnumerateObject())
+        {
+            Assert.False(string.IsNullOrWhiteSpace(profileProperty.Value.GetProperty("display_name").GetString()));
+        }
+
+        var catalogs = expectedProfileIds.ToDictionary(
+            static profileId => profileId,
+            KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile);
+        foreach (var row in document.RootElement.GetProperty("device_range_rows").EnumerateArray())
+        {
+            var deviceType = row.GetProperty("device_type").GetString()!;
+            foreach (var rangeProperty in row.GetProperty("ranges").EnumerateObject())
+            {
+                var entry = catalogs[rangeProperty.Name].Entry(deviceType);
+                Assert.NotNull(entry);
+                var expectedRange = rangeProperty.Value.GetString();
+                if (expectedRange == "-")
+                {
+                    Assert.False(entry!.Supported);
+                    Assert.Null(entry.AddressRange);
+                }
+                else
+                {
+                    Assert.True(entry!.Supported);
+                    Assert.Equal(expectedRange, entry.AddressRange);
+                }
+            }
+        }
     }
 
     [Fact]
