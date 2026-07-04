@@ -204,6 +204,27 @@ await foreach (var snapshot in client.PollAsync(addresses, TimeSpan.FromSeconds(
 
 `PollAsync` yields a dictionary snapshot on each interval until cancellation or until your loop exits.
 
+## Operational recipes
+
+The samples include two read-only operational recipes for repeatable collection:
+
+- `PlcComm.KvHostLink.MultiPlcMonitorSample` monitors multiple PLC endpoints at
+  the same time. Each PLC has its own task, connection, and reconnect loop, so
+  one offline PLC does not block healthy PLC reads.
+- `PlcComm.KvHostLink.ConfigPollingSample` runs periodic collection from a JSON
+  config file and can append long-form CSV rows as
+  `timestamp,plc,tag,value`.
+
+Both samples use the same reconnect states as the polling reconnect sample:
+`connected`, `lost`, `reconnecting`, and `recovered`, with 1 second initial
+backoff, exponential delay, and a 30 second default maximum. YAML config is
+available only in the Python sample; the .NET sample uses JSON.
+
+```powershell
+dotnet run --project samples/PlcComm.KvHostLink.MultiPlcMonitorSample -- --plc line-a=192.168.250.100,keyence:kv-8000,8501,tcp --plc line-b=192.168.250.101,keyence:kv-8000,8501,tcp --tag dm100=DM100:U
+dotnet run --project samples/PlcComm.KvHostLink.ConfigPollingSample -- --config samples/PlcComm.KvHostLink.ConfigPollingSample/config_polling.example.json --dry-run
+```
+
 ## Timer/counter helpers
 
 ```csharp
