@@ -55,4 +55,4 @@ KV-3000 and KV-5000 profiles include `AT`, but timer/counter preset writes (`WS`
 
 KV-7000 and KV-8000 profiles are the documented profiles for timer/counter preset writes (`WS`/`WSS`). They do not include `CTH` or `CTC`.
 
-KV-X500 profiles do not include `AT`, `VM`, `VB`, `CTH`, or `CTC`. Use the shared [KV Host Link Error Codes](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/error-codes/) page for common address-shape and unsupported-device symptoms.
+KV-X500 profiles do not include `AT`, `VM`, `VB`, `CTH`, or `CTC`. Use the shared [KV Host Link Troubleshooting & Codes](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/troubleshooting-codes/) page for common address-shape and unsupported-device symptoms.
