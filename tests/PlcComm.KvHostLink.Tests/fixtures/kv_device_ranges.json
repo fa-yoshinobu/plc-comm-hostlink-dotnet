@@ -19,7 +19,7 @@
       "address_notation": "native"
     },
     "keyence:kv-nano-xym": {
-      "display_name": "KEYENCE KV-NANO (XYM notation)",
+      "display_name": "KEYENCE KV-NANO (XYM)",
       "source_label": "KV-NANO(XYM)",
       "vendor": "KEYENCE",
       "family": "KV-NANO",
@@ -35,7 +35,7 @@
       "address_notation": "native"
     },
     "keyence:kv-3000-xym": {
-      "display_name": "KEYENCE KV-3000 (XYM notation)",
+      "display_name": "KEYENCE KV-3000 (XYM)",
       "source_label": "KV-3000(XYM)",
       "vendor": "KEYENCE",
       "family": "KV-3000",
@@ -51,7 +51,7 @@
       "address_notation": "native"
     },
     "keyence:kv-5000-xym": {
-      "display_name": "KEYENCE KV-5000 (XYM notation)",
+      "display_name": "KEYENCE KV-5000 (XYM)",
       "source_label": "KV-5000(XYM)",
       "vendor": "KEYENCE",
       "family": "KV-5000",
@@ -67,7 +67,7 @@
       "address_notation": "native"
     },
     "keyence:kv-7000-xym": {
-      "display_name": "KEYENCE KV-7000 (XYM notation)",
+      "display_name": "KEYENCE KV-7000 (XYM)",
       "source_label": "KV-7000(XYM)",
       "vendor": "KEYENCE",
       "family": "KV-7000",
@@ -83,7 +83,7 @@
       "address_notation": "native"
     },
     "keyence:kv-8000-xym": {
-      "display_name": "KEYENCE KV-8000 (XYM notation)",
+      "display_name": "KEYENCE KV-8000 (XYM)",
       "source_label": "KV-8000(XYM)",
       "vendor": "KEYENCE",
       "family": "KV-8000",
@@ -99,7 +99,7 @@
       "address_notation": "native"
     },
     "keyence:kv-x500-xym": {
-      "display_name": "KEYENCE KV-X500 (XYM notation)",
+      "display_name": "KEYENCE KV-X500 (XYM)",
       "source_label": "KV-X500(XYM)",
       "vendor": "KEYENCE",
       "family": "KV-X500",
