@@ -296,10 +296,10 @@ public const KvDeviceRangeCategory TimerCounter
 public const KvDeviceRangeCategory Index
 ```
 
-##### FileRefresh
+##### FileRegister
 
 ```csharp
-public const KvDeviceRangeCategory FileRefresh
+public const KvDeviceRangeCategory FileRegister
 ```
 
 ### KvDeviceRangeEntry

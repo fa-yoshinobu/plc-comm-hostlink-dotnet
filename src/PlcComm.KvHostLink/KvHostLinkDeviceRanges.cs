@@ -17,7 +17,7 @@ public enum KvDeviceRangeCategory
     Word,
     TimerCounter,
     Index,
-    FileRefresh,
+    FileRegister,
 }
 
 public sealed record KvDeviceRangeSegment(
@@ -93,7 +93,11 @@ public static class KvHostLinkDeviceRanges
             Row("CR", KvDeviceRangeNotation.Decimal, "CR0000-CR8915", "CR0000-CR8915", "CR0000-CR3915", "CR0000-CR3915", "CR0000-CR3915", "CR0000-CR3915", "CR0000-CR7915", "CR0000-CR7915", "CR0000-CR7915", "CR0000-CR7915", "CR0000-CR7915", "CR0000-CR7915"),
             Row("CM", KvDeviceRangeNotation.Decimal, "CM0000-CM8999", "CM0000-CM8999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM5999", "CM0000-CM7599", "CM0000-CM7599", "CM0000-CM7599", "CM0000-CM7599"),
             Row("T", KvDeviceRangeNotation.Decimal, "T0000-T0511", "T0000-T0511", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999", "T0000-T3999"),
+            Row("TC", KvDeviceRangeNotation.Decimal, "TC0000-TC0511", "TC0000-TC0511", "TC0000-TC3999", "TC0000-TC3999", "TC0000-TC3999", "TC0000-TC3999", "TC0000-TC3999", "TC0000-TC3999", "TC0000-TC3999", "TC0000-TC3999", "TC0000-TC3999", "TC0000-TC3999"),
+            Row("TS", KvDeviceRangeNotation.Decimal, "TS0000-TS0511", "TS0000-TS0511", "TS0000-TS3999", "TS0000-TS3999", "TS0000-TS3999", "TS0000-TS3999", "TS0000-TS3999", "TS0000-TS3999", "TS0000-TS3999", "TS0000-TS3999", "TS0000-TS3999", "TS0000-TS3999"),
             Row("C", KvDeviceRangeNotation.Decimal, "C0000-C0255", "C0000-C0255", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999", "C0000-C3999"),
+            Row("CC", KvDeviceRangeNotation.Decimal, "CC0000-CC0255", "CC0000-CC0255", "CC0000-CC3999", "CC0000-CC3999", "CC0000-CC3999", "CC0000-CC3999", "CC0000-CC3999", "CC0000-CC3999", "CC0000-CC3999", "CC0000-CC3999", "CC0000-CC3999", "CC0000-CC3999"),
+            Row("CS", KvDeviceRangeNotation.Decimal, "CS0000-CS0255", "CS0000-CS0255", "CS0000-CS3999", "CS0000-CS3999", "CS0000-CS3999", "CS0000-CS3999", "CS0000-CS3999", "CS0000-CS3999", "CS0000-CS3999", "CS0000-CS3999", "CS0000-CS3999", "CS0000-CS3999"),
             Row("DM", KvDeviceRangeNotation.Decimal, "DM00000-DM32767", "D0-32767", "DM00000-DM65534", "D0-65534", "DM00000-DM65534", "D0-65534", "DM00000-DM65534", "D00000-D65534", "DM00000-DM65534", "D00000-D65534", "DM00000-DM65534", "D00000-D65534"),
             Row("EM", KvDeviceRangeNotation.Decimal, "-", "-", "EM00000-EM65534", "E0-65534", "EM00000-EM65534", "E0-65534", "EM00000-EM65534", "E00000-E65534", "EM00000-EM65534", "E00000-E65534", "EM00000-EM65534", "E00000-E65534"),
             Row("FM", KvDeviceRangeNotation.Decimal, "-", "-", "FM00000-FM32767", "F0-32767", "FM00000-FM32767", "F0-32767", "FM00000-FM32767", "F00000-F32767", "FM00000-FM32767", "F00000-F32767", "FM00000-FM32767", "F00000-F32767"),
@@ -379,7 +383,7 @@ public static class KvHostLinkDeviceRanges
 
         if (deviceType == "ZF")
         {
-            return (KvDeviceRangeCategory.FileRefresh, false);
+            return (KvDeviceRangeCategory.FileRegister, false);
         }
 
         if (deviceType is "T" or "C" or "AT" or "CTH" or "CTC")

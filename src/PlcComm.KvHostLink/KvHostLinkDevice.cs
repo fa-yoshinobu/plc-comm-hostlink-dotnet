@@ -229,6 +229,8 @@ public static class KvHostLinkDevice
             case "C":
             case "CC":
             case "CS":
+            case "CTH":
+            case "CTC":
                 hi = 120;
                 break;
             default:

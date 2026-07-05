@@ -51,6 +51,8 @@ internal static class KvHostLinkModels
         { "C", (0, 3999, 10) },
         { "CC", (0, 3999, 10) },
         { "CS", (0, 3999, 10) },
+        { "CTH", (0, 3, 10) },
+        { "CTC", (0, 7, 10) },
         { "AT", (0, 7, 10) },
         { "CM", (0, 7599, 10) },
         { "VM", (0, 589823, 10) },
@@ -63,22 +65,22 @@ internal static class KvHostLinkModels
         { "F", (0, 32767, 10) }
     };
 
-    public static readonly HashSet<string> Native32BitDeviceTypes = new() { "T", "TC", "TS", "C", "CC", "CS", "Z", "AT" };
+    public static readonly HashSet<string> Native32BitDeviceTypes = new() { "T", "TC", "TS", "C", "CC", "CS", "CTH", "CTC", "Z", "AT" };
     public static readonly HashSet<string> DirectBitDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "X", "Y", "M", "L" };
-    public static readonly HashSet<string> ForceDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "VB", "X", "Y", "M", "L" };
+    public static readonly HashSet<string> ForceDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "CTH", "CTC", "VB", "X", "Y", "M", "L" };
     public static readonly HashSet<string> ForceConsecutiveDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "X", "Y", "M", "L" };
-    public static readonly HashSet<string> MbsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "VB", "X", "Y", "M", "L" };
+    public static readonly HashSet<string> MbsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "T", "C", "CTH", "CTC", "VB", "X", "Y", "M", "L" };
     public static readonly HashSet<string> MwsDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "X", "Y", "DM", "EM", "FM", "D", "E", "F", "W", "TM", "Z", "TC", "TS", "CC", "CS", "CM", "VM" };
-    public static readonly HashSet<string> RdcDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "C", "CM", "X", "Y", "M", "L", "D", "E", "F" };
-    public static readonly HashSet<string> WrDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "TC", "TS", "C", "CC", "CS", "CM", "VM", "X", "Y", "M", "L", "D", "E", "F" };
-    public static readonly HashSet<string> WsDeviceTypes = new() { "T", "C" };
+    public static readonly HashSet<string> RdcDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "C", "CTH", "CTC", "CM", "X", "Y", "M", "L", "D", "E", "F" };
+    public static readonly HashSet<string> WrDeviceTypes = new() { "R", "B", "MR", "LR", "CR", "VB", "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "TC", "TS", "C", "CC", "CS", "CTH", "CTC", "CM", "VM", "X", "Y", "M", "L", "D", "E", "F" };
+    public static readonly HashSet<string> WsDeviceTypes = new() { "T", "C", "CTH", "CTC" };
 
     public static readonly Dictionary<string, string> DefaultFormatByDeviceType = new()
     {
         { "R", "" }, { "B", "" }, { "MR", "" }, { "LR", "" }, { "CR", "" }, { "VB", "" },
         { "DM", ".U" }, { "EM", ".U" }, { "FM", ".U" }, { "ZF", ".U" }, { "W", ".U" }, { "TM", ".U" },
         { "Z", ".U" }, { "AT", ".D" }, { "CM", ".U" }, { "VM", ".U" }, { "T", ".D" }, { "TC", ".D" },
-        { "TS", ".D" }, { "C", ".D" }, { "CC", ".D" }, { "CS", ".D" },
+        { "TS", ".D" }, { "C", ".D" }, { "CC", ".D" }, { "CS", ".D" }, { "CTH", ".D" }, { "CTC", ".D" },
         { "X", "" }, { "Y", "" }, { "M", "" }, { "L", "" }, { "D", ".U" }, { "E", ".U" }, { "F", ".U" }
     };
 }

@@ -111,6 +111,7 @@
   "device_range_rows": [
     {
       "device_type": "R",
+      "device_name": "Relay",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "R00000-R59915",
@@ -129,6 +130,7 @@
     },
     {
       "device_type": "B",
+      "device_name": "Link relay",
       "notation": "hexadecimal",
       "ranges": {
         "keyence:kv-nano": "B0000-B1FFF",
@@ -147,6 +149,7 @@
     },
     {
       "device_type": "MR",
+      "device_name": "Internal auxiliary relay",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "MR00000-MR59915",
@@ -165,6 +168,7 @@
     },
     {
       "device_type": "LR",
+      "device_name": "Latch relay",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "LR00000-LR19915",
@@ -183,6 +187,7 @@
     },
     {
       "device_type": "CR",
+      "device_name": "Control relay",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "CR0000-CR8915",
@@ -201,6 +206,7 @@
     },
     {
       "device_type": "CM",
+      "device_name": "Control memory",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "CM0000-CM8999",
@@ -219,6 +225,7 @@
     },
     {
       "device_type": "T",
+      "device_name": "Timer",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "T0000-T0511",
@@ -236,7 +243,46 @@
       }
     },
     {
+      "device_type": "TC",
+      "device_name": "Timer (current value)",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "TC0000-TC0511",
+        "keyence:kv-nano-xym": "TC0000-TC0511",
+        "keyence:kv-3000": "TC0000-TC3999",
+        "keyence:kv-3000-xym": "TC0000-TC3999",
+        "keyence:kv-5000": "TC0000-TC3999",
+        "keyence:kv-5000-xym": "TC0000-TC3999",
+        "keyence:kv-7000": "TC0000-TC3999",
+        "keyence:kv-7000-xym": "TC0000-TC3999",
+        "keyence:kv-8000": "TC0000-TC3999",
+        "keyence:kv-8000-xym": "TC0000-TC3999",
+        "keyence:kv-x500": "TC0000-TC3999",
+        "keyence:kv-x500-xym": "TC0000-TC3999"
+      }
+    },
+    {
+      "device_type": "TS",
+      "device_name": "Timer (set value)",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "TS0000-TS0511",
+        "keyence:kv-nano-xym": "TS0000-TS0511",
+        "keyence:kv-3000": "TS0000-TS3999",
+        "keyence:kv-3000-xym": "TS0000-TS3999",
+        "keyence:kv-5000": "TS0000-TS3999",
+        "keyence:kv-5000-xym": "TS0000-TS3999",
+        "keyence:kv-7000": "TS0000-TS3999",
+        "keyence:kv-7000-xym": "TS0000-TS3999",
+        "keyence:kv-8000": "TS0000-TS3999",
+        "keyence:kv-8000-xym": "TS0000-TS3999",
+        "keyence:kv-x500": "TS0000-TS3999",
+        "keyence:kv-x500-xym": "TS0000-TS3999"
+      }
+    },
+    {
       "device_type": "C",
+      "device_name": "Counter",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "C0000-C0255",
@@ -254,7 +300,46 @@
       }
     },
     {
+      "device_type": "CC",
+      "device_name": "Counter (current value)",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "CC0000-CC0255",
+        "keyence:kv-nano-xym": "CC0000-CC0255",
+        "keyence:kv-3000": "CC0000-CC3999",
+        "keyence:kv-3000-xym": "CC0000-CC3999",
+        "keyence:kv-5000": "CC0000-CC3999",
+        "keyence:kv-5000-xym": "CC0000-CC3999",
+        "keyence:kv-7000": "CC0000-CC3999",
+        "keyence:kv-7000-xym": "CC0000-CC3999",
+        "keyence:kv-8000": "CC0000-CC3999",
+        "keyence:kv-8000-xym": "CC0000-CC3999",
+        "keyence:kv-x500": "CC0000-CC3999",
+        "keyence:kv-x500-xym": "CC0000-CC3999"
+      }
+    },
+    {
+      "device_type": "CS",
+      "device_name": "Counter (set value)",
+      "notation": "decimal",
+      "ranges": {
+        "keyence:kv-nano": "CS0000-CS0255",
+        "keyence:kv-nano-xym": "CS0000-CS0255",
+        "keyence:kv-3000": "CS0000-CS3999",
+        "keyence:kv-3000-xym": "CS0000-CS3999",
+        "keyence:kv-5000": "CS0000-CS3999",
+        "keyence:kv-5000-xym": "CS0000-CS3999",
+        "keyence:kv-7000": "CS0000-CS3999",
+        "keyence:kv-7000-xym": "CS0000-CS3999",
+        "keyence:kv-8000": "CS0000-CS3999",
+        "keyence:kv-8000-xym": "CS0000-CS3999",
+        "keyence:kv-x500": "CS0000-CS3999",
+        "keyence:kv-x500-xym": "CS0000-CS3999"
+      }
+    },
+    {
       "device_type": "DM",
+      "device_name": "Data memory",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "DM00000-DM32767",
@@ -273,6 +358,7 @@
     },
     {
       "device_type": "EM",
+      "device_name": "Extended data memory",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "-",
@@ -291,6 +377,7 @@
     },
     {
       "device_type": "FM",
+      "device_name": "File register",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "-",
@@ -309,6 +396,7 @@
     },
     {
       "device_type": "ZF",
+      "device_name": "File register",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "-",
@@ -327,6 +415,7 @@
     },
     {
       "device_type": "W",
+      "device_name": "Link register",
       "notation": "hexadecimal",
       "ranges": {
         "keyence:kv-nano": "W0000-W3FFF",
@@ -345,6 +434,7 @@
     },
     {
       "device_type": "TM",
+      "device_name": "Temporary data memory",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "TM000-TM511",
@@ -363,6 +453,7 @@
     },
     {
       "device_type": "VM",
+      "device_name": "Work memory",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "VM0-9499",
@@ -381,6 +472,7 @@
     },
     {
       "device_type": "VB",
+      "device_name": "Work relay",
       "notation": "hexadecimal",
       "ranges": {
         "keyence:kv-nano": "VB0-1FFF",
@@ -399,6 +491,7 @@
     },
     {
       "device_type": "Z",
+      "device_name": "Index register",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "Z1-12",
@@ -417,6 +510,7 @@
     },
     {
       "device_type": "CTH",
+      "device_name": "High-speed counter",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "CTH0-3",
@@ -435,6 +529,7 @@
     },
     {
       "device_type": "CTC",
+      "device_name": "High-speed counter comparator",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "CTC0-7",
@@ -453,6 +548,7 @@
     },
     {
       "device_type": "AT",
+      "device_name": "Digital trimmer",
       "notation": "decimal",
       "ranges": {
         "keyence:kv-nano": "-",
