@@ -116,6 +116,30 @@ public static class KvHostLinkDeviceRanges
         return ParsedRangeTable.Value.Profiles.Select(profile => profile.PlcProfile).ToArray();
     }
 
+    public static string GetDisplayName(string plcProfile)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(plcProfile);
+
+        var normalized = NormalizePlcProfile(plcProfile);
+        _ = RangeProfileForPlcProfile(ParsedRangeTable.Value, normalized);
+        return normalized switch
+        {
+            "keyence:kv-nano" => "KEYENCE KV-NANO",
+            "keyence:kv-nano-xym" => "KEYENCE KV-NANO (XYM)",
+            "keyence:kv-3000" => "KEYENCE KV-3000",
+            "keyence:kv-3000-xym" => "KEYENCE KV-3000 (XYM)",
+            "keyence:kv-5000" => "KEYENCE KV-5000",
+            "keyence:kv-5000-xym" => "KEYENCE KV-5000 (XYM)",
+            "keyence:kv-7000" => "KEYENCE KV-7000",
+            "keyence:kv-7000-xym" => "KEYENCE KV-7000 (XYM)",
+            "keyence:kv-8000" => "KEYENCE KV-8000",
+            "keyence:kv-8000-xym" => "KEYENCE KV-8000 (XYM)",
+            "keyence:kv-x500" => "KEYENCE KV-X500",
+            "keyence:kv-x500-xym" => "KEYENCE KV-X500 (XYM)",
+            _ => throw new HostLinkProtocolError($"Unsupported PLC profile '{plcProfile}'."),
+        };
+    }
+
     public static KvDeviceRangeCatalog DeviceRangeCatalogForPlcProfile(string plcProfile)
     {
         return BuildCatalog(plcProfile, modelCode: null);

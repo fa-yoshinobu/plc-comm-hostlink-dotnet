@@ -50,7 +50,9 @@ public sealed class KvHostLinkDeviceRangeTests
         Assert.Equal(expectedProfileIds, KvHostLinkDeviceRanges.AvailablePlcProfiles());
         foreach (var profileProperty in profiles.EnumerateObject())
         {
-            Assert.False(string.IsNullOrWhiteSpace(profileProperty.Value.GetProperty("display_name").GetString()));
+            Assert.Equal(
+                profileProperty.Value.GetProperty("display_name").GetString(),
+                KvHostLinkDeviceRanges.GetDisplayName(profileProperty.Name));
         }
 
         var catalogs = expectedProfileIds.ToDictionary(
