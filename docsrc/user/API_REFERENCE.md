@@ -1525,6 +1525,12 @@ public static class KvHostLinkDeviceRanges
 public static IReadOnlyList<string> AvailablePlcProfiles()
 ```
 
+##### GetDisplayName
+
+```csharp
+public static string GetDisplayName(string plcProfile)
+```
+
 ##### DeviceRangeCatalogForPlcProfile
 
 ```csharp
