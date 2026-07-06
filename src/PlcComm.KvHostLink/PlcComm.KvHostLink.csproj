@@ -9,7 +9,7 @@
     <PackageId>PlcComm.KvHostLink</PackageId>
     <Title>PLC Communication KEYENCE Host Link .NET</Title>
     <Description>Modern Host Link (Upper Link) client library for KEYENCE KV series PLCs.</Description>
-    <PackageTags>keyence kv hostlink plc tcp udp</PackageTags>
+    <PackageTags>plc-comm keyence kv hostlink plc tcp udp</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
