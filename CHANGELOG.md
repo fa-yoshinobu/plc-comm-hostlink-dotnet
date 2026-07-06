@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Tooling`: Developer/operator command-line tools and helper utilities.
 - `CI`: Release checks, workflow scripts, or automation-only changes.
 
+## [Unreleased]
+
+### Changed
+- Tooling: Moved .NET project version metadata to `Directory.Build.props` so the library and samples no longer carry stale per-project versions.
+
 ## [1.3.0] - 2026-07-06
 
 ### Added
