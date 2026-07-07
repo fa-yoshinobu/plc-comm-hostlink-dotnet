@@ -71,20 +71,9 @@ public static class KvHostLinkDeviceRanges
     private static readonly Lazy<RangeTable> ParsedRangeTable = new(CreateRangeTable);
 
     private static RangeTable CreateRangeTable() => new(
-        [
-            new("KV-NANO", "keyence:kv-nano"),
-            new("KV-NANO(XYM)", "keyence:kv-nano-xym"),
-            new("KV-3000", "keyence:kv-3000"),
-            new("KV-3000(XYM)", "keyence:kv-3000-xym"),
-            new("KV-5000", "keyence:kv-5000"),
-            new("KV-5000(XYM)", "keyence:kv-5000-xym"),
-            new("KV-7000", "keyence:kv-7000"),
-            new("KV-7000(XYM)", "keyence:kv-7000-xym"),
-            new("KV-8000", "keyence:kv-8000"),
-            new("KV-8000(XYM)", "keyence:kv-8000-xym"),
-            new("KV-X500", "keyence:kv-x500"),
-            new("KV-X500(XYM)", "keyence:kv-x500-xym"),
-        ],
+        KvHostLinkPlcProfiles.GetProfiles()
+            .Select(profile => new RangeProfile(profile.SourceLabel, profile.Name))
+            .ToList(),
         [
             Row("R", KvDeviceRangeNotation.Decimal, "R00000-R59915", "X0-599F,Y0-599F", "R00000-R99915", "X0-999F,Y0-999F", "R00000-R99915", "X0-999F,Y0-999F", "R00000-R199915", "X0-1999F,Y0-1999F", "R00000-R199915", "X0-1999F,Y0-1999F", "R00000-R199915", "X0-1999F,Y0-1999F"),
             Row("B", KvDeviceRangeNotation.Hexadecimal, "B0000-B1FFF", "B0000-B1FFF", "B0000-B3FFF", "B0000-B3FFF", "B0000-B3FFF", "B0000-B3FFF", "B0000-B7FFF", "B0000-B7FFF", "B0000-B7FFF", "B0000-B7FFF", "B0000-B7FFF", "B0000-B7FFF"),
@@ -115,35 +104,6 @@ public static class KvHostLinkDeviceRanges
     private static RangeRow Row(string deviceType, KvDeviceRangeNotation notation, params string[] ranges) =>
         new(deviceType, notation, ranges);
 
-    public static IReadOnlyList<string> AvailablePlcProfiles()
-    {
-        return ParsedRangeTable.Value.Profiles.Select(profile => profile.PlcProfile).ToArray();
-    }
-
-    public static string GetDisplayName(string plcProfile)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(plcProfile);
-
-        var normalized = NormalizePlcProfile(plcProfile);
-        _ = RangeProfileForPlcProfile(ParsedRangeTable.Value, normalized);
-        return normalized switch
-        {
-            "keyence:kv-nano" => "KEYENCE KV-NANO",
-            "keyence:kv-nano-xym" => "KEYENCE KV-NANO (XYM)",
-            "keyence:kv-3000" => "KEYENCE KV-3000",
-            "keyence:kv-3000-xym" => "KEYENCE KV-3000 (XYM)",
-            "keyence:kv-5000" => "KEYENCE KV-5000",
-            "keyence:kv-5000-xym" => "KEYENCE KV-5000 (XYM)",
-            "keyence:kv-7000" => "KEYENCE KV-7000",
-            "keyence:kv-7000-xym" => "KEYENCE KV-7000 (XYM)",
-            "keyence:kv-8000" => "KEYENCE KV-8000",
-            "keyence:kv-8000-xym" => "KEYENCE KV-8000 (XYM)",
-            "keyence:kv-x500" => "KEYENCE KV-X500",
-            "keyence:kv-x500-xym" => "KEYENCE KV-X500 (XYM)",
-            _ => throw new HostLinkProtocolError($"Unsupported PLC profile '{plcProfile}'."),
-        };
-    }
-
     public static KvDeviceRangeCatalog DeviceRangeCatalogForPlcProfile(string plcProfile)
     {
         return BuildCatalog(plcProfile, modelCode: null);
@@ -153,7 +113,7 @@ public static class KvHostLinkDeviceRanges
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(plcProfile);
 
-        var requestedPlcProfile = NormalizePlcProfile(plcProfile);
+        var requestedPlcProfile = KvHostLinkPlcProfiles.NormalizeName(plcProfile);
         var table = ParsedRangeTable.Value;
         var resolvedProfile = RangeProfileForPlcProfile(table, requestedPlcProfile);
         var modelIndex = table.Profiles.IndexOf(resolvedProfile);
@@ -417,7 +377,7 @@ public static class KvHostLinkDeviceRanges
 
     private static RangeProfile RangeProfileForPlcProfile(RangeTable table, string plcProfile)
     {
-        var normalized = NormalizePlcProfile(plcProfile);
+        var normalized = KvHostLinkPlcProfiles.NormalizeName(plcProfile);
         var direct = table.Profiles.FirstOrDefault(profile =>
             string.Equals(profile.PlcProfile, normalized, StringComparison.Ordinal));
         if (direct is not null)
@@ -425,14 +385,9 @@ public static class KvHostLinkDeviceRanges
             return direct;
         }
 
-        var supported = string.Join(", ", AvailablePlcProfiles());
+        var supported = string.Join(", ", KvHostLinkPlcProfiles.GetNames());
         throw new HostLinkProtocolError(
             $"Unsupported PLC profile '{plcProfile}'. Supported PLC profiles: {supported}.");
-    }
-
-    private static string NormalizePlcProfile(string text)
-    {
-        return text.Trim().TrimEnd('\0');
     }
 
     private sealed record RangeTable(List<RangeProfile> Profiles, List<RangeRow> Rows);

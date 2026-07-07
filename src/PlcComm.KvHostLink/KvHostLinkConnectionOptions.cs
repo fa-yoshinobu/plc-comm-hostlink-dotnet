@@ -38,5 +38,5 @@ public sealed record KvHostLinkConnectionOptions(
     public TimeSpan EffectiveTimeout => Timeout == default ? TimeSpan.FromSeconds(3) : Timeout;
 
     private static string NormalizePlcProfile(string plcProfile)
-        => KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile(plcProfile).PlcProfile;
+        => KvHostLinkPlcProfiles.NormalizeName(plcProfile);
 }

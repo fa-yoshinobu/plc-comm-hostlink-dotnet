@@ -1,5 +1,12 @@
 # TODO: Host Link Communication .NET
 
+## API cleanup
+
+- [x] Add `KvHostLinkPlcProfiles.GetDisplayName(string plcProfile)` as the
+  PLC-profile display-name API. Keep device-range APIs under
+  `KvHostLinkDeviceRanges`; `GetDisplayName` should not be discoverable only
+  through a device-range class.
+
 ## Live verification
 
 - Verify high-level `:H` / `H` hexadecimal word read and write on a live KEYENCE KV PLC.

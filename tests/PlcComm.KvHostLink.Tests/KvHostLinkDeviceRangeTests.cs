@@ -17,9 +17,9 @@ public sealed class KvHostLinkDeviceRangeTests
     }
 
     [Fact]
-    public void AvailablePlcProfiles_IncludesXymColumns()
+    public void PlcProfiles_GetNames_IncludesXymColumns()
     {
-        var profiles = KvHostLinkDeviceRanges.AvailablePlcProfiles();
+        var profiles = KvHostLinkPlcProfiles.GetNames();
 
         Assert.Equal(
             [
@@ -47,12 +47,12 @@ public sealed class KvHostLinkDeviceRangeTests
         var profiles = document.RootElement.GetProperty("profiles");
         var expectedProfileIds = profiles.EnumerateObject().Select(static property => property.Name).ToArray();
 
-        Assert.Equal(expectedProfileIds, KvHostLinkDeviceRanges.AvailablePlcProfiles());
+        Assert.Equal(expectedProfileIds, KvHostLinkPlcProfiles.GetNames());
         foreach (var profileProperty in profiles.EnumerateObject())
         {
             Assert.Equal(
                 profileProperty.Value.GetProperty("display_name").GetString(),
-                KvHostLinkDeviceRanges.GetDisplayName(profileProperty.Name));
+                KvHostLinkPlcProfiles.GetDisplayName(profileProperty.Name));
         }
 
         var catalogs = expectedProfileIds.ToDictionary(

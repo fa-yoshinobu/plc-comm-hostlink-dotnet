@@ -36,7 +36,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         _host = host;
         _port = port;
         _transportMode = transportMode;
-        PlcProfile = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile(plcProfile).PlcProfile;
+        PlcProfile = KvHostLinkPlcProfiles.NormalizeName(plcProfile);
     }
 
     public string PlcProfile { get; }

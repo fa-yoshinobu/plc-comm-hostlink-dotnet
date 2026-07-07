@@ -1519,10 +1519,56 @@ public static class KvHostLinkDeviceRanges
 
 #### Members
 
-##### AvailablePlcProfiles
+##### DeviceRangeCatalogForPlcProfile
 
 ```csharp
-public static IReadOnlyList<string> AvailablePlcProfiles()
+public static KvDeviceRangeCatalog DeviceRangeCatalogForPlcProfile(string plcProfile)
+```
+
+### KvHostLinkPlcProfile
+
+```csharp
+public sealed class KvHostLinkPlcProfile
+```
+
+#### Members
+
+##### KvHostLinkPlcProfile
+
+```csharp
+public KvHostLinkPlcProfile(string Name, string DisplayName)
+```
+
+##### Name
+
+```csharp
+public string Name { get; set; }
+```
+
+##### DisplayName
+
+```csharp
+public string DisplayName { get; set; }
+```
+
+### KvHostLinkPlcProfiles
+
+```csharp
+public static class KvHostLinkPlcProfiles
+```
+
+#### Members
+
+##### GetNames
+
+```csharp
+public static IReadOnlyList<string> GetNames()
+```
+
+##### NormalizeName
+
+```csharp
+public static string NormalizeName(string plcProfile)
 ```
 
 ##### GetDisplayName
@@ -1531,10 +1577,82 @@ public static IReadOnlyList<string> AvailablePlcProfiles()
 public static string GetDisplayName(string plcProfile)
 ```
 
-##### DeviceRangeCatalogForPlcProfile
+##### FromName
 
 ```csharp
-public static KvDeviceRangeCatalog DeviceRangeCatalogForPlcProfile(string plcProfile)
+public static KvHostLinkPlcProfile FromName(string plcProfile)
+```
+
+##### KvNano
+
+```csharp
+public static KvHostLinkPlcProfile KvNano { get; }
+```
+
+##### KvNanoXym
+
+```csharp
+public static KvHostLinkPlcProfile KvNanoXym { get; }
+```
+
+##### Kv3000
+
+```csharp
+public static KvHostLinkPlcProfile Kv3000 { get; }
+```
+
+##### Kv3000Xym
+
+```csharp
+public static KvHostLinkPlcProfile Kv3000Xym { get; }
+```
+
+##### Kv5000
+
+```csharp
+public static KvHostLinkPlcProfile Kv5000 { get; }
+```
+
+##### Kv5000Xym
+
+```csharp
+public static KvHostLinkPlcProfile Kv5000Xym { get; }
+```
+
+##### Kv7000
+
+```csharp
+public static KvHostLinkPlcProfile Kv7000 { get; }
+```
+
+##### Kv7000Xym
+
+```csharp
+public static KvHostLinkPlcProfile Kv7000Xym { get; }
+```
+
+##### Kv8000
+
+```csharp
+public static KvHostLinkPlcProfile Kv8000 { get; }
+```
+
+##### Kv8000Xym
+
+```csharp
+public static KvHostLinkPlcProfile Kv8000Xym { get; }
+```
+
+##### KvX500
+
+```csharp
+public static KvHostLinkPlcProfile KvX500 { get; }
+```
+
+##### KvX500Xym
+
+```csharp
+public static KvHostLinkPlcProfile KvX500Xym { get; }
 ```
 
 ### KvLogicalAddress
