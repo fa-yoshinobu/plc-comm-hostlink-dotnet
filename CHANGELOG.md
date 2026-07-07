@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### BREAKING
 - Library: Moved PLC profile lookup APIs to `KvHostLinkPlcProfiles`; use `GetNames`, `NormalizeName`, `GetDisplayName`, and `FromName` there. `KvHostLinkDeviceRanges` now exposes only the device-range catalog entry point.
 
+### Changed
+- Docs: Updated PLC profile documentation and the generated API reference for the new profile API location.
+- Tests: Updated PLC profile display-name coverage to assert the profile API instead of device-range APIs.
+
 ## [2.0.0] - 2026-07-06
 
 ### BREAKING
