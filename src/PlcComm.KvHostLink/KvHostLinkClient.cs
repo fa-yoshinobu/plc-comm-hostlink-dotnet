@@ -15,6 +15,7 @@ namespace PlcComm.KvHostLink;
 /// </remarks>
 public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 {
+    private const int MaxTcpLineLength = 65_536;
     private readonly string _host;
     private readonly int _port;
     private readonly HostLinkTransportMode _transportMode;
@@ -62,12 +63,21 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
             if (_transportMode == HostLinkTransportMode.Tcp)
             {
-                _tcp = new TcpClient();
+                var tcp = new TcpClient();
                 using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 linked.CancelAfter(Timeout);
-                await _tcp.ConnectAsync(_host, _port, linked.Token).ConfigureAwait(false);
-                _tcp.NoDelay = true;
-                _tcpStream = _tcp.GetStream();
+                try
+                {
+                    await tcp.ConnectAsync(_host, _port, linked.Token).ConfigureAwait(false);
+                    tcp.NoDelay = true;
+                    _tcp = tcp;
+                    _tcpStream = tcp.GetStream();
+                }
+                catch
+                {
+                    tcp.Dispose();
+                    throw;
+                }
             }
             else
             {
@@ -89,18 +99,23 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         _lock.Wait();
         try
         {
-            _tcpStream?.Dispose();
-            _tcpStream = null;
-            _tcp?.Close();
-            _tcp = null;
-            _udp?.Dispose();
-            _udp = null;
-            _rxStart = 0; _rxCount = 0;
+            CloseTransport();
         }
         finally
         {
             _lock.Release();
         }
+    }
+
+    private void CloseTransport()
+    {
+        _tcpStream?.Dispose();
+        _tcpStream = null;
+        _tcp?.Close();
+        _tcp = null;
+        _udp?.Dispose();
+        _udp = null;
+        _rxStart = 0; _rxCount = 0;
     }
 
     public Task CloseAsync()
@@ -131,9 +146,18 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             FireTrace(HostLinkTraceDirection.Send, frame);
             if (_transportMode == HostLinkTransportMode.Tcp)
             {
-                await _tcpStream!.WriteAsync(frame, cancellationToken).ConfigureAwait(false);
-                var responseRaw = await RecvTcpLineAsync(cancellationToken).ConfigureAwait(false);
-                FireTrace(HostLinkTraceDirection.Receive, responseRaw);
+                byte[] responseRaw;
+                try
+                {
+                    await _tcpStream!.WriteAsync(frame, cancellationToken).ConfigureAwait(false);
+                    responseRaw = await RecvTcpLineAsync(cancellationToken).ConfigureAwait(false);
+                    FireTrace(HostLinkTraceDirection.Receive, responseRaw);
+                }
+                catch
+                {
+                    CloseTransport();
+                    throw;
+                }
                 return KvHostLinkProtocol.EnsureSuccess(KvHostLinkProtocol.DecodeResponse(responseRaw));
             }
             else
@@ -159,6 +183,12 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
         while (true)
         {
+            while (_rxCount > 0 && (_rxBuf[_rxStart] == '\r' || _rxBuf[_rxStart] == '\n'))
+            {
+                _rxStart++;
+                _rxCount--;
+            }
+
             // Scan for first CR or LF -- O(n) on valid data only, no allocation
             int foundIdx = -1;
             for (int i = 0; i < _rxCount; i++)
@@ -169,6 +199,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
             if (foundIdx >= 0)
             {
+                if (foundIdx > MaxTcpLineLength)
+                {
+                    CloseTransport();
+                    throw new HostLinkProtocolError($"Response line exceeds {MaxTcpLineLength} bytes");
+                }
                 var line = _rxBuf.AsSpan(_rxStart, foundIdx).ToArray();
                 int skip = foundIdx;
                 while (skip < _rxCount && (_rxBuf[_rxStart + skip] == '\r' || _rxBuf[_rxStart + skip] == '\n'))
@@ -184,6 +219,12 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                 return line;
             }
 
+            if (_rxCount > MaxTcpLineLength)
+            {
+                CloseTransport();
+                throw new HostLinkProtocolError($"Response line exceeds {MaxTcpLineLength} bytes");
+            }
+
             int read = await _tcpStream!.ReadAsync(_tcpReadBuf, token).ConfigureAwait(false);
             if (read == 0)
             {
@@ -193,6 +234,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                     _rxStart = 0; _rxCount = 0;
                     return line;
                 }
+                CloseTransport();
                 throw new HostLinkConnectionError("Connection closed by PLC");
             }
 
@@ -213,6 +255,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             }
             _tcpReadBuf.AsSpan(0, read).CopyTo(_rxBuf.AsSpan(_rxStart + _rxCount));
             _rxCount += read;
+            if (_rxCount > MaxTcpLineLength)
+            {
+                CloseTransport();
+                throw new HostLinkProtocolError($"Response line exceeds {MaxTcpLineLength} bytes");
+            }
         }
     }
 

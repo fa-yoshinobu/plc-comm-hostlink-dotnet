@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-07-10
+
+### Changed
+- Release: Bumped .NET package metadata to `2.0.1`.
+
 ### BREAKING
 - Library: Moved PLC profile lookup APIs to `KvHostLinkPlcProfiles`; use `GetNames`, `NormalizeName`, `GetDisplayName`, and `FromName` there. `KvHostLinkDeviceRanges` now exposes only the device-range catalog entry point.
 
