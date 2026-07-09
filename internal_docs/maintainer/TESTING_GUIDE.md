@@ -2,11 +2,6 @@
 
 This document describes the test structure and verification approach for `PlcComm.KvHostLink`.
 
-Related documents:
-
-- [ARCHITECTURE.md](ARCHITECTURE.md)
-- [PROTOCOL_SPEC.md](PROTOCOL_SPEC.md)
-
 ## Unit / Integration Tests
 
 The automated test suite is under `tests/PlcComm.KvHostLink.Tests/`.
@@ -30,13 +25,10 @@ The test suite covers:
 - 32-bit value packing (DWord, Float32)
 - Extension methods: `ReadTypedAsync`, `WriteTypedAsync`, `WriteBitInWordAsync`, `PollAsync`
 
-## Hardware Verification
+## Hardware Checks
 
-Verified hardware targets:
-
-- KEYENCE KV-7500 (TCP and UDP)
-
-For live hardware tests, use the scripts in `plc-comm-hostlink-python/scripts/`.
+For live hardware checks, use the scripts in `plc-comm-hostlink-python/scripts/`.
+Keep current target support in the profile data, not in this maintainer guide.
 
 ## Cross-Library Parity
 
@@ -47,7 +39,7 @@ When adding or changing a method, verify:
 1. The equivalent Python operation exists and has the same semantics.
 2. Low-level changes are reflected in `KvHostLinkClient`.
 3. High-level helper changes are reflected in `KvHostLinkClientExtensions.cs` where applicable.
-4. Intentional public API design differences remain documented in `API_UNIFICATION_POLICY.md`.
+4. Intentional public API differences stay covered by tests and public docs.
 
 ## CI
 
