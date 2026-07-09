@@ -13,6 +13,18 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
 {
     private readonly KvHostLinkClient _client;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private int _disposed;
+
+    private async Task EnterAsync(CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            _gate.Release();
+            ObjectDisposedException.ThrowIf(true, this);
+        }
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QueuedKvHostLinkClient"/> class.
@@ -61,7 +73,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     /// <remarks>Call this once after construction or again after an intentional disconnect.</remarks>
     public async Task OpenAsync(CancellationToken cancellationToken = default)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await EnterAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await _client.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -75,7 +87,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     /// <summary>Closes the connection asynchronously with exclusive access.</summary>
     public async Task CloseAsync(CancellationToken cancellationToken = default)
     {
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await EnterAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await _client.CloseAsync().ConfigureAwait(false);
@@ -96,7 +108,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await EnterAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             return await operation(_client).ConfigureAwait(false);
@@ -115,7 +127,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await EnterAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await operation(_client).ConfigureAwait(false);
@@ -296,14 +308,30 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     /// <summary>Disposes the wrapper and the underlying client.</summary>
     public void Dispose()
     {
-        _gate.Dispose();
-        _client.Dispose();
+        if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+        _gate.Wait();
+        try
+        {
+            _client.Dispose();
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     /// <summary>Disposes the wrapper and the underlying client asynchronously.</summary>
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        Dispose();
-        return ValueTask.CompletedTask;
+        if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
+        await _gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await _client.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 }
