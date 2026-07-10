@@ -2,6 +2,13 @@ namespace PlcComm.KvHostLink;
 
 public sealed record KvHostLinkPlcProfile(string Name, string DisplayName);
 
+/// <summary>Canonical metadata used to select and describe one KV Host Link PLC profile.</summary>
+public sealed record KvHostLinkPlcProfileDescriptor(
+    string CanonicalName,
+    string DisplayName,
+    bool Connectable,
+    string? BaseProfile);
+
 internal sealed record KvHostLinkPlcProfileDefinition(
     string Name,
     string DisplayName,
@@ -117,9 +124,33 @@ public static class KvHostLinkPlcProfiles
 
     private static readonly string[] ProfileNames = Profiles.Select(profile => profile.Name).ToArray();
 
+    private static readonly IReadOnlyList<KvHostLinkPlcProfileDescriptor> ProfileDescriptors =
+    [
+        new("keyence:kv-nano", "KEYENCE KV-NANO", true, null),
+        new("keyence:kv-nano-xym", "KEYENCE KV-NANO (XYM)", true, "keyence:kv-nano"),
+        new("keyence:kv-3000", "KEYENCE KV-3000", true, null),
+        new("keyence:kv-3000-xym", "KEYENCE KV-3000 (XYM)", true, "keyence:kv-3000"),
+        new("keyence:kv-5000", "KEYENCE KV-5000", true, null),
+        new("keyence:kv-5000-xym", "KEYENCE KV-5000 (XYM)", true, "keyence:kv-5000"),
+        new("keyence:kv-7000", "KEYENCE KV-7000", true, null),
+        new("keyence:kv-7000-xym", "KEYENCE KV-7000 (XYM)", true, "keyence:kv-7000"),
+        new("keyence:kv-8000", "KEYENCE KV-8000", true, null),
+        new("keyence:kv-8000-xym", "KEYENCE KV-8000 (XYM)", true, "keyence:kv-8000"),
+        new("keyence:kv-x500", "KEYENCE KV-X500", true, null),
+        new("keyence:kv-x500-xym", "KEYENCE KV-X500 (XYM)", true, "keyence:kv-x500"),
+    ];
+
     public static IReadOnlyList<string> GetNames()
     {
         return ProfileNames;
+    }
+
+    /// <summary>
+    /// Return all canonical profiles with display, connection, and base-profile metadata.
+    /// </summary>
+    public static IReadOnlyList<KvHostLinkPlcProfileDescriptor> GetProfileDescriptors()
+    {
+        return ProfileDescriptors;
     }
 
     public static string NormalizeName(string plcProfile)

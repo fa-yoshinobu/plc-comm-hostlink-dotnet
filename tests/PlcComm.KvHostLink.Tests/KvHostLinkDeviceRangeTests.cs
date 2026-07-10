@@ -81,6 +81,28 @@ public sealed class KvHostLinkDeviceRangeTests
     }
 
     [Fact]
+    public void PlcProfileDescriptors_MatchCanonicalProfileMetadata()
+    {
+        var fixturePath = Path.Combine(AppContext.BaseDirectory, "fixtures", "kv_device_ranges.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(fixturePath));
+        var profiles = document.RootElement.GetProperty("profiles");
+        var descriptors = KvHostLinkPlcProfiles.GetProfileDescriptors();
+
+        Assert.Equal(
+            profiles.EnumerateObject().Select(static property => property.Name),
+            descriptors.Select(static descriptor => descriptor.CanonicalName));
+        foreach (var descriptor in descriptors)
+        {
+            var expected = profiles.GetProperty(descriptor.CanonicalName);
+            Assert.Equal(expected.GetProperty("display_name").GetString(), descriptor.DisplayName);
+            Assert.True(descriptor.Connectable);
+            Assert.Equal(
+                expected.TryGetProperty("base_profile", out var baseProfile) ? baseProfile.GetString() : null,
+                descriptor.BaseProfile);
+        }
+    }
+
+    [Fact]
     public void DeviceRangeCatalogForPlcProfile_ResolvesCanonicalProfiles()
     {
         var catalog = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-8000");
