@@ -17,10 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.0.1] - 2026-07-10
+## [3.1.0] - 2026-07-10
+
+### Added
+- Library: Added `KvHostLinkPlcProfileDescriptor` and `KvHostLinkPlcProfiles.GetProfileDescriptors()` for canonical Host Link profile metadata.
 
 ### Changed
-- Release: Bumped .NET package metadata to `3.0.1`.
+- Release: Bumped .NET package metadata to `3.1.0`.
 
 ### Fixed
 - Library: Apply `Timeout` to UDP receives and discard TCP/UDP transports after an incomplete exchange.

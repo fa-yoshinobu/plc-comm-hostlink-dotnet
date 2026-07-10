@@ -1567,6 +1567,48 @@ public string Name { get; set; }
 public string DisplayName { get; set; }
 ```
 
+### KvHostLinkPlcProfileDescriptor
+
+```csharp
+public sealed class KvHostLinkPlcProfileDescriptor
+```
+
+Canonical metadata used to select and describe one KV Host Link PLC profile.
+
+#### Members
+
+##### KvHostLinkPlcProfileDescriptor
+
+```csharp
+public KvHostLinkPlcProfileDescriptor(string CanonicalName, string DisplayName, bool Connectable, string BaseProfile)
+```
+
+Canonical metadata used to select and describe one KV Host Link PLC profile.
+
+##### CanonicalName
+
+```csharp
+public string CanonicalName { get; set; }
+```
+
+##### DisplayName
+
+```csharp
+public string DisplayName { get; set; }
+```
+
+##### Connectable
+
+```csharp
+public bool Connectable { get; set; }
+```
+
+##### BaseProfile
+
+```csharp
+public string BaseProfile { get; set; }
+```
+
 ### KvHostLinkPlcProfiles
 
 ```csharp
@@ -1580,6 +1622,14 @@ public static class KvHostLinkPlcProfiles
 ```csharp
 public static IReadOnlyList<string> GetNames()
 ```
+
+##### GetProfileDescriptors
+
+```csharp
+public static IReadOnlyList<KvHostLinkPlcProfileDescriptor> GetProfileDescriptors()
+```
+
+Return all canonical profiles with display, connection, and base-profile metadata.
 
 ##### NormalizeName
 

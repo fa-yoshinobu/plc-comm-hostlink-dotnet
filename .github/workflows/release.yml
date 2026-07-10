@@ -97,6 +97,6 @@ jobs:
             gh release upload $env:RELEASE_TAG $assets --clobber
             if ($LASTEXITCODE -ne 0) { throw "Failed to upload assets for $env:RELEASE_TAG." }
           } else {
-            gh release create $env:RELEASE_TAG $assets --verify-tag --title "Release $env:RELEASE_TAG" --generate-notes
+            gh release create $env:RELEASE_TAG $assets --verify-tag --title "Release $env:RELEASE_TAG" --generate-notes --draft
             if ($LASTEXITCODE -ne 0) { throw "Failed to create release $env:RELEASE_TAG." }
           }
