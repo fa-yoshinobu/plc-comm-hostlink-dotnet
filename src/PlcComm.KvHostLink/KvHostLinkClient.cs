@@ -147,10 +147,12 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             if (_transportMode == HostLinkTransportMode.Tcp)
             {
                 byte[] responseRaw;
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                linked.CancelAfter(Timeout);
                 try
                 {
-                    await _tcpStream!.WriteAsync(frame, cancellationToken).ConfigureAwait(false);
-                    responseRaw = await RecvTcpLineAsync(cancellationToken).ConfigureAwait(false);
+                    await _tcpStream!.WriteAsync(frame, linked.Token).ConfigureAwait(false);
+                    responseRaw = await RecvTcpLineAsync(linked.Token).ConfigureAwait(false);
                     FireTrace(HostLinkTraceDirection.Receive, responseRaw);
                 }
                 catch
@@ -162,10 +164,22 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             }
             else
             {
-                await _udp!.SendAsync(frame, cancellationToken).ConfigureAwait(false);
-                var result = await _udp.ReceiveAsync(cancellationToken).ConfigureAwait(false);
-                FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
-                return KvHostLinkProtocol.EnsureSuccess(KvHostLinkProtocol.DecodeResponse(result.Buffer));
+                using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                linked.CancelAfter(Timeout);
+                try
+                {
+                    await _udp!.SendAsync(frame, linked.Token).ConfigureAwait(false);
+                    var result = await _udp.ReceiveAsync(linked.Token).ConfigureAwait(false);
+                    FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
+                    return KvHostLinkProtocol.EnsureSuccess(KvHostLinkProtocol.DecodeResponse(result.Buffer));
+                }
+                catch
+                {
+                    // Host Link has no transaction ID. A timed-out or cancelled
+                    // datagram must never remain queued for the next request.
+                    CloseTransport();
+                    throw;
+                }
             }
         }
         finally
@@ -228,14 +242,12 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             int read = await _tcpStream!.ReadAsync(_tcpReadBuf, token).ConfigureAwait(false);
             if (read == 0)
             {
-                if (_rxCount > 0)
-                {
-                    var line = _rxBuf.AsSpan(_rxStart, _rxCount).ToArray();
-                    _rxStart = 0; _rxCount = 0;
-                    return line;
-                }
+                bool hadPartialResponse = _rxCount > 0;
                 CloseTransport();
-                throw new HostLinkConnectionError("Connection closed by PLC");
+                string message = hadPartialResponse
+                    ? "Connection closed by PLC before the response terminator"
+                    : "Connection closed by PLC";
+                throw new HostLinkConnectionError(message);
             }
 
             // Ensure there is room for the newly read bytes

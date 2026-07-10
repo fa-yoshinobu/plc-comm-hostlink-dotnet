@@ -90,8 +90,3 @@ Only write to a test address that is safe for your machine and program.
 | The connection fails immediately. | Default port is `8501`, not `1025`; double-check the connection node port. |
 | Reads fail while you are trying the first example. | Start with `DM` word reads; do not start with timer/counter or expansion buffer access. |
 | Timer/counter preset writes return `E1`. | Timer/Counter preset writes (`WS`/`WSS`) are only supported on KV-8000/7000-series. |
-
-## Next steps
-
-- Open the runnable samples: [samples README](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/tree/main/samples).
-- Continue with the [Usage guide](USAGE_GUIDE.md) and [Gotchas](GOTCHAS.md).
