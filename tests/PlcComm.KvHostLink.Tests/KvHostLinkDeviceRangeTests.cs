@@ -210,7 +210,7 @@ public sealed class KvHostLinkDeviceRangeTests
     {
         var nano = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-nano");
 
-        Assert.Equal("VM0-9499", nano.Entry("VM")!.AddressRange);
+        Assert.Equal("VM0-9999", nano.Entry("VM")!.AddressRange);
         Assert.Equal("VB0-1FFF", nano.Entry("VB")!.AddressRange);
         Assert.Equal("CTC0-7", nano.Entry("CTC")!.AddressRange);
 

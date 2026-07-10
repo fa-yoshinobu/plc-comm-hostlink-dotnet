@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release: Bumped .NET package metadata to `3.1.0`.
 
 ### Fixed
+- Library: Corrected ten KV device range cells against live PLC hardware and the KEYENCE simulator, and pinned the canonical profile source to `plc-comm-hostlink-profiles` `v1.2.0`. `VM` widens to `VM0-9999` on KV-NANO and `VM0-59999` on KV-3000/KV-5000; `Z` widens to `Z1-23` on KV-8000. `CTH` narrows to `CTH0-1` on the KV-3000 and KV-5000 XYM profiles, matching their base profiles: `CTH2` and `CTH3` were previously accepted there and are now rejected.
 - Library: Apply `Timeout` to UDP receives and discard TCP/UDP transports after an incomplete exchange.
 - CI: Require exact-tag checkout and verify tag, manifest, and NuGet artifact versions before a GitHub Release upload.
 - Tooling: Render XML `cref` method labels without leaking parameter-type suffixes into the generated API reference.
