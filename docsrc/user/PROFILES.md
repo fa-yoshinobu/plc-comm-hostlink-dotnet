@@ -3,7 +3,8 @@
 This library provides canonical profiles for the KV families listed below. Device ranges differ by model. You select the device-range catalog by passing a canonical PLC profile name such as `keyence:kv-7000`; the library does not query the PLC to choose a profile for you. Models not represented below, including KV-700 and KV-1000, do not currently have a canonical profile.
 Use `KvHostLinkPlcProfiles.GetProfileDescriptors()` when a UI or configuration
 schema needs the canonical name, display name, connection availability, and
-base-profile relationship in one list. Store `CanonicalName`, not `DisplayName`.
+base-profile relationship in one list. This descriptor list is the stable
+source for selectors; store `CanonicalName`, not `DisplayName`.
 
 ## Device families and ranges
 

@@ -14,6 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Check release workflows do not auto-publish
+        shell: pwsh
+        run: ./scripts/check_no_auto_publish.ps1
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
