@@ -7,6 +7,7 @@ on:
       version:
         description: "Release version without the v prefix"
         required: true
+        type: string
 permissions:
   contents: write
 jobs:
@@ -14,12 +15,41 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/v{0}', inputs.version) || github.ref }}
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
             8.0.x
             9.0.x
             10.0.x
+      - name: Verify release identity
+        shell: pwsh
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = $env:DISPATCH_VERSION
+            $tag = "v$version"
+          } else {
+            $tag = "${{ github.ref_name }}"
+            $version = $tag -replace '^v', ''
+          }
+          if ($version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+(?:[-.][0-9A-Za-z.-]+)?$') {
+            throw "Invalid release version: $version"
+          }
+          $actualTag = (git describe --tags --exact-match HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $actualTag -ne $tag) {
+            throw "Checked out tag '$actualTag', expected '$tag'."
+          }
+          [xml]$props = Get-Content Directory.Build.props -Raw
+          $manifestVersion = $props.Project.PropertyGroup.Version | Select-Object -First 1
+          if ($manifestVersion -ne $version) {
+            throw "Directory.Build.props has '$manifestVersion', expected '$version'."
+          }
+          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RELEASE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Restore
         run: dotnet restore PlcComm.KvHostLink.sln
       - name: Build
@@ -30,6 +60,25 @@ jobs:
         run: dotnet format PlcComm.KvHostLink.sln --verify-no-changes --no-restore
       - name: Pack
         run: dotnet pack src\PlcComm.KvHostLink\PlcComm.KvHostLink.csproj -c Release --no-build --output out
+      - name: Verify package metadata
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $packages = @(Get-ChildItem out -Filter *.nupkg -File | Where-Object { $_.Name -notlike '*.snupkg' })
+          if ($packages.Count -ne 1) { throw "Expected one nupkg, found $($packages.Count)." }
+          $archive = [System.IO.Compression.ZipFile]::OpenRead($packages[0].FullName)
+          try {
+            $nuspec = @($archive.Entries | Where-Object { $_.FullName -like '*.nuspec' })
+            if ($nuspec.Count -ne 1) { throw "Expected one nuspec in $($packages[0].Name)." }
+            $reader = [System.IO.StreamReader]::new($nuspec[0].Open())
+            try { [xml]$metadata = $reader.ReadToEnd() } finally { $reader.Dispose() }
+            $packageVersion = $metadata.package.metadata.version
+          } finally {
+            $archive.Dispose()
+          }
+          if ($packageVersion -ne $env:RELEASE_VERSION) {
+            throw "Package version '$packageVersion' does not match '$env:RELEASE_VERSION'."
+          }
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
@@ -41,7 +90,13 @@ jobs:
         env:
           GH_TOKEN: "${{ github.token }}"
         run: |
-          if ("${{ github.ref_type }}" -eq "tag") { $tag = "${{ github.ref_name }}" } else { $tag = "v${{ inputs.version }}" }
-          $assets = Get-ChildItem out -File | Select-Object -ExpandProperty FullName
-          if (gh release view $tag) { gh release upload $tag $assets --clobber }
-          else { gh release create $tag $assets --target main --title "Release $tag" --generate-notes }
+          $assets = @(Get-ChildItem out -File | Select-Object -ExpandProperty FullName)
+          if ($assets.Count -eq 0) { throw "No release assets found in out." }
+          gh release view $env:RELEASE_TAG *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:RELEASE_TAG $assets --clobber
+            if ($LASTEXITCODE -ne 0) { throw "Failed to upload assets for $env:RELEASE_TAG." }
+          } else {
+            gh release create $env:RELEASE_TAG $assets --verify-tag --title "Release $env:RELEASE_TAG" --generate-notes
+            if ($LASTEXITCODE -ne 0) { throw "Failed to create release $env:RELEASE_TAG." }
+          }

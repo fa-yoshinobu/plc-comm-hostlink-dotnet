@@ -9,10 +9,12 @@ The automated test suite is under `tests/PlcComm.KvHostLink.Tests/`.
 Run with:
 
 ```powershell
-dotnet test KvHostLink.sln -v normal
+call run_ci.bat
 ```
 
-Expected result: all tests pass, 0 warnings.
+`run_ci.bat` is the canonical local gate. It builds the library and tests,
+runs all target-framework tests, checks formatting and generated API docs, and
+builds the documented samples.
 
 ## Test Coverage
 
@@ -27,8 +29,8 @@ The test suite covers:
 
 ## Hardware Checks
 
-For live hardware checks, use the scripts in `plc-comm-hostlink-python/scripts/`.
-Keep current target support in the profile data, not in this maintainer guide.
+Live hardware checks require a separately approved controlled-test plan. Keep
+current target support in the profile data, not in this maintainer guide.
 
 ## Cross-Library Parity
 
@@ -45,7 +47,6 @@ When adding or changing a method, verify:
 
 CI runs on every push via `.github/workflows/ci.yml`:
 
-```powershell
-dotnet build KvHostLink.sln
-dotnet test KvHostLink.sln --no-build
-```
+The workflow runs the same solution, `PlcComm.KvHostLink.sln`; use
+`run_ci.bat` locally to include the repository-specific documentation and
+sample gates.

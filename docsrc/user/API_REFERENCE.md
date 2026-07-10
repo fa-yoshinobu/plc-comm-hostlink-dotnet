@@ -589,7 +589,7 @@ public sealed class KvHostLinkClient
 
 A low-level Host Link (Upper Link) client for KEYENCE KV series PLCs.
 
-Remarks: This class serializes individual raw requests on one connection, but compound helper workflows such as typed polling and read-modify-write are better served by `QueuedKvHostLinkClient`. For application code, prefer `CancellationToken)`.
+Remarks: This class serializes individual raw requests on one connection, but compound helper workflows such as typed polling and read-modify-write are better served by `QueuedKvHostLinkClient`. For application code, prefer `OpenAndConnectAsync`.
 
 #### Members
 
@@ -759,7 +759,7 @@ Consecutively force-resets up to 16 bit devices starting at `device` (RSS comman
 public Task<string[]> ReadConsecutiveLegacyAsync(string device, int count, string dataFormat = null, CancellationToken cancellationToken = default)
 ```
 
-Reads consecutive devices using the legacy RDE command. Prefer `CancellationToken)` on current models.
+Reads consecutive devices using the legacy RDE command. Prefer `ReadConsecutiveAsync` on current models.
 
 ##### WriteConsecutiveLegacyAsync
 
@@ -767,7 +767,7 @@ Reads consecutive devices using the legacy RDE command. Prefer `CancellationToke
 public Task WriteConsecutiveLegacyAsync<T>(string device, IEnumerable<T> values, string dataFormat = null, CancellationToken cancellationToken = default)
 ```
 
-Writes consecutive devices using the legacy WRE command. Prefer `CancellationToken)` on current models.
+Writes consecutive devices using the legacy WRE command. Prefer `WriteConsecutiveAsync` on current models.
 
 ##### WriteSetValueAsync
 
@@ -1075,7 +1075,7 @@ Remarks: If the address set is batchable, the compiled read plan is reused on ev
 
 Parameters:
 - `client`: The client to use.
-- `addresses`: Address strings in the same format as `CancellationToken)`.
+- `addresses`: Address strings in the same format as `ReadNamedAsync`.
 - `interval`: Time between polls.
 - `ct`: Cancellation token to stop polling.
 
@@ -1265,7 +1265,7 @@ public static Task<ushort[]> ReadWordsAsync(KvHostLinkClient client, string devi
 
 Reads contiguous unsigned 16-bit words starting at `device`.
 
-Remarks: This helper is the preferred user-facing block-read API for contiguous word devices. It preserves single-request semantics by delegating to `CancellationToken)`.
+Remarks: This helper is the preferred user-facing block-read API for contiguous word devices. It preserves single-request semantics by delegating to `ReadWordsSingleRequestAsync`.
 
 Returns: Unsigned word values in PLC order.
 
@@ -1291,7 +1291,7 @@ public static Task<uint[]> ReadDWordsAsync(KvHostLinkClient client, string devic
 
 Reads contiguous unsigned 32-bit values starting at `device`.
 
-Remarks: This helper preserves single-request semantics by delegating to `CancellationToken)`.
+Remarks: This helper preserves single-request semantics by delegating to `ReadDWordsSingleRequestAsync`.
 
 Returns: Unsigned 32-bit values in logical device order.
 
@@ -1460,8 +1460,24 @@ public static string NormalizeSuffix(string suffix)
 ##### ParseDevice
 
 ```csharp
-public static KvDeviceAddress ParseDevice(string text, bool allowOmittedType = true)
+public static KvDeviceAddress ParseDevice(string text)
 ```
+
+Parses a Host Link device token with an explicit device type.
+
+##### ParseDevice
+
+```csharp
+public static KvDeviceAddress ParseDevice(string text, bool allowOmittedType)
+```
+
+Parses a Host Link device token with an explicit device type.
+
+Remarks: Use `ParseDevice`. This overload will be removed in a future major release.
+
+Parameters:
+- `text`: Device token such as `DM100`.
+- `allowOmittedType`: Retained for source and binary compatibility. The value is ignored because Host Link device types are always required.
 
 ##### ParseDeviceText
 
@@ -2061,7 +2077,7 @@ public KvHostLinkClient InnerClient { get; }
 
 Gets the underlying low-level client.
 
-Remarks: Use `CancellationToken)` when you need direct access while preserving serialized request ordering.
+Remarks: Use `ExecuteAsync` when you need direct access while preserving serialized request ordering.
 
 ##### PlcProfile
 

@@ -294,7 +294,11 @@ def normalize_text(text: str) -> str:
 
 def cref_label(value: str) -> str:
     value = value.split(":", 1)[-1]
-    value = value.replace("`1", "").replace("`2", "").replace("``1", "").replace("``2", "")
+    # XML member IDs append the parameter signature to methods. Remove it
+    # before splitting the qualified member name; parameter types may contain
+    # dots and previously produced labels such as ``CancellationToken)``.
+    value = value.split("(", 1)[0]
+    value = value.replace("``1", "").replace("``2", "").replace("`1", "").replace("`2", "")
     return value.split(".")[-1]
 
 

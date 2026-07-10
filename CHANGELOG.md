@@ -17,20 +17,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-07-10
+
+### Changed
+- Release: Bumped .NET package metadata to `3.0.1`.
+
+### Fixed
+- Library: Apply `Timeout` to UDP receives and discard TCP/UDP transports after an incomplete exchange.
+- CI: Require exact-tag checkout and verify tag, manifest, and NuGet artifact versions before a GitHub Release upload.
+- Tooling: Render XML `cref` method labels without leaking parameter-type suffixes into the generated API reference.
+- Docs: Correct the supported-profile scope, `CTH`/`CTC` parser behavior, and maintainer commands.
+
+### Deprecated
+- Library: Deprecated the ineffective `ParseDevice(string, bool)` compatibility overload; device types remain explicit.
+
 ## [3.0.0] - 2026-07-10
 
 ### Changed
 - Release: Bumped .NET package metadata to `3.0.0`.
 - Packaging: Marked samples, CLI, and validation tools non-packable so only the library package is produced.
 - Docs: Replaced relative README links with absolute URLs so they resolve on package registry pages.
+- Docs: Updated PLC profile documentation and the generated API reference for the new profile API location.
+- Tests: Updated PLC profile display-name coverage to assert the profile API instead of device-range APIs.
 
 ### BREAKING
 - Library: Breaking: Moved PLC profile lookup APIs to `KvHostLinkPlcProfiles`; the old `KvHostLinkDeviceRanges` profile methods are no longer the supported location.
 - Migration: Use `KvHostLinkPlcProfiles.GetNames`, `NormalizeName`, `GetDisplayName`, and `FromName`; use `KvHostLinkDeviceRanges` only for the device-range catalog.
-
-### Changed
-- Docs: Updated PLC profile documentation and the generated API reference for the new profile API location.
-- Tests: Updated PLC profile display-name coverage to assert the profile API instead of device-range APIs.
 
 ## [2.0.0] - 2026-07-06
 

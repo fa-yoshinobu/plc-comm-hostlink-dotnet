@@ -31,8 +31,7 @@ Before packaging:
 Run these commands locally:
 
 ```powershell
-dotnet build KvHostLink.sln
-dotnet test KvHostLink.sln --no-build
+call run_ci.bat
 dotnet pack src\PlcComm.KvHostLink\PlcComm.KvHostLink.csproj -c Release
 ```
 
@@ -56,7 +55,8 @@ Repository workflows:
 - `.github/workflows/ci.yml`
   - restore, build, and test on Windows for pushes and pull requests
 - `.github/workflows/release.yml`
-  - build release artifacts on tag pushes
+  - build release artifacts on tag pushes or an existing-tag manual dispatch
+  - reject tag, `Directory.Build.props`, or package-version mismatches
   - create or update a GitHub Release for `v*` tags
 
 ## NuGet Readiness

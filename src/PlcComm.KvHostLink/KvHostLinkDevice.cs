@@ -60,7 +60,24 @@ public static class KvHostLinkDevice
         return s;
     }
 
-    public static KvDeviceAddress ParseDevice(string text, bool allowOmittedType = true)
+    /// <summary>Parses a Host Link device token with an explicit device type.</summary>
+    public static KvDeviceAddress ParseDevice(string text) => ParseDeviceCore(text);
+
+    /// <summary>Parses a Host Link device token with an explicit device type.</summary>
+    /// <param name="text">Device token such as <c>DM100</c>.</param>
+    /// <param name="allowOmittedType">
+    /// Retained for source and binary compatibility. The value is ignored because
+    /// Host Link device types are always required.
+    /// </param>
+    /// <remarks>Use <see cref="ParseDevice(string)"/>. This overload will be removed in a future major release.</remarks>
+    [Obsolete("Device types are always explicit. Use ParseDevice(string); allowOmittedType has no effect.", false)]
+    public static KvDeviceAddress ParseDevice(string text, bool allowOmittedType)
+    {
+        _ = allowOmittedType;
+        return ParseDeviceCore(text);
+    }
+
+    private static KvDeviceAddress ParseDeviceCore(string text)
     {
         var raw = text.Trim().ToUpperInvariant();
         var match = DeviceRegex.Match(raw);
