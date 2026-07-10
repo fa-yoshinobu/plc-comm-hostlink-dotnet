@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -17,13 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.1] - 2026-07-10
+## [3.0.0] - 2026-07-10
 
 ### Changed
-- Release: Bumped .NET package metadata to `2.0.1`.
+- Release: Bumped .NET package metadata to `3.0.0`.
 
 ### BREAKING
-- Library: Moved PLC profile lookup APIs to `KvHostLinkPlcProfiles`; use `GetNames`, `NormalizeName`, `GetDisplayName`, and `FromName` there. `KvHostLinkDeviceRanges` now exposes only the device-range catalog entry point.
+- Library: Breaking: Moved PLC profile lookup APIs to `KvHostLinkPlcProfiles`; the old `KvHostLinkDeviceRanges` profile methods are no longer the supported location.
+- Migration: Use `KvHostLinkPlcProfiles.GetNames`, `NormalizeName`, `GetDisplayName`, and `FromName`; use `KvHostLinkDeviceRanges` only for the device-range catalog.
 
 ### Changed
 - Docs: Updated PLC profile documentation and the generated API reference for the new profile API location.
