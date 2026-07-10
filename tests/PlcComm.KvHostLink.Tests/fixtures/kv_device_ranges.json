@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "date": "2026-07-05",
+  "date": "2026-07-10",
   "scope": "keyence-kv-hostlink",
   "description": "Canonical KEYENCE KV Host Link profile and device range catalog shared by the plc-comm-hostlink libraries.",
   "policy": {
@@ -8,7 +8,8 @@
     "unsupported_marker": "-"
   },
   "evidence_files": {
-    "catalog": "evidence/hostlink_device_ranges_source_20260705.md"
+    "catalog": "evidence/hostlink_device_ranges_source_20260705.md",
+    "live_verification": "evidence/kv_device_ranges_live_verification_20260710.md"
   },
   "profiles": {
     "keyence:kv-nano": {
@@ -456,12 +457,12 @@
       "device_name": "Work memory",
       "notation": "decimal",
       "ranges": {
-        "keyence:kv-nano": "VM0-9499",
-        "keyence:kv-nano-xym": "VM0-9499",
-        "keyence:kv-3000": "VM0-49999",
-        "keyence:kv-3000-xym": "VM0-49999",
-        "keyence:kv-5000": "VM0-49999",
-        "keyence:kv-5000-xym": "VM0-49999",
+        "keyence:kv-nano": "VM0-9999",
+        "keyence:kv-nano-xym": "VM0-9999",
+        "keyence:kv-3000": "VM0-59999",
+        "keyence:kv-3000-xym": "VM0-59999",
+        "keyence:kv-5000": "VM0-59999",
+        "keyence:kv-5000-xym": "VM0-59999",
         "keyence:kv-7000": "VM0-63999",
         "keyence:kv-7000-xym": "VM0-63999",
         "keyence:kv-8000": "VM0-589823",
@@ -502,8 +503,8 @@
         "keyence:kv-5000-xym": "Z1-12",
         "keyence:kv-7000": "Z1-12",
         "keyence:kv-7000-xym": "Z1-12",
-        "keyence:kv-8000": "Z1-12",
-        "keyence:kv-8000-xym": "Z1-12",
+        "keyence:kv-8000": "Z1-23",
+        "keyence:kv-8000-xym": "Z1-23",
         "keyence:kv-x500": "Z1-10",
         "keyence:kv-x500-xym": "Z1-10"
       }
@@ -516,9 +517,9 @@
         "keyence:kv-nano": "CTH0-3",
         "keyence:kv-nano-xym": "CTH0-3",
         "keyence:kv-3000": "CTH0-1",
-        "keyence:kv-3000-xym": "CTH0-3",
+        "keyence:kv-3000-xym": "CTH0-1",
         "keyence:kv-5000": "CTH0-1",
-        "keyence:kv-5000-xym": "CTH0-3",
+        "keyence:kv-5000-xym": "CTH0-1",
         "keyence:kv-7000": "-",
         "keyence:kv-7000-xym": "-",
         "keyence:kv-8000": "-",

@@ -93,10 +93,10 @@ public static class KvHostLinkDeviceRanges
             Row("ZF", KvDeviceRangeNotation.Decimal, "-", "-", "ZF000000-ZF131071", "ZF000000-ZF131071", "ZF000000-ZF131071", "ZF000000-ZF131071", "ZF000000-ZF524287", "ZF000000-ZF524287", "ZF000000-ZF524287", "ZF000000-ZF524287", "ZF000000-ZF524287", "ZF000000-ZF524287"),
             Row("W", KvDeviceRangeNotation.Hexadecimal, "W0000-W3FFF", "W0000-W3FFF", "W0000-W3FFF", "W0000-W3FFF", "W0000-W3FFF", "W0000-W3FFF", "W0000-W7FFF", "W0000-W7FFF", "W0000-W7FFF", "W0000-W7FFF", "W0000-W7FFF", "W0000-W7FFF"),
             Row("TM", KvDeviceRangeNotation.Decimal, "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511", "TM000-TM511"),
-            Row("VM", KvDeviceRangeNotation.Decimal, "VM0-9499", "VM0-9499", "VM0-49999", "VM0-49999", "VM0-49999", "VM0-49999", "VM0-63999", "VM0-63999", "VM0-589823", "VM0-589823", "-", "-"),
+            Row("VM", KvDeviceRangeNotation.Decimal, "VM0-9999", "VM0-9999", "VM0-59999", "VM0-59999", "VM0-59999", "VM0-59999", "VM0-63999", "VM0-63999", "VM0-589823", "VM0-589823", "-", "-"),
             Row("VB", KvDeviceRangeNotation.Hexadecimal, "VB0-1FFF", "VB0-1FFF", "VB0-3FFF", "VB0-3FFF", "VB0-3FFF", "VB0-3FFF", "VB0-F9FF", "VB0-F9FF", "VB0-F9FF", "VB0-F9FF", "-", "-"),
-            Row("Z", KvDeviceRangeNotation.Decimal, "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-10", "Z1-10"),
-            Row("CTH", KvDeviceRangeNotation.Decimal, "CTH0-3", "CTH0-3", "CTH0-1", "CTH0-3", "CTH0-1", "CTH0-3", "-", "-", "-", "-", "-", "-"),
+            Row("Z", KvDeviceRangeNotation.Decimal, "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-12", "Z1-23", "Z1-23", "Z1-10", "Z1-10"),
+            Row("CTH", KvDeviceRangeNotation.Decimal, "CTH0-3", "CTH0-3", "CTH0-1", "CTH0-1", "CTH0-1", "CTH0-1", "-", "-", "-", "-", "-", "-"),
             Row("CTC", KvDeviceRangeNotation.Decimal, "CTC0-7", "CTC0-7", "CTC0-3", "CTC0-3", "CTC0-3", "CTC0-3", "-", "-", "-", "-", "-", "-"),
             Row("AT", KvDeviceRangeNotation.Decimal, "-", "-", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "AT0-7", "-", "-"),
         ]);
