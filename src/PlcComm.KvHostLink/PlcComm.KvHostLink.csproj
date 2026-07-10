@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <IsPackable>true</IsPackable>
     <PackageId>PlcComm.KvHostLink</PackageId>
     <Title>PLC Communication KEYENCE Host Link .NET</Title>
     <Description>Modern Host Link (Upper Link) client library for KEYENCE KV series PLCs.</Description>

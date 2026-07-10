@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Release: Bumped .NET package metadata to `3.0.0`.
+- Packaging: Marked samples, CLI, and validation tools non-packable so only the library package is produced.
+- Docs: Replaced relative README links with absolute URLs so they resolve on package registry pages.
 
 ### BREAKING
 - Library: Breaking: Moved PLC profile lookup APIs to `KvHostLinkPlcProfiles`; the old `KvHostLinkDeviceRanges` profile methods are no longer the supported location.
