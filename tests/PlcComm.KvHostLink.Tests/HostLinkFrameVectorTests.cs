@@ -77,24 +77,42 @@ public sealed class HostLinkFrameVectorTests
         switch (cmd)
         {
             case "read":
-                await client.ReadAsync(vec.GetProperty("device").GetString()!).ConfigureAwait(false);
+                if (vec.TryGetProperty("data_format", out var readFormat))
+                    await client.ReadAsync(
+                        vec.GetProperty("device").GetString()!, readFormat.GetString()!).ConfigureAwait(false);
+                else
+                    await client.ReadAsync(vec.GetProperty("device").GetString()!).ConfigureAwait(false);
                 break;
             case "read_consecutive":
-                await client.ReadConsecutiveAsync(
-                    vec.GetProperty("device").GetString()!,
-                    vec.GetProperty("count").GetInt32()).ConfigureAwait(false);
+                if (vec.TryGetProperty("data_format", out var readConsecutiveFormat))
+                    await client.ReadConsecutiveAsync(
+                        vec.GetProperty("device").GetString()!,
+                        vec.GetProperty("count").GetInt32(),
+                        readConsecutiveFormat.GetString()!).ConfigureAwait(false);
+                else
+                    await client.ReadConsecutiveAsync(
+                        vec.GetProperty("device").GetString()!,
+                        vec.GetProperty("count").GetInt32()).ConfigureAwait(false);
                 break;
             case "write":
-                await client.WriteAsync(
-                    vec.GetProperty("device").GetString()!,
-                    vec.GetProperty("value").GetInt32()).ConfigureAwait(false);
+                if (vec.TryGetProperty("data_format", out var writeFormat))
+                    await client.WriteAsync(
+                        vec.GetProperty("device").GetString()!,
+                        vec.GetProperty("value").GetInt32(),
+                        writeFormat.GetString()!).ConfigureAwait(false);
+                else
+                    await client.WriteAsync(
+                        vec.GetProperty("device").GetString()!,
+                        vec.GetProperty("value").GetInt32()).ConfigureAwait(false);
                 break;
             case "write_consecutive":
                 var values = vec.GetProperty("values").EnumerateArray()
                     .Select(x => x.GetInt32())
                     .ToArray();
                 await client.WriteConsecutiveAsync(
-                    vec.GetProperty("device").GetString()!, values).ConfigureAwait(false);
+                    vec.GetProperty("device").GetString()!,
+                    values,
+                    vec.GetProperty("data_format").GetString()!).ConfigureAwait(false);
                 break;
             case "change_mode":
                 var mode = vec.GetProperty("mode").GetString()! == "RUN"
@@ -128,7 +146,7 @@ public sealed class HostLinkFrameVectorTests
             case "read_format":
                 await client.ReadAsync(
                     vec.GetProperty("device").GetString()!,
-                    vec.GetProperty("data_format").GetString()).ConfigureAwait(false);
+                    vec.GetProperty("data_format").GetString()!).ConfigureAwait(false);
                 break;
             case "read_monitor_bits":
                 await client.ReadMonitorBitsAsync().ConfigureAwait(false);
@@ -149,14 +167,17 @@ public sealed class HostLinkFrameVectorTests
             case "read_consecutive_legacy":
                 await client.ReadConsecutiveLegacyAsync(
                     vec.GetProperty("device").GetString()!,
-                    vec.GetProperty("count").GetInt32()).ConfigureAwait(false);
+                    vec.GetProperty("count").GetInt32(),
+                    vec.GetProperty("data_format").GetString()!).ConfigureAwait(false);
                 break;
             case "write_consecutive_legacy":
                 var legacyValues = vec.GetProperty("values").EnumerateArray()
                     .Select(x => x.GetInt32())
                     .ToArray();
                 await client.WriteConsecutiveLegacyAsync(
-                    vec.GetProperty("device").GetString()!, legacyValues).ConfigureAwait(false);
+                    vec.GetProperty("device").GetString()!,
+                    legacyValues,
+                    vec.GetProperty("data_format").GetString()!).ConfigureAwait(false);
                 break;
             case "register_monitor_bits":
                 await client.RegisterMonitorBitsAsync(
@@ -164,19 +185,24 @@ public sealed class HostLinkFrameVectorTests
                 break;
             case "register_monitor_words":
                 await client.RegisterMonitorWordsAsync(
-                    vec.GetProperty("devices").EnumerateArray().Select(item => item.GetString()!)).ConfigureAwait(false);
+                    vec.GetProperty("devices").EnumerateArray().Select(item => new KvMonitorWordTarget(
+                        item.GetProperty("device").GetString()!,
+                        item.GetProperty("data_format").GetString()!))).ConfigureAwait(false);
                 break;
             case "write_set_value":
                 await client.WriteSetValueAsync(
                     vec.GetProperty("device").GetString()!,
-                    vec.GetProperty("value").GetInt32()).ConfigureAwait(false);
+                    vec.GetProperty("value").GetInt32(),
+                    vec.GetProperty("data_format").GetString()!).ConfigureAwait(false);
                 break;
             case "write_set_value_consecutive":
                 var setValues = vec.GetProperty("values").EnumerateArray()
                     .Select(x => x.GetInt32())
                     .ToArray();
                 await client.WriteSetValueConsecutiveAsync(
-                    vec.GetProperty("device").GetString()!, setValues).ConfigureAwait(false);
+                    vec.GetProperty("device").GetString()!,
+                    setValues,
+                    vec.GetProperty("data_format").GetString()!).ConfigureAwait(false);
                 break;
             case "switch_bank":
                 await client.SwitchBankAsync(vec.GetProperty("bank").GetInt32()).ConfigureAwait(false);
@@ -185,7 +211,8 @@ public sealed class HostLinkFrameVectorTests
                 await client.ReadExpansionUnitBufferAsync(
                     vec.GetProperty("unit").GetInt32(),
                     vec.GetProperty("address").GetInt32(),
-                    vec.GetProperty("count").GetInt32()).ConfigureAwait(false);
+                    vec.GetProperty("count").GetInt32(),
+                    vec.GetProperty("data_format").GetString()!).ConfigureAwait(false);
                 break;
             case "write_expansion_unit_buffer":
                 var expansionValues = vec.GetProperty("values").EnumerateArray()
@@ -194,7 +221,8 @@ public sealed class HostLinkFrameVectorTests
                 await client.WriteExpansionUnitBufferAsync(
                     vec.GetProperty("unit").GetInt32(),
                     vec.GetProperty("address").GetInt32(),
-                    expansionValues).ConfigureAwait(false);
+                    expansionValues,
+                    vec.GetProperty("data_format").GetString()!).ConfigureAwait(false);
                 break;
             case "read_comments":
                 await client.ReadCommentsAsync(vec.GetProperty("device").GetString()!).ConfigureAwait(false);
@@ -212,14 +240,16 @@ public sealed class HostLinkFrameVectorTests
         var (server, received) = StartEchoServer();
         var port = ((IPEndPoint)server.LocalEndpoint).Port;
 
-        using var client = new KvHostLinkClient("127.0.0.1", TestPlcProfile, port);
+        using var client = new KvHostLinkClient("127.0.0.1", port, HostLinkTransportMode.Tcp, TestPlcProfile);
         try
         {
+            await client.OpenAsync();
             await RunCommandAsync(client, vec);
         }
-        catch (Exception ex) when (ex is not HostLinkProtocolError)
+        catch (Exception)
         {
-            // Ignore TCP/parsing errors; we only care what was sent
+            // Response parsing may fail because the fixture always replies OK;
+            // the assertion below still requires the expected frame to have been sent.
         }
         finally
         {

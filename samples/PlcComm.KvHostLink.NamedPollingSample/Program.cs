@@ -1,21 +1,27 @@
 using PlcComm.KvHostLink;
 
-if (args.Length < 3)
+if (args.Length < 4)
 {
-    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- <host> <port> <plc-profile>");
-    Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- 192.168.250.100 8501 keyence:kv-8000");
+    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- <host> <port> <transport> <plc-profile>");
+    Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- 192.168.250.100 8501 tcp keyence:kv-8000");
     return;
 }
 
 var host = args[0];
 var port = int.Parse(args[1]);
-var plcProfile = args[2];
+var transport = args[2].ToLowerInvariant() switch
+{
+    "tcp" => HostLinkTransportMode.Tcp,
+    "udp" => HostLinkTransportMode.Udp,
+    _ => throw new ArgumentException("transport must be tcp or udp."),
+};
+var plcProfile = args[3];
 const string bitWordAddress = "DM126";
 string bit0Address = $"{bitWordAddress}.0";
 string bit3Address = $"{bitWordAddress}.3";
 
 Console.WriteLine($"Connecting to {host}:{port} ({plcProfile}) ...");
-var options = new KvHostLinkConnectionOptions(host, plcProfile, port);
+var options = new KvHostLinkConnectionOptions(host, port, transport, plcProfile);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 // Read the original bit values so the sample can restore them later.

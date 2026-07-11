@@ -17,6 +17,7 @@ from pathlib import Path
 
 CSHARP_INSPECTOR = r'''
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -215,6 +216,11 @@ static bool IsCompilerGenerated(MemberInfo member)
     return member.GetCustomAttribute<CompilerGeneratedAttribute>() is not null || member.Name.Contains('<');
 }
 
+static bool IsEditorHidden(MemberInfo member)
+{
+    return member.GetCustomAttribute<EditorBrowsableAttribute>()?.State == EditorBrowsableState.Never;
+}
+
 static bool IsDeclaredPublic(MemberInfo member)
 {
     return member switch
@@ -231,7 +237,7 @@ static bool IsDeclaredPublic(MemberInfo member)
 var assemblyPath = args[0];
 var assembly = Assembly.LoadFrom(assemblyPath);
 var types = assembly.GetExportedTypes()
-    .Where(t => !IsCompilerGenerated(t))
+    .Where(t => !IsCompilerGenerated(t) && !IsEditorHidden(t))
     .OrderBy(t => t.Namespace)
     .ThenBy(t => t.Name)
     .Select(type => new
@@ -243,7 +249,7 @@ var types = assembly.GetExportedTypes()
         Signature = TypeSignature(type),
         DocId = MemberDocId(type),
         Members = type.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
-            .Where(m => !IsCompilerGenerated(m) && IsDeclaredPublic(m))
+            .Where(m => !IsCompilerGenerated(m) && !IsEditorHidden(m) && IsDeclaredPublic(m))
             .OrderBy(m => m.MetadataToken)
             .Select(m => new
             {

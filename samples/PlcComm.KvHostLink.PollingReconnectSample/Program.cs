@@ -3,19 +3,25 @@ using System.IO;
 using System.Net.Sockets;
 using PlcComm.KvHostLink;
 
-if (args.Length < 3)
+if (args.Length < 4)
 {
-    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.PollingReconnectSample -- <host> <port> <plc-profile> [device] [dtype] [interval-seconds]");
-    Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.PollingReconnectSample -- 192.168.250.100 8501 keyence:kv-8000 DM100 U 1");
+    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.PollingReconnectSample -- <host> <port> <transport> <plc-profile> [device] [dtype] [interval-seconds]");
+    Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.PollingReconnectSample -- 192.168.250.100 8501 tcp keyence:kv-8000 DM100 U 1");
     return;
 }
 
 var host = args[0];
 var port = int.Parse(args[1], CultureInfo.InvariantCulture);
-var plcProfile = args[2];
-var device = args.ElementAtOrDefault(3) ?? "DM100";
-var dtype = args.ElementAtOrDefault(4) ?? "U";
-var interval = TimeSpan.FromSeconds(ParseDouble(args.ElementAtOrDefault(5), 1.0));
+var transport = args[2].ToLowerInvariant() switch
+{
+    "tcp" => HostLinkTransportMode.Tcp,
+    "udp" => HostLinkTransportMode.Udp,
+    _ => throw new ArgumentException("transport must be tcp or udp."),
+};
+var plcProfile = args[3];
+var device = args.ElementAtOrDefault(4) ?? "DM100";
+var dtype = args.ElementAtOrDefault(5) ?? "U";
+var interval = TimeSpan.FromSeconds(ParseDouble(args.ElementAtOrDefault(6), 1.0));
 var initialBackoff = TimeSpan.FromSeconds(1);
 var maxBackoff = TimeSpan.FromSeconds(30);
 
@@ -36,10 +42,11 @@ try
     {
         if (client is null)
         {
-            Log("reconnecting", $"tcp {host}:{port} profile={plcProfile}");
+            Log("reconnecting", $"{transport.ToString().ToLowerInvariant()} {host}:{port} profile={plcProfile}");
             try
             {
-                var options = new KvHostLinkConnectionOptions(host, plcProfile, port, Timeout: TimeSpan.FromSeconds(3));
+                var options = new KvHostLinkConnectionOptions(
+                    host, port, transport, plcProfile, TimeSpan.FromSeconds(3));
                 client = await KvHostLinkClientFactory.OpenAndConnectAsync(options, shutdown.Token);
             }
             catch (Exception ex) when (IsRetryable(ex) && !shutdown.IsCancellationRequested)

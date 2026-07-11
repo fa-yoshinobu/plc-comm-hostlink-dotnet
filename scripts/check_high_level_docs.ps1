@@ -67,19 +67,9 @@ $expected = @(
         Params = @("client", "device", "count", "ct")
     },
     @{
-        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsChunkedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Int32,System.Threading.CancellationToken)'
-        Tags = @("summary", "returns", "remarks")
-        Params = @("client", "device", "count", "maxWordsPerRequest", "ct")
-    },
-    @{
         Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsSingleRequestAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)'
         Tags = @("summary", "returns", "remarks")
         Params = @("client", "device", "count", "ct")
-    },
-    @{
-        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsChunkedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Int32,System.Threading.CancellationToken)'
-        Tags = @("summary", "returns", "remarks")
-        Params = @("client", "device", "count", "maxDwordsPerRequest", "ct")
     },
     @{
         Name = 'M:PlcComm.KvHostLink.KvHostLinkClientFactory.OpenAndConnectAsync(PlcComm.KvHostLink.KvHostLinkConnectionOptions,System.Threading.CancellationToken)'

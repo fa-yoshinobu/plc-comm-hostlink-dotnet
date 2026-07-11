@@ -129,10 +129,12 @@ internal sealed record PollingPlan(
     {
         using var document = JsonDocument.Parse(File.ReadAllText(options.ConfigPath));
         var root = document.RootElement;
-        var defaults = root.TryGetProperty("defaults", out var defaultsElement) ? RequireObject(defaultsElement, "defaults") : default;
+        if (!root.TryGetProperty("defaults", out var defaultsElement))
+            throw new ArgumentException("defaults is required and must define port and transport.");
+        var defaults = RequireObject(defaultsElement, "defaults");
         var output = root.TryGetProperty("output", out var outputElement) ? RequireObject(outputElement, "output") : default;
-        var defaultTransport = GetString(defaults, "transport", "tcp");
-        var defaultPort = GetOptionalInt(defaults, "port") ?? 8501;
+        var defaultTransport = GetRequiredString(defaults, "transport", "defaults.transport");
+        var defaultPort = GetRequiredPositiveInt(defaults, "port", "defaults.port");
         var defaultTimeout = TimeSpan.FromSeconds(GetPositiveDouble(defaults, "timeout", 3));
         var defaultInterval = TimeSpan.FromSeconds(GetPositiveDouble(defaults, "interval", 1));
         var defaultProfile = GetOptionalString(defaults, "plc_profile");
@@ -218,6 +220,9 @@ internal sealed record PollingPlan(
             throw new ArgumentException($"{propertyName} must be a positive integer.");
         return parsed;
     }
+
+    private static int GetRequiredPositiveInt(JsonElement element, string propertyName, string displayName)
+        => GetOptionalInt(element, propertyName) ?? throw new ArgumentException($"{displayName} is required.");
 
     private static double GetPositiveDouble(JsonElement element, string propertyName, double defaultValue)
     {

@@ -3,24 +3,30 @@
 // Demonstrates all high-level KEYENCE KV Host Link APIs:
 //   KvHostLinkClientFactory.OpenAndConnectAsync, ReadTypedAsync,
 //   WriteTypedAsync, WriteBitInWordAsync, ReadWordsSingleRequestAsync,
-//   ReadDWordsSingleRequestAsync, ReadWordsChunkedAsync, ReadDWordsChunkedAsync,
+//   ReadWordsAsync, ReadDWordsAsync,
 //   ReadNamedAsync, PollAsync, and KvHostLinkAddress.Normalize.
 //
 // Usage:
-//   dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <plc-profile>
+//   dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <transport> <plc-profile>
 
 using PlcComm.KvHostLink;
 
-if (args.Length < 3)
+if (args.Length < 4)
 {
-    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <plc-profile>");
-    Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- 192.168.250.100 8501 keyence:kv-8000");
+    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <transport> <plc-profile>");
+    Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- 192.168.250.100 8501 tcp keyence:kv-8000");
     return;
 }
 
 var host = args[0];
 var port = int.Parse(args[1]);
-var plcProfile = args[2];
+var transport = args[2].ToLowerInvariant() switch
+{
+    "tcp" => HostLinkTransportMode.Tcp,
+    "udp" => HostLinkTransportMode.Udp,
+    _ => throw new ArgumentException("transport must be tcp or udp."),
+};
+var plcProfile = args[3];
 
 // -------------------------------------------------------------------------
 // 1. OpenAndConnectAsync  (recommended entry point)
@@ -29,14 +35,14 @@ var plcProfile = args[2];
 //
 // Parameters:
 //   host - KEYENCE KV PLC IP address or hostname
-//   port - KV Ethernet module port (default 8501; configure in KV Studio
-//          under Ethernet settings)
+//   port - explicitly configured KV Ethernet module port
+//   transport - tcp or udp, matching the PLC connection settings
 //   ct   - CancellationToken
 //
 // Use case: simplest way to establish a connection for normal application code.
 // -------------------------------------------------------------------------
 Console.WriteLine($"Connecting to {host}:{port} ({plcProfile}) ...");
-var options = new KvHostLinkConnectionOptions(host, plcProfile, port);
+var options = new KvHostLinkConnectionOptions(host, port, transport, plcProfile);
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 Console.WriteLine($"[OpenAndConnectAsync] Connected to {host}:{port} ({client.PlcProfile})");
 
@@ -93,24 +99,20 @@ try
     Console.WriteLine($"[ReadWordsSingleRequestAsync] DM0-DM9 = [{string.Join(", ", words)}]");
 
     // -------------------------------------------------------------------------
-    // 4. ReadDWordsSingleRequestAsync / ReadWordsChunkedAsync / ReadDWordsChunkedAsync
+    // 4. ReadWordsAsync / ReadDWordsAsync
     //
     // Reads count consecutive DWord (32-bit unsigned) values starting at device.
-    // Each DWord is assembled from two consecutive word registers (lo, hi).
-    // Returns uint[].
-    //
-    // Use case: choosing explicitly between one-request reads and multi-request
-    //           chunked reads.
+    // DWord reads use the native .D Host Link request format. Both helpers send
+    // exactly one request and reject counts above the protocol limit.
     // -------------------------------------------------------------------------
     // Read consecutive 32-bit values in one PLC request.
     uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM0", 4);
     Console.WriteLine($"[ReadDWordsSingleRequestAsync] DM0-DM7 as uint32[4] = [{string.Join(", ", dwords)}]");
 
-    // Read larger areas with explicit chunk sizes.
-    ushort[] largeWords = await client.ReadWordsChunkedAsync("DM1000", 200, maxWordsPerRequest: 64);
-    uint[] largeDwords = await client.ReadDWordsChunkedAsync("DM2000", 40, maxDwordsPerRequest: 32);
-    Console.WriteLine($"[ReadWordsChunkedAsync] DM1000 block words = {largeWords.Length}");
-    Console.WriteLine($"[ReadDWordsChunkedAsync] DM2000 block dwords = {largeDwords.Length}");
+    ushort[] largeWords = await client.ReadWordsAsync("DM1000", 200);
+    uint[] largeDwords = await client.ReadDWordsAsync("DM2000", 40);
+    Console.WriteLine($"[ReadWordsAsync] DM1000 block words = {largeWords.Length}");
+    Console.WriteLine($"[ReadDWordsAsync] DM2000 block dwords = {largeDwords.Length}");
 
     // -------------------------------------------------------------------------
     // 5. WriteBitInWordAsync

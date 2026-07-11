@@ -22,10 +22,12 @@ public sealed class KvHostLinkTransportTests
             accepted.Client.Shutdown(SocketShutdown.Send);
         });
 
-        await using var client = new KvHostLinkClient("127.0.0.1", "keyence:kv-8000", port)
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Tcp, "keyence:kv-8000")
         {
             Timeout = TimeSpan.FromSeconds(2)
         };
+        await client.OpenAsync();
         var error = await Assert.ThrowsAsync<HostLinkConnectionError>(() => client.SendRawAsync("READ"));
 
         Assert.Contains("before the response terminator", error.Message, StringComparison.Ordinal);
@@ -54,18 +56,21 @@ public sealed class KvHostLinkTransportTests
 
         await using var client = new KvHostLinkClient(
             "127.0.0.1",
-            "keyence:kv-8000",
             port,
-            HostLinkTransportMode.Udp)
+            HostLinkTransportMode.Udp,
+            "keyence:kv-8000")
         {
             Timeout = TimeSpan.FromMilliseconds(50)
         };
 
+        await client.OpenAsync();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.SendRawAsync("FIRST"));
         Assert.False(client.IsOpen);
 
         client.Timeout = TimeSpan.FromSeconds(2);
-        Assert.Equal("SECOND", await client.SendRawAsync("SECOND"));
+        await Assert.ThrowsAsync<HostLinkNotConnectedError>(() => client.SendRawAsync("SECOND"));
+        await client.OpenAsync();
+        Assert.Equal(Encoding.ASCII.GetBytes("SECOND"), await client.SendRawAsync("SECOND"));
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
@@ -84,13 +89,14 @@ public sealed class KvHostLinkTransportTests
 
         await using var client = new KvHostLinkClient(
             "127.0.0.1",
-            "keyence:kv-8000",
             port,
-            HostLinkTransportMode.Udp)
+            HostLinkTransportMode.Udp,
+            "keyence:kv-8000")
         {
             Timeout = TimeSpan.FromSeconds(5)
         };
         using var cancellation = new CancellationTokenSource();
+        await client.OpenAsync();
         Task request = client.SendRawAsync("CANCEL", cancellation.Token);
         await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
         cancellation.Cancel();
@@ -98,5 +104,15 @@ public sealed class KvHostLinkTransportTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => request);
         Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task CommandBeforeExplicitOpenFailsWithoutConnecting()
+    {
+        await using var client = new KvHostLinkClient(
+            "invalid.invalid", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
+
+        await Assert.ThrowsAsync<HostLinkNotConnectedError>(() => client.SendRawAsync("?K"));
+        Assert.False(client.IsOpen);
     }
 }

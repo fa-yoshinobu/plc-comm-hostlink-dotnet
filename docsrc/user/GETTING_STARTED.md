@@ -23,11 +23,13 @@ dotnet add package PlcComm.KvHostLink
 ```csharp
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 ```
 
 This opens a queued client, which is the recommended surface for normal application code.
+The port, TCP/UDP transport, and canonical PLC profile are all explicit. The
+factory performs the network connection; constructing options does not.
 
 ## First read (step by step)
 
@@ -35,7 +37,7 @@ This opens a queued client, which is the recommended surface for normal applicat
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 ushort dm0 = (ushort)await client.ReadTypedAsync("DM0", "U");
@@ -56,7 +58,7 @@ Your number will match the current value stored in `DM0` on your PLC.
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 const string testAddress = "DM100";
@@ -87,6 +89,7 @@ Only write to a test address that is safe for your machine and program.
 
 | Symptom | Check |
 |---|---|
-| The connection fails immediately. | Default port is `8501`, not `1025`; double-check the connection node port. |
+| The connection fails immediately. | Confirm that the explicitly configured port and TCP/UDP transport match the PLC connection settings. |
+| A command reports `HostLinkNotConnectedError`. | Call `OpenAsync` after construction or after a timeout, cancellation, close, EOF, or transport failure. |
 | Reads fail while you are trying the first example. | Start with `DM` word reads; do not start with timer/counter or expansion buffer access. |
 | Timer/counter preset writes return `E1`. | Timer/Counter preset writes (`WS`/`WSS`) are only supported on KV-8000/7000-series. |

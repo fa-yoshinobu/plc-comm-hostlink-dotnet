@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Threading;
 
 namespace PlcComm.KvHostLink;
@@ -52,14 +53,8 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
         set => _client.Timeout = value;
     }
 
-    /// <summary>Gets or sets whether LF is appended after CR on send.</summary>
-    public bool AppendLfOnSend
-    {
-        get => _client.AppendLfOnSend;
-        set => _client.AppendLfOnSend = value;
-    }
-
     /// <summary>Gets or sets the raw frame trace hook.</summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public Action<HostLinkTraceFrame>? TraceHook
     {
         get => _client.TraceHook;
@@ -139,7 +134,8 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     }
 
     /// <inheritdoc cref="KvHostLinkClient.SendRawAsync"/>
-    public Task<string> SendRawAsync(string body, CancellationToken cancellationToken = default)
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public Task<byte[]> SendRawAsync(string body, CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.SendRawAsync(body, cancellationToken), cancellationToken);
 
     /// <inheritdoc cref="KvHostLinkClient.ChangeModeAsync"/>
@@ -163,7 +159,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
         => ExecuteAsync(client => client.ConfirmOperatingModeAsync(cancellationToken), cancellationToken);
 
     /// <inheritdoc cref="KvHostLinkClient.SetTimeAsync"/>
-    public Task SetTimeAsync(DateTime? value = null, CancellationToken cancellationToken = default)
+    public Task SetTimeAsync(DateTime value, CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.SetTimeAsync(value, cancellationToken), cancellationToken);
 
     /// <inheritdoc cref="KvHostLinkClient.ForcedSetAsync"/>
@@ -174,24 +170,37 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     public Task ForcedResetAsync(string device, CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.ForcedResetAsync(device, cancellationToken), cancellationToken);
 
-    /// <inheritdoc cref="KvHostLinkClient.ReadAsync"/>
-    public Task<string[]> ReadAsync(string device, string? dataFormat = null, CancellationToken cancellationToken = default)
+    /// <inheritdoc cref="KvHostLinkClient.ReadAsync(string, CancellationToken)"/>
+    public Task<string[]> ReadAsync(string device, CancellationToken cancellationToken = default)
+        => ExecuteAsync(client => client.ReadAsync(device, cancellationToken), cancellationToken);
+
+    /// <inheritdoc cref="KvHostLinkClient.ReadAsync(string, string, CancellationToken)"/>
+    public Task<string[]> ReadAsync(
+        string device,
+        string dataFormat,
+        CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.ReadAsync(device, dataFormat, cancellationToken), cancellationToken);
 
-    /// <inheritdoc cref="KvHostLinkClient.ReadConsecutiveAsync"/>
+    /// <inheritdoc cref="KvHostLinkClient.ReadConsecutiveAsync(string, int, CancellationToken)"/>
     public Task<string[]> ReadConsecutiveAsync(
         string device,
         int count,
-        string? dataFormat = null,
+        CancellationToken cancellationToken = default)
+        => ExecuteAsync(client => client.ReadConsecutiveAsync(device, count, cancellationToken), cancellationToken);
+
+    /// <inheritdoc cref="KvHostLinkClient.ReadConsecutiveAsync(string, int, string, CancellationToken)"/>
+    public Task<string[]> ReadConsecutiveAsync(
+        string device,
+        int count,
+        string dataFormat,
         CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.ReadConsecutiveAsync(device, count, dataFormat, cancellationToken), cancellationToken);
 
     /// <inheritdoc cref="KvHostLinkClient.ReadCommentsAsync"/>
     public Task<string> ReadCommentsAsync(
         string device,
-        bool stripPadding = true,
         CancellationToken cancellationToken = default)
-        => ExecuteAsync(client => client.ReadCommentsAsync(device, stripPadding, cancellationToken), cancellationToken);
+        => ExecuteAsync(client => client.ReadCommentsAsync(device, cancellationToken), cancellationToken);
 
     /// <inheritdoc cref="KvHostLinkClient.RegisterMonitorBitsAsync"/>
     public Task RegisterMonitorBitsAsync(
@@ -201,7 +210,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
 
     /// <inheritdoc cref="KvHostLinkClient.RegisterMonitorWordsAsync"/>
     public Task RegisterMonitorWordsAsync(
-        IEnumerable<string> devices,
+        IEnumerable<KvMonitorWordTarget> devices,
         CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.RegisterMonitorWordsAsync(devices, cancellationToken), cancellationToken);
 
@@ -231,23 +240,37 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     public Task<string[]> ReadConsecutiveLegacyAsync(
         string device,
         int count,
-        string? dataFormat = null,
+        string dataFormat,
         CancellationToken cancellationToken = default)
         => ExecuteAsync(client => client.ReadConsecutiveLegacyAsync(device, count, dataFormat, cancellationToken), cancellationToken);
 
-    /// <inheritdoc cref="KvHostLinkClient.WriteAsync{T}"/>
+    /// <inheritdoc cref="KvHostLinkClient.WriteAsync{T}(string, T, CancellationToken)"/>
     public Task WriteAsync<T>(
         string device,
         T value,
-        string? dataFormat = null,
+        CancellationToken cancellationToken = default) where T : IFormattable
+        => ExecuteAsync(client => client.WriteAsync(device, value, cancellationToken), cancellationToken);
+
+    /// <inheritdoc cref="KvHostLinkClient.WriteAsync{T}(string, T, string, CancellationToken)"/>
+    public Task WriteAsync<T>(
+        string device,
+        T value,
+        string dataFormat,
         CancellationToken cancellationToken = default) where T : IFormattable
         => ExecuteAsync(client => client.WriteAsync(device, value, dataFormat, cancellationToken), cancellationToken);
 
-    /// <inheritdoc cref="KvHostLinkClient.WriteConsecutiveAsync{T}"/>
+    /// <inheritdoc cref="KvHostLinkClient.WriteConsecutiveAsync{T}(string, IEnumerable{T}, CancellationToken)"/>
     public Task WriteConsecutiveAsync<T>(
         string device,
         IEnumerable<T> values,
-        string? dataFormat = null,
+        CancellationToken cancellationToken = default) where T : IFormattable
+        => ExecuteAsync(client => client.WriteConsecutiveAsync(device, values, cancellationToken), cancellationToken);
+
+    /// <inheritdoc cref="KvHostLinkClient.WriteConsecutiveAsync{T}(string, IEnumerable{T}, string, CancellationToken)"/>
+    public Task WriteConsecutiveAsync<T>(
+        string device,
+        IEnumerable<T> values,
+        string dataFormat,
         CancellationToken cancellationToken = default) where T : IFormattable
         => ExecuteAsync(client => client.WriteConsecutiveAsync(device, values, dataFormat, cancellationToken), cancellationToken);
 
@@ -255,7 +278,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     public Task WriteConsecutiveLegacyAsync<T>(
         string device,
         IEnumerable<T> values,
-        string? dataFormat = null,
+        string dataFormat,
         CancellationToken cancellationToken = default) where T : IFormattable
         => ExecuteAsync(
             client => client.WriteConsecutiveLegacyAsync(device, values, dataFormat, cancellationToken),
@@ -265,7 +288,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     public Task WriteSetValueAsync<T>(
         string device,
         T value,
-        string? dataFormat = null,
+        string dataFormat,
         CancellationToken cancellationToken = default) where T : IFormattable
         => ExecuteAsync(client => client.WriteSetValueAsync(device, value, dataFormat, cancellationToken), cancellationToken);
 
@@ -273,7 +296,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
     public Task WriteSetValueConsecutiveAsync<T>(
         string device,
         IEnumerable<T> values,
-        string? dataFormat = null,
+        string dataFormat,
         CancellationToken cancellationToken = default) where T : IFormattable
         => ExecuteAsync(
             client => client.WriteSetValueConsecutiveAsync(device, values, dataFormat, cancellationToken),
@@ -288,7 +311,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
         int unitNo,
         int address,
         int count,
-        string dataFormat = "",
+        string dataFormat,
         CancellationToken cancellationToken = default)
         => ExecuteAsync(
             client => client.ReadExpansionUnitBufferAsync(unitNo, address, count, dataFormat, cancellationToken),
@@ -299,7 +322,7 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
         int unitNo,
         int address,
         IEnumerable<T> values,
-        string dataFormat = "",
+        string dataFormat,
         CancellationToken cancellationToken = default) where T : IFormattable
         => ExecuteAsync(
             client => client.WriteExpansionUnitBufferAsync(unitNo, address, values, dataFormat, cancellationToken),

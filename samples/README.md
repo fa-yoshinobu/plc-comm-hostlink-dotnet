@@ -1,21 +1,21 @@
 # Samples
 
-This directory contains buildable console projects that demonstrate the recommended high-level KEYENCE KV Host Link API. Each sample requires a host, port, and canonical PLC profile; the examples below use `192.168.250.100`, `8501`, and `keyence:kv-8000`.
+This directory contains buildable console projects that demonstrate the recommended high-level KEYENCE KV Host Link API. Each endpoint requires a host, port, TCP/UDP transport, and canonical PLC profile; the examples below use `192.168.250.100`, `8501`, `tcp`, and `keyence:kv-8000`.
 
 Use only test addresses that are safe for your PLC program before you run any write example.
 
 ## How to run
 
 ```powershell
-dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- 192.168.250.100 8501 keyence:kv-8000
+dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- 192.168.250.100 8501 tcp keyence:kv-8000
 ```
 
 ```powershell
-dotnet run --project samples/PlcComm.KvHostLink.BasicReadWriteSample -- 192.168.250.100 8501 keyence:kv-8000
+dotnet run --project samples/PlcComm.KvHostLink.BasicReadWriteSample -- 192.168.250.100 8501 tcp keyence:kv-8000
 ```
 
 ```powershell
-dotnet run --project samples/PlcComm.KvHostLink.PollingReconnectSample -- 192.168.250.100 8501 keyence:kv-8000 DM100 U 1
+dotnet run --project samples/PlcComm.KvHostLink.PollingReconnectSample -- 192.168.250.100 8501 tcp keyence:kv-8000 DM100 U 1
 ```
 
 ```powershell
@@ -27,7 +27,7 @@ dotnet run --project samples/PlcComm.KvHostLink.ConfigPollingSample -- --config 
 ```
 
 ```powershell
-dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- 192.168.250.100 8501 keyence:kv-8000
+dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- 192.168.250.100 8501 tcp keyence:kv-8000
 ```
 
 ## Sample index

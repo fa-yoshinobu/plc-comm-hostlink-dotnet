@@ -3,20 +3,13 @@ namespace PlcComm.KvHostLink.Tests;
 public class KvHostLinkDeviceTests
 {
     [Fact]
-    public void ParseDevice_CompatibilityBooleanOverload_IsDeprecatedAndStillRequiresType()
+    public void ParseDevice_CompatibilityBooleanOverload_IsRemoved()
     {
         var overload = typeof(KvHostLinkDevice).GetMethod(
             nameof(KvHostLinkDevice.ParseDevice),
             [typeof(string), typeof(bool)]);
 
-        Assert.NotNull(overload);
-        Assert.NotNull(overload.GetCustomAttributes(typeof(ObsoleteAttribute), inherit: false).SingleOrDefault());
-        var parsed = Assert.IsType<KvDeviceAddress>(overload.Invoke(null, ["DM0", true]));
-        Assert.Equal("DM", parsed.DeviceType);
-
-        var error = Assert.Throws<System.Reflection.TargetInvocationException>(
-            () => overload.Invoke(null, ["0", true]));
-        Assert.IsType<HostLinkProtocolError>(error.InnerException);
+        Assert.Null(overload);
     }
 
     [Theory]
@@ -99,6 +92,15 @@ public class KvHostLinkDeviceTests
     public void KvHostLinkAddress_Normalize_InvalidPublicDotNotation_Throws(string input)
     {
         Assert.Throws<HostLinkProtocolError>(() => KvHostLinkAddress.Normalize(input));
+    }
+
+    [Theory]
+    [InlineData("DM100.U")]
+    [InlineData("DM100.U:U")]
+    public void KvHostLinkAddress_BaseParserRejectsSuffixBearingInput(string input)
+    {
+        Assert.Throws<HostLinkProtocolError>(() => KvHostLinkAddress.Parse(input));
+        Assert.Throws<HostLinkProtocolError>(() => KvHostLinkAddress.ParseLogical(input));
     }
 
     [Theory]

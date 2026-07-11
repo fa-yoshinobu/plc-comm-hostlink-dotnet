@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace PlcComm.KvHostLink;
 
 /// <summary>
@@ -21,6 +23,7 @@ public enum KvPlcMode
 /// <summary>
 /// Direction of a traced frame.
 /// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
 public enum HostLinkTraceDirection
 {
     Send,
@@ -30,6 +33,7 @@ public enum HostLinkTraceDirection
 /// <summary>
 /// A raw frame captured by <see cref="KvHostLinkClient.TraceHook"/>.
 /// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
 public record HostLinkTraceFrame(
     HostLinkTraceDirection Direction,
     byte[] Data,

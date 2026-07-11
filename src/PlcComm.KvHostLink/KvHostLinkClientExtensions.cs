@@ -85,8 +85,8 @@ public static class KvHostLinkClientExtensions
     /// <param name="ct">Cancellation token.</param>
     /// <returns>
     /// A boxed CLR value. Integer formats return boxed integral types and
-    /// <c>"F"</c> returns a boxed <see cref="float"/>, and <c>"H"</c>
-    /// returns a <see cref="string"/>.
+    /// <c>"F"</c> returns a boxed <see cref="float"/>, <c>"H"</c>
+    /// returns a <see cref="string"/>, and <c>"BIT"</c> returns a <see cref="bool"/>.
     /// </returns>
     /// <remarks>
     /// The float helper is implemented at the extension layer by reading two
@@ -115,9 +115,12 @@ public static class KvHostLinkClientExtensions
             return BitConverter.Int32BitsToSingle(unchecked((int)(words[0] | (words[1] << 16))));
         }
 
-        if (normalized == "")
+        if (normalized == "BIT")
         {
-            var bitTokens = await client.ReadAsync(device, dataFormat: null, cancellationToken: ct).ConfigureAwait(false);
+            var address = KvHostLinkDevice.RequireBaseDevice(device);
+            if (!KvHostLinkModels.DirectBitDeviceTypes.Contains(address.DeviceType))
+                throw new HostLinkProtocolError("BIT reads require a direct bit device.");
+            var bitTokens = await client.ReadAsync(device, ct).ConfigureAwait(false);
             var bitRaw = RequireDataToken(bitTokens, device);
             return ParseBoolToken(bitRaw);
         }
@@ -229,21 +232,6 @@ public static class KvHostLinkClientExtensions
         => client.ExecuteAsync(inner => inner.ReadCounterAsync(device, ct), ct);
 
     /// <summary>
-    /// Reads the configured PLC comment text for one device through the queued helper surface.
-    /// </summary>
-    /// <param name="client">The queued client to use.</param>
-    /// <param name="device">Base device address such as <c>"DM100"</c>.</param>
-    /// <param name="stripPadding">Whether to trim the Host Link fixed-width trailing spaces.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>The PLC comment text for <paramref name="device"/>.</returns>
-    public static Task<string> ReadCommentsAsync(
-        this QueuedKvHostLinkClient client,
-        string device,
-        bool stripPadding = true,
-        CancellationToken ct = default)
-        => client.ExecuteAsync(inner => inner.ReadCommentsAsync(device, stripPadding, ct), ct);
-
-    /// <summary>
     /// Writes a single device value using a high-level data type code.
     /// </summary>
     /// <param name="client">The client to use.</param>
@@ -280,10 +268,22 @@ public static class KvHostLinkClientExtensions
             return;
         }
 
-        if (normalized == "")
+        if (normalized == "BIT")
         {
-            bool bit = Convert.ToBoolean(value, CultureInfo.InvariantCulture);
-            await client.WriteAsync(device, bit ? 1 : 0, dataFormat: null, cancellationToken: ct).ConfigureAwait(false);
+            object boxed = value;
+            bool bit = boxed switch
+            {
+                byte number when number <= 1 => number == 1,
+                sbyte number when number is 0 or 1 => number == 1,
+                short number when number is 0 or 1 => number == 1,
+                ushort number when number <= 1 => number == 1,
+                int number when number is 0 or 1 => number == 1,
+                uint number when number <= 1 => number == 1,
+                long number when number is 0 or 1 => number == 1,
+                ulong number when number <= 1 => number == 1,
+                _ => throw new HostLinkProtocolError("BIT writes require bool or integer 0/1."),
+            };
+            await client.WriteAsync(device, bit ? 1 : 0, ct).ConfigureAwait(false);
             return;
         }
 
@@ -291,30 +291,17 @@ public static class KvHostLinkClientExtensions
         await client.WriteAsync(device, value, fmt, ct).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Writes a hexadecimal word text value using the high-level <c>"H"</c>
-    /// data type code.
-    /// </summary>
-    public static async Task WriteTypedAsync(
+    /// <summary>Writes a direct bit device using an explicit BIT dtype and boolean value.</summary>
+    public static Task WriteTypedAsync(
         this KvHostLinkClient client,
         string device,
         string dtype,
-        string value,
+        bool value,
         CancellationToken ct = default)
     {
-        string normalized = dtype.Trim().TrimStart('.').ToUpperInvariant();
-        if (normalized != "H")
-            throw new HostLinkProtocolError("String WriteTypedAsync is supported only for dtype 'H'.");
-
-        var addr = KvHostLinkDevice.ParseDevice(device);
-        KvHostLinkDevice.ValidateDeviceType("WR", addr.DeviceType, KvHostLinkModels.WrDeviceTypes);
-        KvHostLinkDevice.ValidateDeviceSpan(addr.DeviceType, addr.Number, ".H");
-
-        string hex = NormalizeHexWordText(value);
-        string response = await client.SendRawAsync($"WR {(addr with { Suffix = ".H" }).ToText()} {hex}", ct)
-            .ConfigureAwait(false);
-        if (response != "OK")
-            throw new HostLinkProtocolError($"Expected 'OK' but received '{response}' for H write.");
+        if (!string.Equals(dtype.Trim().TrimStart('.'), "BIT", StringComparison.OrdinalIgnoreCase))
+            throw new HostLinkProtocolError("Boolean WriteTypedAsync requires dtype 'BIT'.");
+        return client.WriteAsync(device, value ? 1 : 0, ct);
     }
 
     /// <summary>
@@ -328,15 +315,12 @@ public static class KvHostLinkClientExtensions
         CancellationToken ct = default) where T : IFormattable
         => client.ExecuteAsync(inner => KvHostLinkClientExtensions.WriteTypedAsync(inner, device, dtype, value, ct), ct);
 
-    /// <summary>
-    /// Writes a hexadecimal word text value using the high-level <c>"H"</c>
-    /// data type code.
-    /// </summary>
+    /// <summary>Writes a direct bit device using an explicit BIT dtype and boolean value.</summary>
     public static Task WriteTypedAsync(
         this QueuedKvHostLinkClient client,
         string device,
         string dtype,
-        string value,
+        bool value,
         CancellationToken ct = default)
         => client.ExecuteAsync(inner => KvHostLinkClientExtensions.WriteTypedAsync(inner, device, dtype, value, ct), ct);
 
@@ -370,11 +354,14 @@ public static class KvHostLinkClientExtensions
     {
         if (bitIndex is < 0 or > 15)
             throw new ArgumentOutOfRangeException(nameof(bitIndex), "bitIndex must be 0-15.");
-        var tokens = await client.ReadAsync(device, ".U", ct).ConfigureAwait(false);
-        int cur = ushort.Parse(RequireDataToken(tokens, device), CultureInfo.InvariantCulture);
-        if (value) cur |= 1 << bitIndex;
-        else cur &= ~(1 << bitIndex);
-        await client.WriteAsync(device, (ushort)(cur & 0xFFFF), ".U", ct).ConfigureAwait(false);
+        await client.ExecuteExclusiveAsync(async () =>
+        {
+            var tokens = await client.ReadCoreAsync(device, ".U", 1, false, ct).ConfigureAwait(false);
+            int current = ushort.Parse(RequireDataToken(tokens, device), CultureInfo.InvariantCulture);
+            if (value) current |= 1 << bitIndex;
+            else current &= ~(1 << bitIndex);
+            await client.WriteCoreAsync(device, (ushort)current, ".U", ct).ConfigureAwait(false);
+        }, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -566,10 +553,12 @@ public static class KvHostLinkClientExtensions
         if (count < 1)
             throw new ArgumentOutOfRangeException(nameof(count), "count must be 1 or greater.");
 
-        ushort[] words = await client.ReadWordsSingleRequestAsync(device, checked(count * 2), ct).ConfigureAwait(false);
+        if (count > 500)
+            throw new HostLinkProtocolError("Dword count must be in the range 1-500 for one request.");
+        string[] tokens = await client.ReadConsecutiveAsync(device, count, ".D", ct).ConfigureAwait(false);
         var result = new uint[count];
         for (int i = 0; i < count; i++)
-            result[i] = unchecked((uint)(words[i * 2] | (words[(i * 2) + 1] << 16)));
+            result[i] = uint.Parse(tokens[i], CultureInfo.InvariantCulture);
         return result;
     }
 
@@ -621,15 +610,9 @@ public static class KvHostLinkClientExtensions
         if (values.Count == 0)
             throw new HostLinkProtocolError("values must not be empty");
 
-        var words = new ushort[checked(values.Count * 2)];
-        for (int i = 0; i < values.Count; i++)
-        {
-            uint value = values[i];
-            words[i * 2] = unchecked((ushort)(value & 0xFFFF));
-            words[(i * 2) + 1] = unchecked((ushort)((value >> 16) & 0xFFFF));
-        }
-
-        return client.WriteWordsSingleRequestAsync(device, words, ct);
+        if (values.Count > 500)
+            throw new HostLinkProtocolError("Dword count must be in the range 1-500 for one request.");
+        return client.WriteConsecutiveAsync(device, values, ".D", ct);
     }
 
     /// <summary>
@@ -642,171 +625,6 @@ public static class KvHostLinkClientExtensions
         CancellationToken ct = default)
         => client.ExecuteAsync(inner => KvHostLinkClientExtensions.WriteDWordsSingleRequestAsync(inner, device, values, ct), ct);
 
-    /// <summary>
-    /// Reads contiguous unsigned 16-bit words using explicit chunking.
-    /// </summary>
-    /// <param name="client">Connected Host Link client.</param>
-    /// <param name="device">Start device address.</param>
-    /// <param name="count">Number of words to read.</param>
-    /// <param name="maxWordsPerRequest">Maximum words per protocol request.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>The concatenated word values from all explicit chunks.</returns>
-    /// <remarks>Chunking is opt-in and advances only by contiguous word boundaries.</remarks>
-    public static async Task<ushort[]> ReadWordsChunkedAsync(
-        this KvHostLinkClient client,
-        string device,
-        int count,
-        int maxWordsPerRequest,
-        CancellationToken ct = default)
-    {
-        ValidateChunkArguments(count, maxWordsPerRequest, nameof(count), nameof(maxWordsPerRequest));
-        var start = KvHostLinkAddress.Parse(device) with { Suffix = string.Empty };
-        var result = new ushort[count];
-
-        int offset = 0;
-        while (offset < count)
-        {
-            int chunkCount = Math.Min(maxWordsPerRequest, count - offset);
-            string chunkStart = OffsetDevice(start, offset);
-            var chunk = await client.ReadWordsSingleRequestAsync(chunkStart, chunkCount, ct).ConfigureAwait(false);
-            Array.Copy(chunk, 0, result, offset, chunkCount);
-            offset += chunkCount;
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Reads contiguous unsigned 16-bit words using explicit chunking.
-    /// </summary>
-    public static Task<ushort[]> ReadWordsChunkedAsync(
-        this QueuedKvHostLinkClient client,
-        string device,
-        int count,
-        int maxWordsPerRequest,
-        CancellationToken ct = default)
-        => client.ExecuteAsync(inner => KvHostLinkClientExtensions.ReadWordsChunkedAsync(inner, device, count, maxWordsPerRequest, ct), ct);
-
-    /// <summary>
-    /// Reads contiguous unsigned 32-bit values using explicit chunking.
-    /// </summary>
-    /// <param name="client">Connected Host Link client.</param>
-    /// <param name="device">Start device address.</param>
-    /// <param name="count">Number of 32-bit values to read.</param>
-    /// <param name="maxDwordsPerRequest">Maximum double-words per protocol request.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>The concatenated 32-bit values from all explicit chunks.</returns>
-    /// <remarks>Chunking is opt-in and advances only by whole double-word boundaries.</remarks>
-    public static async Task<uint[]> ReadDWordsChunkedAsync(
-        this KvHostLinkClient client,
-        string device,
-        int count,
-        int maxDwordsPerRequest,
-        CancellationToken ct = default)
-    {
-        ValidateChunkArguments(count, maxDwordsPerRequest, nameof(count), nameof(maxDwordsPerRequest));
-        var start = KvHostLinkAddress.Parse(device) with { Suffix = string.Empty };
-        var result = new uint[count];
-
-        int offset = 0;
-        while (offset < count)
-        {
-            int chunkCount = Math.Min(maxDwordsPerRequest, count - offset);
-            string chunkStart = OffsetDevice(start, offset * 2);
-            var chunk = await client.ReadDWordsSingleRequestAsync(chunkStart, chunkCount, ct).ConfigureAwait(false);
-            Array.Copy(chunk, 0, result, offset, chunkCount);
-            offset += chunkCount;
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Reads contiguous unsigned 32-bit values using explicit chunking.
-    /// </summary>
-    public static Task<uint[]> ReadDWordsChunkedAsync(
-        this QueuedKvHostLinkClient client,
-        string device,
-        int count,
-        int maxDwordsPerRequest,
-        CancellationToken ct = default)
-        => client.ExecuteAsync(inner => KvHostLinkClientExtensions.ReadDWordsChunkedAsync(inner, device, count, maxDwordsPerRequest, ct), ct);
-
-    /// <summary>
-    /// Writes contiguous unsigned 16-bit values using explicit chunking.
-    /// </summary>
-    public static async Task WriteWordsChunkedAsync(
-        this KvHostLinkClient client,
-        string device,
-        IReadOnlyList<ushort> values,
-        int maxWordsPerRequest,
-        CancellationToken ct = default)
-    {
-        ArgumentNullException.ThrowIfNull(values);
-        if (values.Count == 0)
-            throw new HostLinkProtocolError("values must not be empty");
-        ValidateChunkSize(maxWordsPerRequest, nameof(maxWordsPerRequest));
-
-        var start = KvHostLinkAddress.Parse(device) with { Suffix = string.Empty };
-        int offset = 0;
-        while (offset < values.Count)
-        {
-            int chunkCount = Math.Min(maxWordsPerRequest, values.Count - offset);
-            string chunkStart = OffsetDevice(start, offset);
-            await client.WriteWordsSingleRequestAsync(chunkStart, values.Skip(offset).Take(chunkCount).ToArray(), ct)
-                .ConfigureAwait(false);
-            offset += chunkCount;
-        }
-    }
-
-    /// <summary>
-    /// Writes contiguous unsigned 16-bit values using explicit chunking.
-    /// </summary>
-    public static Task WriteWordsChunkedAsync(
-        this QueuedKvHostLinkClient client,
-        string device,
-        IReadOnlyList<ushort> values,
-        int maxWordsPerRequest,
-        CancellationToken ct = default)
-        => client.ExecuteAsync(inner => KvHostLinkClientExtensions.WriteWordsChunkedAsync(inner, device, values, maxWordsPerRequest, ct), ct);
-
-    /// <summary>
-    /// Writes contiguous unsigned 32-bit values using explicit chunking.
-    /// </summary>
-    public static async Task WriteDWordsChunkedAsync(
-        this KvHostLinkClient client,
-        string device,
-        IReadOnlyList<uint> values,
-        int maxDwordsPerRequest,
-        CancellationToken ct = default)
-    {
-        ArgumentNullException.ThrowIfNull(values);
-        if (values.Count == 0)
-            throw new HostLinkProtocolError("values must not be empty");
-        ValidateChunkSize(maxDwordsPerRequest, nameof(maxDwordsPerRequest));
-
-        var start = KvHostLinkAddress.Parse(device) with { Suffix = string.Empty };
-        int offset = 0;
-        while (offset < values.Count)
-        {
-            int chunkCount = Math.Min(maxDwordsPerRequest, values.Count - offset);
-            string chunkStart = OffsetDevice(start, offset * 2);
-            await client.WriteDWordsSingleRequestAsync(chunkStart, values.Skip(offset).Take(chunkCount).ToArray(), ct)
-                .ConfigureAwait(false);
-            offset += chunkCount;
-        }
-    }
-
-    /// <summary>
-    /// Writes contiguous unsigned 32-bit values using explicit chunking.
-    /// </summary>
-    public static Task WriteDWordsChunkedAsync(
-        this QueuedKvHostLinkClient client,
-        string device,
-        IReadOnlyList<uint> values,
-        int maxDwordsPerRequest,
-        CancellationToken ct = default)
-        => client.ExecuteAsync(inner => KvHostLinkClientExtensions.WriteDWordsChunkedAsync(inner, device, values, maxDwordsPerRequest, ct), ct);
 
     /// <summary>
     /// Reads contiguous unsigned 16-bit words starting at <paramref name="device"/>.
@@ -871,8 +689,9 @@ public static class KvHostLinkClientExtensions
     /// Creates a queued client and opens the connection.
     /// </summary>
     /// <param name="host">PLC IP address or hostname.</param>
+    /// <param name="port">Required KV Host Link TCP/UDP port.</param>
+    /// <param name="transport">Required TCP or UDP transport.</param>
     /// <param name="plcProfile">Canonical KEYENCE KV PLC profile for the session.</param>
-    /// <param name="port">KV Host Link TCP/UDP port. Defaults to 8501.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A connected queued client that is safe to share across async callers.</returns>
     /// <remarks>
@@ -882,10 +701,12 @@ public static class KvHostLinkClientExtensions
     /// </remarks>
     public static Task<QueuedKvHostLinkClient> OpenAndConnectAsync(
         string host,
+        int port,
+        HostLinkTransportMode transport,
         string plcProfile,
-        int port = 8501,
         CancellationToken ct = default)
-        => KvHostLinkClientFactory.OpenAndConnectAsync(new KvHostLinkConnectionOptions(host, plcProfile, port), ct);
+        => KvHostLinkClientFactory.OpenAndConnectAsync(
+            new KvHostLinkConnectionOptions(host, port, transport, plcProfile), ct);
 
     private static async Task<IReadOnlyDictionary<string, object>> ReadNamedSequentialAsync(
         KvHostLinkClient client,
@@ -910,12 +731,12 @@ public static class KvHostLinkClientExtensions
                 if (!DirectBitDeviceTypes.Contains(parsed.DeviceType))
                     throw new HostLinkProtocolError($"Logical data type BIT is only valid for direct bit devices: '{address}'.");
 
-                var tokens = await client.ReadAsync(baseAddr, dataFormat: null, cancellationToken: ct).ConfigureAwait(false);
+                var tokens = await client.ReadAsync(baseAddr, ct).ConfigureAwait(false);
                 result[address] = ParseBoolToken(RequireDataToken(tokens, baseAddr));
             }
             else if (dtype == "COMMENT")
             {
-                result[address] = await client.ReadCommentsAsync(baseAddr, stripPadding: true, ct).ConfigureAwait(false);
+                result[address] = await client.ReadCommentsAsync(baseAddr, ct).ConfigureAwait(false);
             }
             else
             {
@@ -1035,8 +856,7 @@ public static class KvHostLinkClientExtensions
                 string[] tokens = await client.ReadConsecutiveAsync(
                     segment.StartAddress.ToText(),
                     segment.Count,
-                    dataFormat: null,
-                    cancellationToken: ct).ConfigureAwait(false);
+                    ct).ConfigureAwait(false);
 
                 foreach (var request in segment.Requests)
                 {
@@ -1176,30 +996,15 @@ public static class KvHostLinkClientExtensions
     // Internal helpers
     // -----------------------------------------------------------------------
 
-    private static void ValidateChunkArguments(int count, int maxPerRequest, string countName, string chunkName)
-    {
-        if (count < 1)
-            throw new ArgumentOutOfRangeException(countName, "count must be 1 or greater.");
-        ValidateChunkSize(maxPerRequest, chunkName);
-    }
-
-    private static void ValidateChunkSize(int maxPerRequest, string paramName)
-    {
-        if (maxPerRequest < 1)
-            throw new ArgumentOutOfRangeException(paramName, "Chunk size must be 1 or greater.");
-    }
-
     private static bool ParseBoolToken(string token)
     {
         switch (token.Trim().ToUpperInvariant())
         {
             case "1":
             case "ON":
-            case "TRUE":
                 return true;
             case "0":
             case "OFF":
-            case "FALSE":
                 return false;
             default:
                 throw new HostLinkProtocolError($"Invalid direct bit response token: {token}");
@@ -1218,23 +1023,6 @@ public static class KvHostLinkClientExtensions
         if (tokens.Length == 0)
             throw new HostLinkProtocolError($"Response for '{context}' did not contain a data token.");
         return tokens[^1];
-    }
-
-    private static string NormalizeHexWordText(string value)
-    {
-        string text = value.Trim().ToUpperInvariant();
-        if (text.Length is 0 or > 4 || text.Any(ch => !Uri.IsHexDigit(ch)))
-            throw new HostLinkProtocolError("H values must be 1 to 4 hexadecimal digits.");
-        return text;
-    }
-
-    private static string OffsetDevice(KvDeviceAddress start, int wordOffset)
-    {
-        int number = KvHostLinkDevice.UsesBitBankAddress(start.DeviceType)
-            ? KvHostLinkDevice.BitBankNumberFromLogical(
-                checked(KvHostLinkDevice.BitBankLogicalNumber(start.Number) + wordOffset))
-            : checked(start.Number + wordOffset);
-        return KvHostLinkAddress.Format(start with { Number = number, Suffix = string.Empty });
     }
 
     // "DM100:F" -> ("DM100", "F", null),  "DM100.3" -> ("DM100", "BIT_IN_WORD", 3),  "DM100.A" -> ("DM100", "BIT_IN_WORD", 10)

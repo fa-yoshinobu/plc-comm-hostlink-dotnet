@@ -63,25 +63,19 @@ internal static class OperationalCommon
 
     public static PlcEndpoint ParsePlcSpec(
         string value,
-        int defaultPort,
-        HostLinkTransportMode defaultTransport,
         TimeSpan defaultTimeout,
         TimeSpan defaultInterval)
     {
         var named = value.Split('=', 2);
         if (named.Length != 2 || string.IsNullOrWhiteSpace(named[0]) || string.IsNullOrWhiteSpace(named[1]))
-            throw new ArgumentException("PLC must be NAME=HOST,PROFILE[,PORT[,TRANSPORT]].", nameof(value));
+            throw new ArgumentException("PLC must be NAME=HOST,PROFILE,PORT,TRANSPORT.", nameof(value));
 
         var parts = named[1].Split(',', StringSplitOptions.TrimEntries);
-        if (parts.Length is < 2 or > 4)
-            throw new ArgumentException("PLC must be NAME=HOST,PROFILE[,PORT[,TRANSPORT]].", nameof(value));
+        if (parts.Length != 4 || parts.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("PLC must be NAME=HOST,PROFILE,PORT,TRANSPORT.", nameof(value));
 
-        var port = parts.Length >= 3 && !string.IsNullOrWhiteSpace(parts[2])
-            ? int.Parse(parts[2], CultureInfo.InvariantCulture)
-            : defaultPort;
-        var transport = parts.Length == 4 && !string.IsNullOrWhiteSpace(parts[3])
-            ? ParseTransport(parts[3])
-            : defaultTransport;
+        var port = ParsePositiveInt(parts[2], "port");
+        var transport = ParseTransport(parts[3]);
 
         return new PlcEndpoint(
             named[0].Trim(),
@@ -200,7 +194,7 @@ internal static class OperationalCommon
         };
 
     private static KvHostLinkConnectionOptions BuildOptions(PlcEndpoint endpoint)
-        => new(endpoint.Host, endpoint.PlcProfile, endpoint.Port, endpoint.Timeout, endpoint.Transport);
+        => new(endpoint.Host, endpoint.Port, endpoint.Transport, endpoint.PlcProfile, endpoint.Timeout);
 
     private static string NormalizeTagName(string address)
     {

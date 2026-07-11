@@ -68,6 +68,22 @@ public string Code { get; }
 public string Response { get; }
 ```
 
+### HostLinkNotConnectedError
+
+```csharp
+public sealed class HostLinkNotConnectedError
+```
+
+Thrown when a command is attempted before an explicit open or after the transport was closed.
+
+#### Members
+
+##### HostLinkNotConnectedError
+
+```csharp
+public HostLinkNotConnectedError()
+```
+
 ### HostLinkProtocolError
 
 ```csharp
@@ -88,64 +104,6 @@ public HostLinkProtocolError(string message)
 
 ```csharp
 public HostLinkProtocolError(string message, Exception inner)
-```
-
-### HostLinkTraceDirection
-
-```csharp
-public enum HostLinkTraceDirection
-```
-
-Direction of a traced frame.
-
-#### Members
-
-##### Send
-
-```csharp
-public const HostLinkTraceDirection Send
-```
-
-##### Receive
-
-```csharp
-public const HostLinkTraceDirection Receive
-```
-
-### HostLinkTraceFrame
-
-```csharp
-public class HostLinkTraceFrame
-```
-
-A raw frame captured by `TraceHook`.
-
-#### Members
-
-##### HostLinkTraceFrame
-
-```csharp
-public HostLinkTraceFrame(HostLinkTraceDirection Direction, byte[] Data, DateTime Timestamp)
-```
-
-A raw frame captured by `TraceHook`.
-
-##### Direction
-
-```csharp
-public HostLinkTraceDirection Direction { get; set; }
-```
-
-##### Data
-
-```csharp
-public byte[] Data { get; set; }
-```
-
-##### Timestamp
-
-```csharp
-public DateTime Timestamp { get; set; }
 ```
 
 ### HostLinkTransportMode
@@ -596,7 +554,7 @@ Remarks: This class serializes individual raw requests on one connection, but co
 ##### KvHostLinkClient
 
 ```csharp
-public KvHostLinkClient(string host, string plcProfile, int port = 8501, HostLinkTransportMode transportMode = Tcp)
+public KvHostLinkClient(string host, int port, HostLinkTransportMode transportMode, string plcProfile)
 ```
 
 ##### OpenAsync
@@ -635,12 +593,6 @@ public void Dispose()
 public ValueTask DisposeAsync()
 ```
 
-##### SendRawAsync
-
-```csharp
-public Task<string> SendRawAsync(string body, CancellationToken cancellationToken = default)
-```
-
 ##### ChangeModeAsync
 
 ```csharp
@@ -674,7 +626,7 @@ public Task<KvPlcMode> ConfirmOperatingModeAsync(CancellationToken cancellationT
 ##### SetTimeAsync
 
 ```csharp
-public Task SetTimeAsync(DateTime? value = null, CancellationToken cancellationToken = default)
+public Task SetTimeAsync(DateTime value, CancellationToken cancellationToken = default)
 ```
 
 ##### ForcedSetAsync
@@ -692,25 +644,49 @@ public Task ForcedResetAsync(string device, CancellationToken cancellationToken 
 ##### ReadAsync
 
 ```csharp
-public Task<string[]> ReadAsync(string device, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task<string[]> ReadAsync(string device, CancellationToken cancellationToken = default)
+```
+
+##### ReadAsync
+
+```csharp
+public Task<string[]> ReadAsync(string device, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### ReadConsecutiveAsync
 
 ```csharp
-public Task<string[]> ReadConsecutiveAsync(string device, int count, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task<string[]> ReadConsecutiveAsync(string device, int count, CancellationToken cancellationToken = default)
+```
+
+##### ReadConsecutiveAsync
+
+```csharp
+public Task<string[]> ReadConsecutiveAsync(string device, int count, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### WriteAsync
 
 ```csharp
-public Task WriteAsync<T>(string device, T value, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteAsync<T>(string device, T value, CancellationToken cancellationToken = default)
+```
+
+##### WriteAsync
+
+```csharp
+public Task WriteAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### WriteConsecutiveAsync
 
 ```csharp
-public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, CancellationToken cancellationToken = default)
+```
+
+##### WriteConsecutiveAsync
+
+```csharp
+public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### RegisterMonitorBitsAsync
@@ -722,7 +698,7 @@ public Task RegisterMonitorBitsAsync(IEnumerable<string> devices, CancellationTo
 ##### RegisterMonitorWordsAsync
 
 ```csharp
-public Task RegisterMonitorWordsAsync(IEnumerable<string> devices, CancellationToken cancellationToken = default)
+public Task RegisterMonitorWordsAsync(IEnumerable<KvMonitorWordTarget> devices, CancellationToken cancellationToken = default)
 ```
 
 ##### ReadMonitorBitsAsync
@@ -756,7 +732,7 @@ Consecutively force-resets up to 16 bit devices starting at `device` (RSS comman
 ##### ReadConsecutiveLegacyAsync
 
 ```csharp
-public Task<string[]> ReadConsecutiveLegacyAsync(string device, int count, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task<string[]> ReadConsecutiveLegacyAsync(string device, int count, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 Reads consecutive devices using the legacy RDE command. Prefer `ReadConsecutiveAsync` on current models.
@@ -764,7 +740,7 @@ Reads consecutive devices using the legacy RDE command. Prefer `ReadConsecutiveA
 ##### WriteConsecutiveLegacyAsync
 
 ```csharp
-public Task WriteConsecutiveLegacyAsync<T>(string device, IEnumerable<T> values, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteConsecutiveLegacyAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 Writes consecutive devices using the legacy WRE command. Prefer `WriteConsecutiveAsync` on current models.
@@ -772,7 +748,7 @@ Writes consecutive devices using the legacy WRE command. Prefer `WriteConsecutiv
 ##### WriteSetValueAsync
 
 ```csharp
-public Task WriteSetValueAsync<T>(string device, T value, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteSetValueAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 Writes a set-value (preset) for a timer or counter device (WS command). Supported device types: T, C.
@@ -780,7 +756,7 @@ Writes a set-value (preset) for a timer or counter device (WS command). Supporte
 ##### WriteSetValueConsecutiveAsync
 
 ```csharp
-public Task WriteSetValueConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteSetValueConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 Writes set-values (presets) for consecutive timer or counter devices (WSS command). Supported device types: T, C.
@@ -796,7 +772,7 @@ Switches the active data bank (BE command). Valid range: 0–15.
 ##### ReadExpansionUnitBufferAsync
 
 ```csharp
-public Task<string[]> ReadExpansionUnitBufferAsync(int unitNo, int address, int count, string dataFormat = "", CancellationToken cancellationToken = default)
+public Task<string[]> ReadExpansionUnitBufferAsync(int unitNo, int address, int count, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 Reads buffer memory from an expansion unit (URD command).
@@ -805,13 +781,13 @@ Parameters:
 - `unitNo`: Unit number (0–48).
 - `address`: Buffer address (0–59999).
 - `count`: Number of values to read.
-- `dataFormat`: Data format suffix, e.g. ".U" or ".S". Defaults to ".U".
+- `dataFormat`: Required data format suffix, e.g. ".U" or ".S".
 - `cancellationToken`: Cancellation token.
 
 ##### WriteExpansionUnitBufferAsync
 
 ```csharp
-public Task WriteExpansionUnitBufferAsync<T>(int unitNo, int address, IEnumerable<T> values, string dataFormat = "", CancellationToken cancellationToken = default)
+public Task WriteExpansionUnitBufferAsync<T>(int unitNo, int address, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 Writes buffer memory to an expansion unit (UWR command).
@@ -820,13 +796,13 @@ Parameters:
 - `unitNo`: Unit number (0–48).
 - `address`: Buffer address (0–59999).
 - `values`: Values to write.
-- `dataFormat`: Data format suffix, e.g. ".U" or ".S". Defaults to ".U".
+- `dataFormat`: Required data format suffix, e.g. ".U" or ".S".
 - `cancellationToken`: Cancellation token.
 
 ##### ReadCommentsAsync
 
 ```csharp
-public Task<string> ReadCommentsAsync(string device, bool stripPadding = true, CancellationToken cancellationToken = default)
+public Task<string> ReadCommentsAsync(string device, CancellationToken cancellationToken = default)
 ```
 
 ##### PlcProfile
@@ -840,20 +816,6 @@ public string PlcProfile { get; }
 ```csharp
 public TimeSpan Timeout { get; set; }
 ```
-
-##### AppendLfOnSend
-
-```csharp
-public bool AppendLfOnSend { get; set; }
-```
-
-##### TraceHook
-
-```csharp
-public Action<HostLinkTraceFrame> TraceHook { get; set; }
-```
-
-Optional hook called for every raw frame sent and received. Useful for protocol tracing and debugging.
 
 ##### IsOpen
 
@@ -883,7 +845,7 @@ Reads a single device value and converts it to a high-level CLR type.
 
 Remarks: The float helper is implemented at the extension layer by reading two consecutive `.U` words and combining them as low-word, high-word.
 
-Returns: A boxed CLR value. Integer formats return boxed integral types and `"F"` returns a boxed `Single`, and `"H"` returns a `String`.
+Returns: A boxed CLR value. Integer formats return boxed integral types and `"F"` returns a boxed `Single`, `"H"` returns a `String`, and `"BIT"` returns a `Boolean`.
 
 Parameters:
 - `client`: The client to use.
@@ -947,22 +909,6 @@ public static Task<KvTimerCounterValue> ReadCounterAsync(QueuedKvHostLinkClient 
 
 Reads a counter composite value.
 
-##### ReadCommentsAsync
-
-```csharp
-public static Task<string> ReadCommentsAsync(QueuedKvHostLinkClient client, string device, bool stripPadding = true, CancellationToken ct = default)
-```
-
-Reads the configured PLC comment text for one device through the queued helper surface.
-
-Returns: The PLC comment text for `device`.
-
-Parameters:
-- `client`: The queued client to use.
-- `device`: Base device address such as `"DM100"`.
-- `stripPadding`: Whether to trim the Host Link fixed-width trailing spaces.
-- `ct`: Cancellation token.
-
 ##### WriteTypedAsync
 
 ```csharp
@@ -983,10 +929,10 @@ Parameters:
 ##### WriteTypedAsync
 
 ```csharp
-public static Task WriteTypedAsync(KvHostLinkClient client, string device, string dtype, string value, CancellationToken ct = default)
+public static Task WriteTypedAsync(KvHostLinkClient client, string device, string dtype, bool value, CancellationToken ct = default)
 ```
 
-Writes a hexadecimal word text value using the high-level `"H"` data type code.
+Writes a direct bit device using an explicit BIT dtype and boolean value.
 
 ##### WriteTypedAsync
 
@@ -1008,10 +954,10 @@ Parameters:
 ##### WriteTypedAsync
 
 ```csharp
-public static Task WriteTypedAsync(QueuedKvHostLinkClient client, string device, string dtype, string value, CancellationToken ct = default)
+public static Task WriteTypedAsync(QueuedKvHostLinkClient client, string device, string dtype, bool value, CancellationToken ct = default)
 ```
 
-Writes a hexadecimal word text value using the high-level `"H"` data type code.
+Writes a direct bit device using an explicit BIT dtype and boolean value.
 
 ##### WriteBitInWordAsync
 
@@ -1171,92 +1117,6 @@ public static Task WriteDWordsSingleRequestAsync(QueuedKvHostLinkClient client, 
 
 Writes contiguous unsigned 32-bit values using one protocol request or returns an error.
 
-##### ReadWordsChunkedAsync
-
-```csharp
-public static Task<ushort[]> ReadWordsChunkedAsync(KvHostLinkClient client, string device, int count, int maxWordsPerRequest, CancellationToken ct = default)
-```
-
-Reads contiguous unsigned 16-bit words using explicit chunking.
-
-Remarks: Chunking is opt-in and advances only by contiguous word boundaries.
-
-Returns: The concatenated word values from all explicit chunks.
-
-Parameters:
-- `client`: Connected Host Link client.
-- `device`: Start device address.
-- `count`: Number of words to read.
-- `maxWordsPerRequest`: Maximum words per protocol request.
-- `ct`: Cancellation token.
-
-##### ReadWordsChunkedAsync
-
-```csharp
-public static Task<ushort[]> ReadWordsChunkedAsync(QueuedKvHostLinkClient client, string device, int count, int maxWordsPerRequest, CancellationToken ct = default)
-```
-
-Reads contiguous unsigned 16-bit words using explicit chunking.
-
-##### ReadDWordsChunkedAsync
-
-```csharp
-public static Task<uint[]> ReadDWordsChunkedAsync(KvHostLinkClient client, string device, int count, int maxDwordsPerRequest, CancellationToken ct = default)
-```
-
-Reads contiguous unsigned 32-bit values using explicit chunking.
-
-Remarks: Chunking is opt-in and advances only by whole double-word boundaries.
-
-Returns: The concatenated 32-bit values from all explicit chunks.
-
-Parameters:
-- `client`: Connected Host Link client.
-- `device`: Start device address.
-- `count`: Number of 32-bit values to read.
-- `maxDwordsPerRequest`: Maximum double-words per protocol request.
-- `ct`: Cancellation token.
-
-##### ReadDWordsChunkedAsync
-
-```csharp
-public static Task<uint[]> ReadDWordsChunkedAsync(QueuedKvHostLinkClient client, string device, int count, int maxDwordsPerRequest, CancellationToken ct = default)
-```
-
-Reads contiguous unsigned 32-bit values using explicit chunking.
-
-##### WriteWordsChunkedAsync
-
-```csharp
-public static Task WriteWordsChunkedAsync(KvHostLinkClient client, string device, IReadOnlyList<ushort> values, int maxWordsPerRequest, CancellationToken ct = default)
-```
-
-Writes contiguous unsigned 16-bit values using explicit chunking.
-
-##### WriteWordsChunkedAsync
-
-```csharp
-public static Task WriteWordsChunkedAsync(QueuedKvHostLinkClient client, string device, IReadOnlyList<ushort> values, int maxWordsPerRequest, CancellationToken ct = default)
-```
-
-Writes contiguous unsigned 16-bit values using explicit chunking.
-
-##### WriteDWordsChunkedAsync
-
-```csharp
-public static Task WriteDWordsChunkedAsync(KvHostLinkClient client, string device, IReadOnlyList<uint> values, int maxDwordsPerRequest, CancellationToken ct = default)
-```
-
-Writes contiguous unsigned 32-bit values using explicit chunking.
-
-##### WriteDWordsChunkedAsync
-
-```csharp
-public static Task WriteDWordsChunkedAsync(QueuedKvHostLinkClient client, string device, IReadOnlyList<uint> values, int maxDwordsPerRequest, CancellationToken ct = default)
-```
-
-Writes contiguous unsigned 32-bit values using explicit chunking.
-
 ##### ReadWordsAsync
 
 ```csharp
@@ -1312,7 +1172,7 @@ Reads contiguous unsigned 32-bit values starting at `device`.
 ##### OpenAndConnectAsync
 
 ```csharp
-public static Task<QueuedKvHostLinkClient> OpenAndConnectAsync(string host, string plcProfile, int port = 8501, CancellationToken ct = default)
+public static Task<QueuedKvHostLinkClient> OpenAndConnectAsync(string host, int port, HostLinkTransportMode transport, string plcProfile, CancellationToken ct = default)
 ```
 
 Creates a queued client and opens the connection.
@@ -1323,8 +1183,9 @@ Returns: A connected queued client that is safe to share across async callers.
 
 Parameters:
 - `host`: PLC IP address or hostname.
+- `port`: Required KV Host Link TCP/UDP port.
+- `transport`: Required TCP or UDP transport.
 - `plcProfile`: Canonical KEYENCE KV PLC profile for the session.
-- `port`: KV Host Link TCP/UDP port. Defaults to 8501.
 - `ct`: Cancellation token.
 
 ### KvHostLinkClientFactory
@@ -1335,7 +1196,7 @@ public static class KvHostLinkClientFactory
 
 Factory helpers for opening ready-to-use Host Link clients.
 
-Remarks: The factory centralizes validation of host, port, timeout, and line-ending behavior so samples and generated docs can point to one explicit connection entry point.
+Remarks: The factory centralizes validation of host, port, transport, and timeout behavior so samples and generated docs can point to one explicit connection entry point.
 
 #### Members
 
@@ -1370,7 +1231,7 @@ Remarks: This type is intended for the unified high-level connection flow so gen
 ##### KvHostLinkConnectionOptions
 
 ```csharp
-public KvHostLinkConnectionOptions(string Host, string PlcProfile, int Port = 8501, TimeSpan Timeout = default, HostLinkTransportMode Transport = Tcp, bool AppendLfOnSend = false)
+public KvHostLinkConnectionOptions(string Host, int Port, HostLinkTransportMode Transport, string PlcProfile, TimeSpan? Timeout = null)
 ```
 
 Explicit connection options for a Host Link session.
@@ -1379,11 +1240,10 @@ Remarks: This type is intended for the unified high-level connection flow so gen
 
 Parameters:
 - `Host`: PLC IP address or hostname.
-- `PlcProfile`: Canonical KEYENCE KV PLC profile for the session.
-- `Port`: Host Link port number. Defaults to 8501.
-- `Timeout`: Operation timeout. A zero value falls back to the library default.
 - `Transport`: Transport protocol.
-- `AppendLfOnSend`: Whether to append LF after CR on send.
+- `PlcProfile`: Canonical KEYENCE KV PLC profile for the session.
+- `Port`: Host Link port number.
+- `Timeout`: Operation timeout. Omit it to use three seconds.
 
 ##### Host
 
@@ -1391,7 +1251,7 @@ Parameters:
 public string Host { get; set; }
 ```
 
-PLC IP address or hostname.
+Gets the validated PLC IP address or hostname.
 
 ##### Port
 
@@ -1399,15 +1259,7 @@ PLC IP address or hostname.
 public int Port { get; set; }
 ```
 
-Host Link port number. Defaults to 8501.
-
-##### Timeout
-
-```csharp
-public TimeSpan Timeout { get; set; }
-```
-
-Operation timeout. A zero value falls back to the library default.
+Gets the validated Host Link port.
 
 ##### Transport
 
@@ -1415,15 +1267,7 @@ Operation timeout. A zero value falls back to the library default.
 public HostLinkTransportMode Transport { get; set; }
 ```
 
-Transport protocol.
-
-##### AppendLfOnSend
-
-```csharp
-public bool AppendLfOnSend { get; set; }
-```
-
-Whether to append LF after CR on send.
+Gets the explicitly selected transport.
 
 ##### PlcProfile
 
@@ -1432,6 +1276,14 @@ public string PlcProfile { get; set; }
 ```
 
 Gets or sets the canonical KEYENCE KV PLC profile for the session.
+
+##### Timeout
+
+```csharp
+public TimeSpan? Timeout { get; set; }
+```
+
+Gets the optional positive communication timeout.
 
 ##### EffectiveTimeout
 
@@ -1465,20 +1317,6 @@ public static KvDeviceAddress ParseDevice(string text)
 
 Parses a Host Link device token with an explicit device type.
 
-##### ParseDevice
-
-```csharp
-public static KvDeviceAddress ParseDevice(string text, bool allowOmittedType)
-```
-
-Parses a Host Link device token with an explicit device type.
-
-Remarks: Use `ParseDevice`. This overload will be removed in a future major release.
-
-Parameters:
-- `text`: Device token such as `DM100`.
-- `allowOmittedType`: Retained for source and binary compatibility. The value is ignored because Host Link device types are always required.
-
 ##### ParseDeviceText
 
 ```csharp
@@ -1494,7 +1332,7 @@ public static string ResolveEffectiveFormat(string deviceType, string suffix)
 ##### RequireExplicitFormat
 
 ```csharp
-public static string RequireExplicitFormat(KvDeviceAddress address, string dataFormat = null)
+public static string RequireExplicitFormat(KvDeviceAddress address, string dataFormat)
 ```
 
 ##### ValidateDeviceType
@@ -1816,6 +1654,36 @@ public string Code { get; set; }
 public string Model { get; set; }
 ```
 
+### KvMonitorWordTarget
+
+```csharp
+public sealed class KvMonitorWordTarget
+```
+
+One base device and explicit data format used by word monitoring.
+
+#### Members
+
+##### KvMonitorWordTarget
+
+```csharp
+public KvMonitorWordTarget(string Device, string DataFormat)
+```
+
+One base device and explicit data format used by word monitoring.
+
+##### Device
+
+```csharp
+public string Device { get; set; }
+```
+
+##### DataFormat
+
+```csharp
+public string DataFormat { get; set; }
+```
+
 ### KvPlcMode
 
 ```csharp
@@ -1941,12 +1809,6 @@ Parameters:
 - `operation`: Delegate that receives the wrapped `KvHostLinkClient`.
 - `cancellationToken`: Cancellation token used while waiting for exclusive access.
 
-##### SendRawAsync
-
-```csharp
-public Task<string> SendRawAsync(string body, CancellationToken cancellationToken = default)
-```
-
 ##### ChangeModeAsync
 
 ```csharp
@@ -1980,7 +1842,7 @@ public Task<KvPlcMode> ConfirmOperatingModeAsync(CancellationToken cancellationT
 ##### SetTimeAsync
 
 ```csharp
-public Task SetTimeAsync(DateTime? value = null, CancellationToken cancellationToken = default)
+public Task SetTimeAsync(DateTime value, CancellationToken cancellationToken = default)
 ```
 
 ##### ForcedSetAsync
@@ -1998,19 +1860,31 @@ public Task ForcedResetAsync(string device, CancellationToken cancellationToken 
 ##### ReadAsync
 
 ```csharp
-public Task<string[]> ReadAsync(string device, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task<string[]> ReadAsync(string device, CancellationToken cancellationToken = default)
+```
+
+##### ReadAsync
+
+```csharp
+public Task<string[]> ReadAsync(string device, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### ReadConsecutiveAsync
 
 ```csharp
-public Task<string[]> ReadConsecutiveAsync(string device, int count, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task<string[]> ReadConsecutiveAsync(string device, int count, CancellationToken cancellationToken = default)
+```
+
+##### ReadConsecutiveAsync
+
+```csharp
+public Task<string[]> ReadConsecutiveAsync(string device, int count, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### ReadCommentsAsync
 
 ```csharp
-public Task<string> ReadCommentsAsync(string device, bool stripPadding = true, CancellationToken cancellationToken = default)
+public Task<string> ReadCommentsAsync(string device, CancellationToken cancellationToken = default)
 ```
 
 ##### RegisterMonitorBitsAsync
@@ -2022,7 +1896,7 @@ public Task RegisterMonitorBitsAsync(IEnumerable<string> devices, CancellationTo
 ##### RegisterMonitorWordsAsync
 
 ```csharp
-public Task RegisterMonitorWordsAsync(IEnumerable<string> devices, CancellationToken cancellationToken = default)
+public Task RegisterMonitorWordsAsync(IEnumerable<KvMonitorWordTarget> devices, CancellationToken cancellationToken = default)
 ```
 
 ##### ReadMonitorBitsAsync
@@ -2052,37 +1926,49 @@ public Task ForcedResetConsecutiveAsync(string device, int count, CancellationTo
 ##### ReadConsecutiveLegacyAsync
 
 ```csharp
-public Task<string[]> ReadConsecutiveLegacyAsync(string device, int count, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task<string[]> ReadConsecutiveLegacyAsync(string device, int count, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### WriteAsync
 
 ```csharp
-public Task WriteAsync<T>(string device, T value, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteAsync<T>(string device, T value, CancellationToken cancellationToken = default)
+```
+
+##### WriteAsync
+
+```csharp
+public Task WriteAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### WriteConsecutiveAsync
 
 ```csharp
-public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, CancellationToken cancellationToken = default)
+```
+
+##### WriteConsecutiveAsync
+
+```csharp
+public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### WriteConsecutiveLegacyAsync
 
 ```csharp
-public Task WriteConsecutiveLegacyAsync<T>(string device, IEnumerable<T> values, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteConsecutiveLegacyAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### WriteSetValueAsync
 
 ```csharp
-public Task WriteSetValueAsync<T>(string device, T value, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteSetValueAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### WriteSetValueConsecutiveAsync
 
 ```csharp
-public Task WriteSetValueConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat = null, CancellationToken cancellationToken = default)
+public Task WriteSetValueConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### SwitchBankAsync
@@ -2094,13 +1980,13 @@ public Task SwitchBankAsync(int bankNo, CancellationToken cancellationToken = de
 ##### ReadExpansionUnitBufferAsync
 
 ```csharp
-public Task<string[]> ReadExpansionUnitBufferAsync(int unitNo, int address, int count, string dataFormat = "", CancellationToken cancellationToken = default)
+public Task<string[]> ReadExpansionUnitBufferAsync(int unitNo, int address, int count, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### WriteExpansionUnitBufferAsync
 
 ```csharp
-public Task WriteExpansionUnitBufferAsync<T>(int unitNo, int address, IEnumerable<T> values, string dataFormat = "", CancellationToken cancellationToken = default)
+public Task WriteExpansionUnitBufferAsync<T>(int unitNo, int address, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 ##### Dispose
@@ -2144,22 +2030,6 @@ public TimeSpan Timeout { get; set; }
 ```
 
 Gets or sets the communication timeout.
-
-##### AppendLfOnSend
-
-```csharp
-public bool AppendLfOnSend { get; set; }
-```
-
-Gets or sets whether LF is appended after CR on send.
-
-##### TraceHook
-
-```csharp
-public Action<HostLinkTraceFrame> TraceHook { get; set; }
-```
-
-Gets or sets the raw frame trace hook.
 
 ##### IsOpen
 

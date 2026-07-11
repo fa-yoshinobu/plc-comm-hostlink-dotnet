@@ -4,7 +4,7 @@ namespace PlcComm.KvHostLink;
 /// Factory helpers for opening ready-to-use Host Link clients.
 /// </summary>
 /// <remarks>
-/// The factory centralizes validation of host, port, timeout, and line-ending behavior so
+/// The factory centralizes validation of host, port, transport, and timeout behavior so
 /// samples and generated docs can point to one explicit connection entry point.
 /// </remarks>
 public static class KvHostLinkClientFactory
@@ -32,10 +32,9 @@ public static class KvHostLinkClientFactory
         if (options.Port is < 1 or > 65535)
             throw new ArgumentOutOfRangeException(nameof(options), "Port must be in the range 1-65535.");
 
-        var inner = new KvHostLinkClient(options.Host, options.PlcProfile, options.Port, options.Transport)
+        var inner = new KvHostLinkClient(options.Host, options.Port, options.Transport, options.PlcProfile)
         {
             Timeout = options.EffectiveTimeout,
-            AppendLfOnSend = options.AppendLfOnSend,
         };
 
         var queued = new QueuedKvHostLinkClient(inner);
