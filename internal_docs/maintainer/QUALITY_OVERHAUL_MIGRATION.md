@@ -27,7 +27,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-053
 
@@ -51,7 +51,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-054
 
@@ -74,7 +74,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-055
 
@@ -98,7 +98,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-056
 
@@ -122,7 +122,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-057
 
@@ -145,7 +145,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-058
 
@@ -169,7 +169,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-059
 
@@ -193,7 +193,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-060
 
@@ -217,7 +217,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-061
 
@@ -241,7 +241,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-062
 
@@ -265,7 +265,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-063
 
@@ -289,7 +289,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-064
 
@@ -313,7 +313,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-065
 
@@ -337,7 +337,7 @@ Evidence checklist:
 - [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\Close\\instructions/hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## DN-HL-CLAUDE-20260712 — Independent-review corrections
 
@@ -406,4 +406,11 @@ Acceptance criteria:
 | D-062 | No live PLC required for this batch | The change makes the existing URD/UWR format explicit and validates frames, limits, values, spans, and response tokens. PLC/profile support evidence remains governed by the separate profile verification plan and was not inferred here. |
 
 - Claude: the user ran the authorized HostLink batch outside Codex; its result and Codex disposition are preserved in the workspace review record.
-- Family-level final acceptance is recorded in `D:\APP\hostlink_cross_implementation_final_comparison_20260712.md`.
+- Family-level final acceptance is recorded in `D:\APP\Close\instructions\hostlink_cross_implementation_final_comparison_20260712.md`.
+
+## 2026-07-12 KV-X500 live smoke evidence
+
+- [x] The public factory and typed-read API connected to `keyence:kv-x500` at `192.168.250.100:8501` over TCP and read `DM0:U` once; the result was `5878`.
+- [x] No write, retry, or profile／transport fallback was performed.
+- [x] The temporary read-only project and generated build artifacts were removed immediately after the test.
+- [x] This evidence is limited to that endpoint, profile, device, transport, and operation; it does not verify other device families or the complete profile.
