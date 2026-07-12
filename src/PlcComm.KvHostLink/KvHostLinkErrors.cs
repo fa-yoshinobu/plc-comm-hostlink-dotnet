@@ -35,4 +35,13 @@ public class HostLinkConnectionError : HostLinkError
     public HostLinkConnectionError(string message) : base(message) { }
     public HostLinkConnectionError(string message, Exception inner) : base(message, inner) { }
 }
+
+/// <summary>
+/// Thrown when a command is attempted before an explicit open or after the transport was closed.
+/// </summary>
+public sealed class HostLinkNotConnectedError : HostLinkConnectionError
+{
+    public HostLinkNotConnectedError()
+        : base("Host Link client is not connected. Call OpenAsync before sending a command.") { }
+}
 #pragma warning restore CA1710

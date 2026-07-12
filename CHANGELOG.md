@@ -17,6 +17,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking
+- Library: Require host, port, TCP/UDP transport, and canonical PLC profile in direct constructors and connection options. Only timeout remains optional, with a three-second default.
+- Library: Require explicit `OpenAsync` before commands and after close or transport failure; commands no longer connect, reconnect, or retry implicitly.
+- Library: Return terminator-free `byte[]` from the maintainer `SendRawAsync` API without semantic decoding or PLC-error translation.
+- Library: Remove `AppendLfOnSend`, comment padding switches, all public chunked helpers, and the ineffective `ParseDevice(string, bool)` compatibility overload.
+- Library: Require base devices and separate data formats for numeric access, monitor-word registration, timer/counter set values, and expansion-unit buffer access. Suffix-bearing low-level device input is rejected.
+- Library: Require an explicit value in `SetTimeAsync`; the library no longer substitutes the host clock.
+- Library: Restrict timeouts to 1 through `Int32.MaxValue` milliseconds before transport creation and restrict PLC clock years to 2000 through 2099.
+- Library: Derive semantic read response counts from the command and device width, including 16/32-point direct-bit numeric reads; direct-bit responses accept only documented `0`/`1`/`ON`/`OFF` and malformed shapes invalidate the session.
+- Library: Remove the obsolete public `ParseDeviceText` and public format-inference surface; internal logical-address parsing no longer appears as a compatibility API.
+
+### Changed
+- Library: Fix normal command framing to CR, isolate maintainer trace-hook failures, cap response bodies at 65,536 bytes, and invalidate transport state after timeout, cancellation, malformed response, count mismatch, or overflow.
+- Library: Use one native `.D` request for Dword reads and writes, limited to 500 values; word requests remain limited to 1,000 values.
+- Library: Hold one client lock across bit-in-word read-modify-write sequences and validate BIT, integer, hexadecimal, signed, and unsigned values without masking or truncation.
+- Samples: Require explicit endpoint port and transport in multi-PLC CLI and JSON configuration paths.
+
+### Tests
+- Tests: Add contract coverage for required connection values, explicit-open state, raw bytes, comment padding, format and range rejection, response counts and cap, native Dword limits, compound locking, trace isolation, and queued cancellation.
+- Tests: Remove library-local cross-implementation frame vectors; cross-language verification is maintained as a separate repository and test concern.
+
 ## [3.1.0] - 2026-07-10
 
 ### Added

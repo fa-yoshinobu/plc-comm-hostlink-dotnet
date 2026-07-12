@@ -5,6 +5,9 @@ namespace PlcComm.KvHostLink;
 /// </summary>
 public record KvModelInfo(string Code, string Model);
 
+/// <summary>One base device and explicit data format used by word monitoring.</summary>
+public sealed record KvMonitorWordTarget(string Device, string DataFormat);
+
 internal static class KvHostLinkModels
 {
     public static readonly Dictionary<string, string> ModelCodes = new()

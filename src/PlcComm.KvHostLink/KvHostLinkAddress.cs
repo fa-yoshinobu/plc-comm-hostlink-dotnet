@@ -43,7 +43,12 @@ public static class KvHostLinkAddress
     public static KvDeviceAddress Parse(string text)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
-        return KvHostLinkDevice.ParseDevice(text.Trim());
+        KvDeviceAddress address = KvHostLinkDevice.ParseDevice(text.Trim());
+        if (!string.IsNullOrEmpty(address.Suffix))
+            throw new HostLinkProtocolError(
+                $"Base device '{text}' must not include a data-format suffix. " +
+                "Use ':' for a logical data type or pass the format separately to a low-level API.");
+        return address;
     }
 
     /// <summary>Attempts to parse a base device address.</summary>
@@ -106,13 +111,10 @@ public static class KvHostLinkAddress
 
         var parsed = Parse(raw);
         string defaultFormat = KvHostLinkDevice.ResolveEffectiveFormat(parsed.DeviceType, "");
-        if (string.IsNullOrEmpty(parsed.Suffix) && !string.IsNullOrEmpty(defaultFormat))
+        if (!string.IsNullOrEmpty(defaultFormat))
             throw new HostLinkProtocolError(
                 $"Logical data type is required for '{text}'. Use ':' syntax such as '{raw}:U'.");
-        string defaultDtype = string.IsNullOrEmpty(parsed.Suffix)
-            ? ""
-            : NormalizeDType(parsed.Suffix);
-        return new KvLogicalAddress(parsed with { Suffix = string.Empty }, defaultDtype, null);
+        return new KvLogicalAddress(parsed, "", null);
     }
 
     /// <summary>Attempts to parse a logical helper address.</summary>

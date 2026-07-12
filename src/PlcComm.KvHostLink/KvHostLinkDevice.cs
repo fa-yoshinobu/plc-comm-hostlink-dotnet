@@ -63,20 +63,6 @@ public static class KvHostLinkDevice
     /// <summary>Parses a Host Link device token with an explicit device type.</summary>
     public static KvDeviceAddress ParseDevice(string text) => ParseDeviceCore(text);
 
-    /// <summary>Parses a Host Link device token with an explicit device type.</summary>
-    /// <param name="text">Device token such as <c>DM100</c>.</param>
-    /// <param name="allowOmittedType">
-    /// Retained for source and binary compatibility. The value is ignored because
-    /// Host Link device types are always required.
-    /// </param>
-    /// <remarks>Use <see cref="ParseDevice(string)"/>. This overload will be removed in a future major release.</remarks>
-    [Obsolete("Device types are always explicit. Use ParseDevice(string); allowOmittedType has no effect.", false)]
-    public static KvDeviceAddress ParseDevice(string text, bool allowOmittedType)
-    {
-        _ = allowOmittedType;
-        return ParseDeviceCore(text);
-    }
-
     private static KvDeviceAddress ParseDeviceCore(string text)
     {
         var raw = text.Trim().ToUpperInvariant();
@@ -120,36 +106,51 @@ public static class KvHostLinkDevice
         }
     }
 
-    public static string ParseDeviceText(string text, string defaultSuffix = "")
-    {
-        var addr = ParseDevice(text);
-        string suffix = !string.IsNullOrEmpty(defaultSuffix) ? NormalizeSuffix(defaultSuffix) : addr.Suffix;
-        if (suffix != addr.Suffix)
-            addr = addr with { Suffix = suffix };
-        return addr.ToText();
-    }
-
-    public static string ResolveEffectiveFormat(string deviceType, string suffix)
+    internal static string ResolveEffectiveFormat(string deviceType, string suffix)
     {
         if (!string.IsNullOrEmpty(suffix)) return suffix;
         return KvHostLinkModels.DefaultFormatByDeviceType.GetValueOrDefault(deviceType, "");
     }
 
-    public static string RequireExplicitFormat(KvDeviceAddress address, string? dataFormat = null)
+    internal static int ReadResponseTokenCount(string deviceType, string dataFormat)
     {
-        string suffix = dataFormat is not null
-            ? NormalizeSuffix(dataFormat)
-            : address.Suffix;
-        if (!string.IsNullOrEmpty(suffix))
-            return suffix;
+        if (deviceType is "T" or "C") return 3;
+        if (!KvHostLinkModels.DirectBitDeviceTypes.Contains(deviceType)) return 1;
+        return dataFormat switch
+        {
+            ".U" or ".S" or ".H" => 16,
+            ".D" or ".L" => 32,
+            _ => 1,
+        };
+    }
 
-        string defaultFormat = ResolveEffectiveFormat(address.DeviceType, "");
-        if (string.IsNullOrEmpty(defaultFormat))
+    public static string RequireExplicitFormat(KvDeviceAddress address, string? dataFormat)
+    {
+        if (!string.IsNullOrEmpty(address.Suffix))
+            throw new HostLinkProtocolError(
+                $"Device '{address.ToText()}' must not include a data-format suffix. " +
+                "Pass the base device and dataFormat separately.");
+
+        if (dataFormat is null && KvHostLinkModels.DirectBitDeviceTypes.Contains(address.DeviceType))
             return "";
 
-        throw new HostLinkProtocolError(
-            $"Data format suffix is required for device '{address.ToText()}'. " +
-            $"Specify a suffix such as '{defaultFormat}' in the device string or dataFormat parameter.");
+        if (string.IsNullOrWhiteSpace(dataFormat))
+            throw new HostLinkProtocolError($"Data format is required for device '{address.ToText()}'.");
+
+        string suffix = NormalizeSuffix(dataFormat);
+        if (string.IsNullOrEmpty(suffix))
+            throw new HostLinkProtocolError($"Data format is required for device '{address.ToText()}'.");
+        return suffix;
+    }
+
+    internal static KvDeviceAddress RequireBaseDevice(string device)
+    {
+        KvDeviceAddress address = ParseDevice(device);
+        if (!string.IsNullOrEmpty(address.Suffix))
+            throw new HostLinkProtocolError(
+                $"Device '{device}' must not include a data-format suffix. " +
+                "Pass the base device and dataFormat separately.");
+        return address;
     }
 
     internal static bool UsesBitBankAddress(string deviceType) =>

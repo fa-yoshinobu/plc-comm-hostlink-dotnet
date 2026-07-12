@@ -9,11 +9,35 @@ public sealed class KvHostLinkDeviceRangeTests
     [Fact]
     public void ConnectionOptions_RequiresCanonicalPlcProfile()
     {
-        var options = new KvHostLinkConnectionOptions("127.0.0.1", "keyence:kv-8000");
+        var options = new KvHostLinkConnectionOptions(
+            "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 
         Assert.Equal("keyence:kv-8000", options.PlcProfile);
-        Assert.Throws<ArgumentException>(() => new KvHostLinkConnectionOptions("127.0.0.1", ""));
-        Assert.Throws<HostLinkProtocolError>(() => new KvHostLinkConnectionOptions("127.0.0.1", "KV-8000"));
+        Assert.Equal(TimeSpan.FromSeconds(3), options.EffectiveTimeout);
+        Assert.Throws<ArgumentException>(() => new KvHostLinkConnectionOptions(
+            "127.0.0.1", 8501, HostLinkTransportMode.Tcp, ""));
+        Assert.Throws<HostLinkProtocolError>(() => new KvHostLinkConnectionOptions(
+            "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "KV-8000"));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new KvHostLinkConnectionOptions(
+            "127.0.0.1", 0, HostLinkTransportMode.Tcp, "keyence:kv-8000"));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new KvHostLinkConnectionOptions(
+            "127.0.0.1", 8501, (HostLinkTransportMode)99, "keyence:kv-8000"));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new KvHostLinkConnectionOptions(
+                "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000", TimeSpan.Zero)
+                .EffectiveTimeout);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new KvHostLinkConnectionOptions(
+                "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000", TimeSpan.FromTicks(1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new KvHostLinkConnectionOptions(
+                "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000",
+                TimeSpan.FromMilliseconds((double)int.MaxValue + 1)));
+        Assert.Equal(
+            TimeSpan.FromMilliseconds(int.MaxValue),
+            new KvHostLinkConnectionOptions(
+                "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000",
+                TimeSpan.FromMilliseconds(int.MaxValue)).EffectiveTimeout);
     }
 
     [Fact]

@@ -13,10 +13,6 @@
 | `ReadDWordsSingleRequestAsync` | Read contiguous 32-bit values in one PLC request. |
 | `WriteWordsSingleRequestAsync` | Write contiguous 16-bit words in one PLC request. |
 | `WriteDWordsSingleRequestAsync` | Write contiguous 32-bit values in one PLC request. |
-| `ReadWordsChunkedAsync` | Read a large 16-bit word block by explicit chunks. |
-| `ReadDWordsChunkedAsync` | Read a large 32-bit value block by explicit chunks. |
-| `WriteWordsChunkedAsync` | Write a large 16-bit word block by explicit chunks. |
-| `WriteDWordsChunkedAsync` | Write a large 32-bit value block by explicit chunks. |
 | `WriteBitInWordAsync` | Set or clear one bit inside a word device. |
 | `ReadTimerCounterAsync` | Read timer or counter status, current value, and preset. |
 | `ReadTimerAsync` | Read a timer as status, current value, and preset. |
@@ -33,24 +29,34 @@ using PlcComm.KvHostLink;
 
 var options = new KvHostLinkConnectionOptions(
     Host: "192.168.250.100",
-    PlcProfile: "keyence:kv-8000",
     Port: 8501,
-    Timeout: TimeSpan.FromSeconds(3),
     Transport: HostLinkTransportMode.Tcp,
-    AppendLfOnSend: false);
+    PlcProfile: "keyence:kv-8000",
+    Timeout: TimeSpan.FromSeconds(3));
 
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 Console.WriteLine($"Connected: {client.IsOpen}");
 ```
 
-`KvHostLinkConnectionOptions` requires one canonical PLC profile and defaults to TCP, port `8501`, a 3-second effective timeout, and no LF appended after CR.
+`Host`, `Port`, `Transport`, and the canonical PLC profile are required. Only
+`Timeout` may be omitted; its default is 3 seconds. Explicit values must be
+from 1 through `Int32.MaxValue` milliseconds. Sub-millisecond, zero, negative,
+or larger timeouts are rejected. Normal Host Link command frames always end in CR.
+
+`SetTimeAsync` requires an explicit `DateTime` whose year is 2000 through
+2099. Years outside that PLC clock range are rejected before communication;
+the library never folds another century into a two-digit year.
+
+Read responses are validated against the issued command. Direct-bit responses
+accept only `0`, `1`, `OFF`, or `ON`; numeric reads of direct-bit devices require the
+corresponding 16- or 32-point response. A malformed response shape invalidates
+the session before another request.
 
 ## Performance notes
 
-For stable local networks, UDP usually has the lowest latency. TCP is the safer
-default for remote or less predictable networks because the OS handles
-retransmission. The TCP transport disables Nagle buffering for small Host Link
-command frames.
+Choose TCP or UDP explicitly for every endpoint. TCP provides stream delivery;
+UDP avoids stream state but does not provide retransmission. The TCP transport
+disables Nagle buffering for small Host Link command frames.
 
 Reuse one connected client for repeated reads and writes. Prefer
 `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, or
@@ -64,9 +70,10 @@ The factory returns a queued client, so multiple async callers can share that
 client without interleaving Host Link frames on the same PLC connection.
 
 Do not call `InnerClient` concurrently. When custom access is needed, use
-`ExecuteAsync` so the operation stays inside the same queue. Use `CloseAsync`
-and `OpenAsync` for an intentional reconnect; after a persistent connection
-failure, dispose the current client and create a new one with the same options.
+`ExecuteAsync` so the operation stays inside the same queue. Commands never
+open or reconnect implicitly. After `CloseAsync`, timeout, cancellation, EOF,
+or transport failure, call `OpenAsync` explicitly before the next command. A
+failed command is never retried automatically.
 
 ## Read a single value
 
@@ -74,7 +81,7 @@ failure, dispose the current client and create a new one with the same options.
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 ushort unsignedWord = (ushort)await client.ReadTypedAsync("DM0", "U");
@@ -94,6 +101,7 @@ Console.WriteLine($"{unsignedWord}, {signedWord}, {unsignedDWord}, {signedDWord}
 | `L` | Signed 32-bit double word | `int` |
 | `F` | IEEE 754 32-bit floating point | `float` |
 | `H` | Hexadecimal 16-bit word text | `string` |
+| `BIT` | Direct bit device | `bool` |
 
 ## Write a single value
 
@@ -101,7 +109,7 @@ Console.WriteLine($"{unsignedWord}, {signedWord}, {unsignedDWord}, {signedDWord}
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 const string address = "DM100";
@@ -127,7 +135,7 @@ This is a matched read/write/readback pattern. Keep it on a test address until y
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 string[] addresses = ["DM0:U", "DM1:S", "DM2:D", "DM4:F", "DM10.A", "DM0:COMMENT"];
@@ -147,19 +155,19 @@ Use `ReadNamedAsync` when one application snapshot mixes unsigned words, signed 
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 ushort[] words = await client.ReadWordsSingleRequestAsync("DM200", 8);
 uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM300", 4);
-ushort[] largeWords = await client.ReadWordsChunkedAsync("DM1000", 128, maxWordsPerRequest: 64);
-uint[] largeDWords = await client.ReadDWordsChunkedAsync("DM2000", 64, maxDwordsPerRequest: 32);
 
 Console.WriteLine($"Words: {words.Length}, DWords: {dwords.Length}");
-Console.WriteLine($"Chunked words: {largeWords.Length}, chunked DWords: {largeDWords.Length}");
 ```
 
-Single-request methods send one PLC command. Chunked methods split only where you explicitly choose a chunk size.
+Both methods send exactly one PLC command. Word requests accept at most 1000
+values and native `.D` Dword requests accept at most 500 values. The library
+does not split larger operations: application code must make each request,
+timing boundary, retry decision, and partial-write consequence explicit.
 
 ## Bit in word
 
@@ -167,7 +175,7 @@ Single-request methods send one PLC command. Chunked methods split only where yo
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 await client.WriteBitInWordAsync("DM50", bitIndex: 10, value: true);
@@ -185,7 +193,7 @@ using System;
 using System.Threading;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 string[] addresses = ["DM0:U", "DM1:S", "DM4:F"];
@@ -231,7 +239,7 @@ dotnet run --project samples/PlcComm.KvHostLink.ConfigPollingSample -- --config 
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 KvTimerCounterValue timer = await client.ReadTimerAsync("T0");
@@ -249,7 +257,9 @@ Console.WriteLine($"Generic T0 preset={generic.Preset}");
 
 ## Device comments
 
-Use `string label = await client.ReadCommentsAsync("DM0");` after connecting to read the PLC device comment label for `DM0`.
+Use `string label = await client.ReadCommentsAsync("DM0");` after connecting to
+read the PLC device comment label for `DM0`. The result removes only trailing
+ASCII space padding; tabs, full-width spaces, and embedded spaces are preserved.
 
 ## Expansion unit buffer
 
@@ -257,7 +267,7 @@ Use `string label = await client.ReadCommentsAsync("DM0");` after connecting to 
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 string[] bufferWords = await client.ReadExpansionUnitBufferAsync(
@@ -276,6 +286,22 @@ Console.WriteLine($"Read {bufferWords.Length} expansion buffer values.");
 ```
 
 Expansion unit buffer methods access module buffer memory by unit number, buffer address, count, and data format.
+The data format is mandatory and must be `.U`, `.S`, `.D`, `.L`, or `.H`.
+
+## Low-level numeric addresses
+
+Low-level numeric methods require a base device and a separate data format:
+
+```csharp
+string[] values = await client.ReadConsecutiveAsync("DM100", 4, ".U");
+await client.WriteAsync("DM200", 123u, ".D");
+```
+
+Do not pass `DM100.U` or another suffix inside the device argument. Suffix input
+is rejected even when it matches the separate format. Direct bit devices are
+the only format-free low-level access because the device family fixes the bit
+unit. In high-level named syntax, `DM100.D` means bit 13 while `DM100:D` means
+an unsigned Dword.
 
 ## Address reference table
 

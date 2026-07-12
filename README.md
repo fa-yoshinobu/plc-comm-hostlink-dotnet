@@ -30,7 +30,8 @@ dotnet add package PlcComm.KvHostLink
 using System;
 using PlcComm.KvHostLink;
 
-var options = new KvHostLinkConnectionOptions("192.168.250.100", "keyence:kv-8000", 8501);
+var options = new KvHostLinkConnectionOptions(
+    "192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 var value = await client.ReadTypedAsync("DM0", "U");
 Console.WriteLine($"DM0 = {value}");

@@ -50,8 +50,6 @@ internal sealed record MultiPlcOptions(
     {
         var plcSpecs = new List<string>();
         var tagSpecs = new List<string>();
-        var defaultPort = 8501;
-        var defaultTransport = HostLinkTransportMode.Tcp;
         var timeout = TimeSpan.FromSeconds(3);
         var interval = TimeSpan.FromSeconds(1);
         int? cycles = null;
@@ -73,12 +71,6 @@ internal sealed record MultiPlcOptions(
                     break;
                 case "--tag":
                     tagSpecs.Add(RequireValue(args, ref i, arg));
-                    break;
-                case "--port":
-                    defaultPort = OperationalCommon.ParsePositiveInt(RequireValue(args, ref i, arg), arg);
-                    break;
-                case "--transport":
-                    defaultTransport = OperationalCommon.ParseTransport(RequireValue(args, ref i, arg));
                     break;
                 case "--timeout":
                     timeout = TimeSpan.FromSeconds(OperationalCommon.ParsePositiveDouble(RequireValue(args, ref i, arg), arg));
@@ -107,7 +99,7 @@ internal sealed record MultiPlcOptions(
             throw new ArgumentException("--plc is required and can be repeated.");
 
         var endpoints = plcSpecs
-            .Select(spec => OperationalCommon.ParsePlcSpec(spec, defaultPort, defaultTransport, timeout, interval))
+            .Select(spec => OperationalCommon.ParsePlcSpec(spec, timeout, interval))
             .ToArray();
         var tags = tagSpecs.Count == 0 ? [OperationalCommon.DefaultTag()] : tagSpecs.Select(OperationalCommon.ParseTagSpec).ToArray();
         return new MultiPlcOptions(endpoints, tags, cycles, initialBackoff, maxBackoff, dryRun);
@@ -125,6 +117,6 @@ internal sealed record MultiPlcOptions(
     {
         Console.WriteLine("Read the same tag set from multiple KEYENCE KV Host Link PLCs concurrently.");
         Console.WriteLine("Usage:");
-        Console.WriteLine("  dotnet run --project samples/PlcComm.KvHostLink.MultiPlcMonitorSample -- --plc NAME=HOST,PROFILE[,PORT[,TRANSPORT]] [--plc ...] [--tag NAME=ADDRESS]");
+        Console.WriteLine("  dotnet run --project samples/PlcComm.KvHostLink.MultiPlcMonitorSample -- --plc NAME=HOST,PROFILE,PORT,TRANSPORT [--plc ...] [--tag NAME=ADDRESS]");
     }
 }
