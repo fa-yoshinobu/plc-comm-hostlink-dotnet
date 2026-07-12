@@ -106,19 +106,22 @@ public static class KvHostLinkDevice
         }
     }
 
-    public static string ParseDeviceText(string text, string defaultSuffix = "")
-    {
-        var addr = ParseDevice(text);
-        string suffix = !string.IsNullOrEmpty(defaultSuffix) ? NormalizeSuffix(defaultSuffix) : addr.Suffix;
-        if (suffix != addr.Suffix)
-            addr = addr with { Suffix = suffix };
-        return addr.ToText();
-    }
-
-    public static string ResolveEffectiveFormat(string deviceType, string suffix)
+    internal static string ResolveEffectiveFormat(string deviceType, string suffix)
     {
         if (!string.IsNullOrEmpty(suffix)) return suffix;
         return KvHostLinkModels.DefaultFormatByDeviceType.GetValueOrDefault(deviceType, "");
+    }
+
+    internal static int ReadResponseTokenCount(string deviceType, string dataFormat)
+    {
+        if (deviceType is "T" or "C") return 3;
+        if (!KvHostLinkModels.DirectBitDeviceTypes.Contains(deviceType)) return 1;
+        return dataFormat switch
+        {
+            ".U" or ".S" or ".H" => 16,
+            ".D" or ".L" => 32,
+            _ => 1,
+        };
     }
 
     public static string RequireExplicitFormat(KvDeviceAddress address, string? dataFormat)

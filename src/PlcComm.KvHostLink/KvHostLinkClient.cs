@@ -52,15 +52,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     }
 
     public string PlcProfile { get; }
+    /// <summary>Gets or sets the operation timeout from 1 through <see cref="int.MaxValue"/> milliseconds.</summary>
     public TimeSpan Timeout
     {
         get => _timeout;
-        set
-        {
-            if (value <= TimeSpan.Zero)
-                throw new ArgumentOutOfRangeException(nameof(value), "Timeout must be greater than zero.");
-            _timeout = value;
-        }
+        set => _timeout = KvHostLinkTimeout.Validate(value, nameof(value));
     }
 
     /// <summary>
@@ -401,9 +397,13 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             throw new HostLinkProtocolError($"Unsupported PLC mode response: {response}");
         }, cancellationToken);
 
+    /// <summary>Sets the PLC clock from an explicit local calendar value in years 2000 through 2099.</summary>
     public async Task SetTimeAsync(DateTime value, CancellationToken cancellationToken = default)
     {
-        int year = value.Year % 100;
+        if (value.Year is < 2000 or > 2099)
+            throw new ArgumentOutOfRangeException(nameof(value), "Host Link clock year must be in the range 2000..2099.");
+
+        int year = value.Year - 2000;
         int week = (int)value.DayOfWeek; // Sun=0, Mon=1..Sat=6 matches HostLink encoding directly
 
         string cmd = $"WRT {year:D2} {value.Month:D2} {value.Day:D2} {value.Hour:D2} {value.Minute:D2} {value.Second:D2} {week}";
@@ -459,7 +459,9 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         string command = consecutive ? $"RDS {target.ToText()} {count}" : $"RD {target.ToText()}";
         string response = await SendSemanticCoreAsync(command, cancellationToken).ConfigureAwait(false);
         string[] tokens = KvHostLinkProtocol.SplitDataTokens(response);
-        int expectedCount = !consecutive && (address.DeviceType is "T" or "C") ? 3 : count;
+        int expectedCount = consecutive
+            ? count
+            : KvHostLinkDevice.ReadResponseTokenCount(address.DeviceType, suffix);
         try
         {
             KvHostLinkProtocol.ValidateResponseTokens(tokens, suffix, expectedCount);

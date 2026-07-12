@@ -11,7 +11,7 @@ namespace PlcComm.KvHostLink;
 /// <param name="Transport">Transport protocol.</param>
 /// <param name="PlcProfile">Canonical KEYENCE KV PLC profile for the session.</param>
 /// <param name="Port">Host Link port number.</param>
-/// <param name="Timeout">Operation timeout. Omit it to use three seconds.</param>
+/// <param name="Timeout">Operation timeout from 1 millisecond through <see cref="int.MaxValue"/> milliseconds. Omit it to use three seconds.</param>
 public sealed record KvHostLinkConnectionOptions(
     string Host,
     int Port,
@@ -53,7 +53,7 @@ public sealed record KvHostLinkConnectionOptions(
         init => _plcProfile = NormalizePlcProfile(value);
     }
 
-    /// <summary>Gets the optional positive communication timeout.</summary>
+    /// <summary>Gets the optional communication timeout in the supported 1 through <see cref="int.MaxValue"/> millisecond range.</summary>
     public TimeSpan? Timeout
     {
         get => _timeout;
@@ -89,9 +89,7 @@ public sealed record KvHostLinkConnectionOptions(
             : throw new ArgumentOutOfRangeException(nameof(transport), "Transport must be TCP or UDP.");
 
     private static TimeSpan? ValidateTimeout(TimeSpan? timeout)
-        => timeout is null || timeout > TimeSpan.Zero
-            ? timeout
-            : throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
+        => timeout is null ? null : KvHostLinkTimeout.Validate(timeout.Value, nameof(timeout));
 
     private static string NormalizePlcProfile(string plcProfile)
         => KvHostLinkPlcProfiles.NormalizeName(plcProfile);

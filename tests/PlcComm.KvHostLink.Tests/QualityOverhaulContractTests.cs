@@ -23,6 +23,13 @@ public sealed class QualityOverhaulContractTests
         using var client = new KvHostLinkClient("127.0.0.1", 8501, HostLinkTransportMode.Tcp, TestProfile);
         Assert.Throws<ArgumentOutOfRangeException>(() => client.Timeout = TimeSpan.Zero);
         Assert.Throws<ArgumentOutOfRangeException>(() => client.Timeout = TimeSpan.FromMilliseconds(-1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => client.Timeout = TimeSpan.FromTicks(1));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            client.Timeout = TimeSpan.FromMilliseconds((double)int.MaxValue + 1));
+        client.Timeout = TimeSpan.FromMilliseconds(1);
+        Assert.Equal(TimeSpan.FromMilliseconds(1), client.Timeout);
+        client.Timeout = TimeSpan.FromMilliseconds(int.MaxValue);
+        Assert.Equal(TimeSpan.FromMilliseconds(int.MaxValue), client.Timeout);
     }
 
     [Fact]
@@ -35,6 +42,8 @@ public sealed class QualityOverhaulContractTests
             method => method.Name.Contains("Chunked", StringComparison.Ordinal));
         Assert.Null(typeof(KvHostLinkDevice).GetMethod(
             nameof(KvHostLinkDevice.ParseDevice), [typeof(string), typeof(bool)]));
+        Assert.Null(typeof(KvHostLinkDevice).GetMethod("ParseDeviceText", BindingFlags.Public | BindingFlags.Static));
+        Assert.Null(typeof(KvHostLinkDevice).GetMethod("ResolveEffectiveFormat", BindingFlags.Public | BindingFlags.Static));
 
         MethodInfo raw = Assert.Single(
             typeof(KvHostLinkClient).GetMethods(),

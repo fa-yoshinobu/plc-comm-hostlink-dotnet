@@ -39,8 +39,18 @@ Console.WriteLine($"Connected: {client.IsOpen}");
 ```
 
 `Host`, `Port`, `Transport`, and the canonical PLC profile are required. Only
-`Timeout` may be omitted; its default is 3 seconds. Explicit zero or negative
-timeouts are rejected. Normal Host Link command frames always end in CR.
+`Timeout` may be omitted; its default is 3 seconds. Explicit values must be
+from 1 through `Int32.MaxValue` milliseconds. Sub-millisecond, zero, negative,
+or larger timeouts are rejected. Normal Host Link command frames always end in CR.
+
+`SetTimeAsync` requires an explicit `DateTime` whose year is 2000 through
+2099. Years outside that PLC clock range are rejected before communication;
+the library never folds another century into a two-digit year.
+
+Read responses are validated against the issued command. Direct-bit responses
+accept only `0`, `1`, `OFF`, or `ON`; numeric reads of direct-bit devices require the
+corresponding 16- or 32-point response. A malformed response shape invalidates
+the session before another request.
 
 ## Performance notes
 

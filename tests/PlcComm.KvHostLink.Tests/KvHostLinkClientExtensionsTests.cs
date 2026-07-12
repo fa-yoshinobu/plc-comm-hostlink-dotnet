@@ -233,6 +233,46 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task SetTimeAsync_RejectsYearsOutside2000Through2099BeforeSend()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            client.SetTimeAsync(new DateTime(1999, 12, 31)));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            client.SetTimeAsync(new DateTime(2100, 1, 1)));
+
+        Assert.Empty(server.ReceivedCommands);
+    }
+
+    [Fact]
+    public async Task ReadAsync_ValidatesDeviceDerivedResponseTokenCount()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD R000.U" => string.Join(' ', Enumerable.Repeat("0", 16)),
+            "RD R000.D" => string.Join(' ', Enumerable.Repeat("0", 32)),
+            "RD DM0.U" => "123",
+            "RD R001" => "ON",
+            "RD R002" => "GARBAGE",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        Assert.Equal(16, (await client.ReadAsync("R0", ".U")).Length);
+        Assert.Equal(32, (await client.ReadAsync("R0", ".D")).Length);
+        Assert.Equal(["123"], await client.ReadAsync("DM0", ".U"));
+        Assert.Equal(["ON"], await client.ReadAsync("R1"));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadAsync("R2"));
+        Assert.False(client.IsOpen);
+    }
+
+    [Fact]
     public async Task ReadNamedAsync_TimerCounterCompositeReadReturnsSetValue()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch

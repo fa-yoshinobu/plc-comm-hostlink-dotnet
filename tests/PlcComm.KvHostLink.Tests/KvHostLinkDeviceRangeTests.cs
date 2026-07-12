@@ -26,6 +26,18 @@ public sealed class KvHostLinkDeviceRangeTests
             new KvHostLinkConnectionOptions(
                 "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000", TimeSpan.Zero)
                 .EffectiveTimeout);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new KvHostLinkConnectionOptions(
+                "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000", TimeSpan.FromTicks(1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new KvHostLinkConnectionOptions(
+                "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000",
+                TimeSpan.FromMilliseconds((double)int.MaxValue + 1)));
+        Assert.Equal(
+            TimeSpan.FromMilliseconds(int.MaxValue),
+            new KvHostLinkConnectionOptions(
+                "127.0.0.1", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000",
+                TimeSpan.FromMilliseconds(int.MaxValue)).EffectiveTimeout);
     }
 
     [Fact]

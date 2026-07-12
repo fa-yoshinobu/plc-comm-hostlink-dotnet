@@ -2,7 +2,7 @@
 
 Branch: `quality/2026-07-overhaul`
 Scope: approved HostLink decisions D-052 through D-065
-Status: implementation, executable verification, packaging, documentation, and Codex self-review complete; Claude review requires separate user authorization.
+Status: the user ran the authorized HostLink Claude review outside Codex on 2026-07-12; .NET findings are corrected and recorded below, with family-level final acceptance still separate.
 
 This record is maintainer-facing. Breaking changes are intentional where the former API hid connection, format, timing, or multi-request behavior.
 
@@ -23,22 +23,22 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-053
 
 Scope: HostLink .NET timeout configuration and all network operations
-Target contract: Timeout omission resolves to three seconds; explicit values must be positive and are propagated to connect/send/receive.
-Compatibility impact: Explicit zero previously treated as default now fails.
+Target contract: Timeout omission resolves to three seconds; explicit values must be 1 through `Int32.MaxValue` milliseconds and are propagated to connect/send/receive.
+Compatibility impact: Sub-millisecond, zero, negative, and over-range values fail before transport creation.
 
 Acceptance criteria:
 
 1. Omitted timeout equals three seconds.
-2. Zero/negative values fail before I/O.
+2. Values below 1 millisecond or above `Int32.MaxValue` milliseconds fail before I/O.
 3. Timeout/cancellation invalidates the transport and does not enable lazy reconnect.
 
 Evidence checklist:
@@ -47,11 +47,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-054
 
@@ -70,11 +70,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-055
 
@@ -94,11 +94,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-056
 
@@ -118,11 +118,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-057
 
@@ -141,11 +141,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-058
 
@@ -165,11 +165,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-059
 
@@ -180,7 +180,7 @@ Compatibility impact: Parameterless/nullable calls no longer compile.
 Acceptance criteria:
 
 1. The public parameter is required and non-nullable.
-2. The emitted weekday is derived consistently from the supplied DateTime.
+2. The year is 2000 through 2099 and the emitted weekday is derived consistently from the supplied DateTime.
 3. No current-clock access occurs inside SetTimeAsync.
 
 Evidence checklist:
@@ -189,11 +189,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-060
 
@@ -213,11 +213,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-061
 
@@ -237,11 +237,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-062
 
@@ -261,11 +261,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-063
 
@@ -285,11 +285,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-064
 
@@ -301,7 +301,7 @@ Acceptance criteria:
 
 1. Missing/empty format and suffix-bearing low-level device fail before send.
 2. Numeric write inputs reject bool/string/fraction/range overflow instead of conversion.
-3. Direct BIT and named DM100.D/DM100:D meanings remain distinct.
+3. Direct BIT and named DM100.D/DM100:D meanings remain distinct; obsolete public parser/format-inference helpers are absent.
 
 Evidence checklist:
 
@@ -309,11 +309,11 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
 
 ## D-065
 
@@ -333,11 +333,50 @@ Evidence checklist:
 - [x] Tests cover every acceptance criterion for this decision.
 - [x] Static checks, unit/integration/vector tests, examples, documentation generation, and package/build checks passed where applicable.
 - [x] Codex self-review inspected the actual diff, public API, validation order, errors, state, timeout/cancellation, tests, docs, and package.
-- [ ] Claude source review completed after explicit user authorization and evidence recorded.
-- [ ] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
+- [x] Claude source review completed after explicit user authorization and evidence recorded.
+- [x] Every Claude finding was dispositioned; accepted findings were corrected and checks rerun.
 - [x] Live-PLC verification passed or an explicit item-level no-live/unverified release disposition is recorded.
 - [x] User docs, migration, changelog, examples, and generated API reference agree with implementation.
-- [ ] Final acceptance criteria verified and this decision marked complete.
+- [x] Final acceptance criteria verified and this decision marked complete; family evidence is in `D:\\APP\\hostlink_cross_implementation_final_comparison_20260712.md`.
+
+## DN-HL-CLAUDE-20260712 — Independent-review corrections
+
+Scope: Claude HostLink findings 6, 7, 10, 17, and 21 for the .NET
+repository.
+
+Target contract: every timeout is representable by the underlying cancellation
+timer before any transport object is created; clock years cannot silently wrap
+centuries; removed D-064 parsing/default-format behavior is not public; and
+cross-language vectors are owned only by the separate cross-verification
+repository.
+
+Compatibility impact: timeout values below 1 ms or above `Int32.MaxValue` ms,
+clock years outside 2000..2099, `KvHostLinkDevice.ParseDeviceText`, and public
+`ResolveEffectiveFormat` calls are rejected or no longer compile.
+
+Acceptance criteria:
+
+1. Client and connection-options paths accept exactly 1 ms and
+   `Int32.MaxValue` ms and reject both adjacent out-of-range classes before
+   transport creation.
+2. `SetTimeAsync` accepts 2000..2099 and rejects 1999/2100 before sending.
+3. Reflection finds no public `ParseDeviceText` or `ResolveEffectiveFormat`,
+   while internal logical parsing continues to work.
+4. Generated API reference, user guide, changelog, and migration describe the
+   corrected surface and no library-local cross-vector runner/data remains.
+5. Single-device reads derive response counts from device type and explicit
+   format, including 16/32-point direct-bit numeric reads; direct BIT accepts
+   only `0`/`1`/`ON`/`OFF` and malformed response shapes invalidate the session.
+
+- [x] Implementation completed in this repository.
+- [x] Tests added or updated for every acceptance criterion.
+- [x] Full build, multi-target 158-test runs, format, generated-doc, sample, and package checks passed.
+- [x] Codex self-review completed against the corrected contract.
+- [x] Claude source review completed; the user ran the authorized batch and its result is preserved in the workspace.
+- [x] Codex dispositioned all .NET findings and reran affected checks.
+- [x] No additional live-PLC check is required for timeout representation, pre-send year validation, API surface, and test ownership.
+- [x] Documentation and migration notes agree with the implementation.
+- [x] Final acceptance criteria verified for this repository; HostLink family-level acceptance remains separate.
 
 ## Batch evidence
 
@@ -346,7 +385,7 @@ Evidence checklist:
   - NuGet registry guard confirmed `PlcComm.KvHostLink` 3.1.0 is not published.
   - Canonical HostLink profile fixture refresh reported no change.
   - Library and tests built without warnings for net8.0, net9.0, and net10.0.
-  - 190 tests passed on each target framework; zero failures and zero skips.
+  - 158 tests passed on each target framework; zero failures and zero skips.
   - API-reference generation, format, high-level XML docs, sample inventory, and release identity guards passed.
   - High-level, basic read/write, and named-polling user samples built successfully.
   - NuGet and symbol packages were generated successfully for 3.1.0.
@@ -366,5 +405,5 @@ Evidence checklist:
 | D-055, D-056, D-060, D-061 | No live PLC required for this batch | Receive limits, exact raw bytes, terminator removal, trace isolation, semantic separation, and decoder behavior are transport/decoder contracts fully exercised by raw TCP/UDP loopback tests. |
 | D-062 | No live PLC required for this batch | The change makes the existing URD/UWR format explicit and validates frames, limits, values, spans, and response tokens. PLC/profile support evidence remains governed by the separate profile verification plan and was not inferred here. |
 
-- Claude: pending explicit user authorization; not invoked. The Claude review and finding-disposition checkboxes remain open.
-- Final acceptance remains open until the separately authorized Claude review is completed and its findings are dispositioned.
+- Claude: the user ran the authorized HostLink batch outside Codex; its result and Codex disposition are preserved in the workspace review record.
+- Family-level final acceptance is recorded in `D:\APP\hostlink_cross_implementation_final_comparison_20260712.md`.

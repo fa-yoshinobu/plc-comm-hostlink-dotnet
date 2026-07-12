@@ -629,6 +629,8 @@ public Task<KvPlcMode> ConfirmOperatingModeAsync(CancellationToken cancellationT
 public Task SetTimeAsync(DateTime value, CancellationToken cancellationToken = default)
 ```
 
+Sets the PLC clock from an explicit local calendar value in years 2000 through 2099.
+
 ##### ForcedSetAsync
 
 ```csharp
@@ -816,6 +818,8 @@ public string PlcProfile { get; }
 ```csharp
 public TimeSpan Timeout { get; set; }
 ```
+
+Gets or sets the operation timeout from 1 through `MaxValue` milliseconds.
 
 ##### IsOpen
 
@@ -1243,7 +1247,7 @@ Parameters:
 - `Transport`: Transport protocol.
 - `PlcProfile`: Canonical KEYENCE KV PLC profile for the session.
 - `Port`: Host Link port number.
-- `Timeout`: Operation timeout. Omit it to use three seconds.
+- `Timeout`: Operation timeout from 1 millisecond through `MaxValue` milliseconds. Omit it to use three seconds.
 
 ##### Host
 
@@ -1283,7 +1287,7 @@ Gets or sets the canonical KEYENCE KV PLC profile for the session.
 public TimeSpan? Timeout { get; set; }
 ```
 
-Gets the optional positive communication timeout.
+Gets the optional communication timeout in the supported 1 through `MaxValue` millisecond range.
 
 ##### EffectiveTimeout
 
@@ -1316,18 +1320,6 @@ public static KvDeviceAddress ParseDevice(string text)
 ```
 
 Parses a Host Link device token with an explicit device type.
-
-##### ParseDeviceText
-
-```csharp
-public static string ParseDeviceText(string text, string defaultSuffix = "")
-```
-
-##### ResolveEffectiveFormat
-
-```csharp
-public static string ResolveEffectiveFormat(string deviceType, string suffix)
-```
 
 ##### RequireExplicitFormat
 
