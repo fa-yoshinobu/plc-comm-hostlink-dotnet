@@ -1,5 +1,8 @@
 namespace PlcComm.KvHostLink;
 
+/// <summary>Immutable lifetime traffic counters for one Host Link client.</summary>
+public readonly record struct HostLinkTrafficStats(ulong RequestCount, ulong TxBytes, ulong RxBytes);
+
 /// <summary>
 /// Information about a PLC model.
 /// </summary>

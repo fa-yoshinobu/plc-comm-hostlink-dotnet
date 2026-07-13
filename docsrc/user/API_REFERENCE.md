@@ -106,6 +106,42 @@ public HostLinkProtocolError(string message)
 public HostLinkProtocolError(string message, Exception inner)
 ```
 
+### HostLinkTrafficStats
+
+```csharp
+public struct HostLinkTrafficStats
+```
+
+Immutable lifetime traffic counters for one Host Link client.
+
+#### Members
+
+##### HostLinkTrafficStats
+
+```csharp
+public HostLinkTrafficStats(ulong RequestCount, ulong TxBytes, ulong RxBytes)
+```
+
+Immutable lifetime traffic counters for one Host Link client.
+
+##### RequestCount
+
+```csharp
+public ulong RequestCount { get; set; }
+```
+
+##### TxBytes
+
+```csharp
+public ulong TxBytes { get; set; }
+```
+
+##### RxBytes
+
+```csharp
+public ulong RxBytes { get; set; }
+```
+
 ### HostLinkTransportMode
 
 ```csharp
@@ -812,6 +848,14 @@ public Task<string> ReadCommentsAsync(string device, CancellationToken cancellat
 ```csharp
 public string PlcProfile { get; }
 ```
+
+##### TrafficStats
+
+```csharp
+public HostLinkTrafficStats TrafficStats { get; }
+```
+
+Gets an immutable snapshot of cumulative traffic for this client lifetime.
 
 ##### Timeout
 
@@ -2014,6 +2058,14 @@ public string PlcProfile { get; }
 ```
 
 Gets the canonical KEYENCE KV PLC profile selected for this session.
+
+##### TrafficStats
+
+```csharp
+public HostLinkTrafficStats TrafficStats { get; }
+```
+
+Gets cumulative traffic for the underlying client lifetime.
 
 ##### Timeout
 

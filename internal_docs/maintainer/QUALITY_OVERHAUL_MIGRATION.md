@@ -414,3 +414,16 @@ Acceptance criteria:
 - [x] No write, retry, or profile／transport fallback was performed.
 - [x] The temporary read-only project and generated build artifacts were removed immediately after the test.
 - [x] This evidence is limited to that endpoint, profile, device, transport, and operation; it does not verify other device families or the complete profile.
+
+## NR-007: Lifetime traffic statistics
+
+Approved next-release contract: `TrafficStats` returns immutable lifetime counters; only complete
+sends and complete response frames/datagrams count, pre-send and partial failures do not, and
+close/reconnect does not reset. Implementation and deterministic tests are required; live PLC
+verification is unnecessary. Claude review and final packaging remain pending explicit authorization.
+
+- [x] Public API and transport-boundary implementation completed.
+- [x] Deterministic tests, documentation, changelog, and package gate completed.
+- [x] Codex final self-review completed.
+- [ ] Claude review completed and findings dispositioned.
+- [ ] Next-release package acceptance completed.

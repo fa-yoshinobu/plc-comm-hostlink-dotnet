@@ -66,11 +66,13 @@ public sealed class KvHostLinkTransportTests
         await client.OpenAsync();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.SendRawAsync("FIRST"));
         Assert.False(client.IsOpen);
+        Assert.Equal(new HostLinkTrafficStats(1, 6, 0), client.TrafficStats);
 
         client.Timeout = TimeSpan.FromSeconds(2);
         await Assert.ThrowsAsync<HostLinkNotConnectedError>(() => client.SendRawAsync("SECOND"));
         await client.OpenAsync();
         Assert.Equal(Encoding.ASCII.GetBytes("SECOND"), await client.SendRawAsync("SECOND"));
+        Assert.Equal(new HostLinkTrafficStats(2, 13, 7), client.TrafficStats);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
     }
 

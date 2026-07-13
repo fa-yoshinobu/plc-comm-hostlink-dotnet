@@ -32,6 +32,9 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private TimeSpan _timeout = TimeSpan.FromSeconds(3);
     private int _monitorBitCount;
     private string[] _monitorWordFormats = [];
+    private long _requestCount;
+    private long _txBytes;
+    private long _rxBytes;
 
     public KvHostLinkClient(
         string host,
@@ -52,6 +55,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     }
 
     public string PlcProfile { get; }
+    /// <summary>Gets an immutable snapshot of cumulative traffic for this client lifetime.</summary>
+    public HostLinkTrafficStats TrafficStats => new(
+        unchecked((ulong)Interlocked.Read(ref _requestCount)),
+        unchecked((ulong)Interlocked.Read(ref _txBytes)),
+        unchecked((ulong)Interlocked.Read(ref _rxBytes)));
     /// <summary>Gets or sets the operation timeout from 1 through <see cref="int.MaxValue"/> milliseconds.</summary>
     public TimeSpan Timeout
     {
@@ -219,7 +227,9 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             try
             {
                 await _tcpStream!.WriteAsync(frame, linked.Token).ConfigureAwait(false);
+                RecordSend(frame.Length);
                 var response = await RecvTcpFrameAsync(linked.Token).ConfigureAwait(false);
+                RecordReceive(response.Frame.Length);
                 FireTrace(HostLinkTraceDirection.Receive, response.Frame);
                 return response.Body;
             }
@@ -236,9 +246,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             try
             {
                 await _udp!.SendAsync(frame, linked.Token).ConfigureAwait(false);
+                RecordSend(frame.Length);
                 var result = await _udp.ReceiveAsync(linked.Token).ConfigureAwait(false);
                 FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
                 byte[] responseBody = KvHostLinkProtocol.ExtractBody(result.Buffer);
+                RecordReceive(result.Buffer.Length);
                 if (responseBody.Length > MaxResponseBodyLength)
                     throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
                 return responseBody;
@@ -252,6 +264,14 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             }
         }
     }
+
+    private void RecordSend(int length)
+    {
+        Interlocked.Increment(ref _requestCount);
+        Interlocked.Add(ref _txBytes, length);
+    }
+
+    private void RecordReceive(int length) => Interlocked.Add(ref _rxBytes, length);
 
     private async Task<(byte[] Body, byte[] Frame)> RecvTcpFrameAsync(CancellationToken cancellationToken)
     {

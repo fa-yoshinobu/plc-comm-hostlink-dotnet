@@ -65,8 +65,13 @@ public sealed class QualityOverhaulContractTests
         await using var server = new RawContractServer(_ => "E1\r"u8.ToArray());
         await using var client = await OpenClientAsync(server.Port);
 
+        Assert.Equal(default, client.TrafficStats);
         Assert.Equal("E1"u8.ToArray(), await client.SendRawAsync("UNKNOWN"));
+        Assert.Equal(new HostLinkTrafficStats(1, 8, 3), client.TrafficStats);
         await Assert.ThrowsAsync<HostLinkError>(() => client.QueryModelAsync());
+        Assert.Equal(new HostLinkTrafficStats(2, 11, 6), client.TrafficStats);
+        await client.CloseAsync();
+        Assert.Equal(new HostLinkTrafficStats(2, 11, 6), client.TrafficStats);
     }
 
     [Fact]
