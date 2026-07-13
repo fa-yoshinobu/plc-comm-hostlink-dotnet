@@ -17,7 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Breaking
+## [3.1.0] - 2026-07-13
+
+### BREAKING
 - Library: Require host, port, TCP/UDP transport, and canonical PLC profile in direct constructors and connection options. Only timeout remains optional, with a three-second default.
 - Library: Require explicit `OpenAsync` before commands and after close or transport failure; commands no longer connect, reconnect, or retry implicitly.
 - Library: Return terminator-free `byte[]` from the maintainer `SendRawAsync` API without semantic decoding or PLC-error translation.
@@ -28,23 +30,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Library: Derive semantic read response counts from the command and device width, including 16/32-point direct-bit numeric reads; direct-bit responses accept only documented `0`/`1`/`ON`/`OFF` and malformed shapes invalidate the session.
 - Library: Remove the obsolete public `ParseDeviceText` and public format-inference surface; internal logical-address parsing no longer appears as a compatibility API.
 
+### Added
+- Library: Added `KvHostLinkPlcProfileDescriptor` and `KvHostLinkPlcProfiles.GetProfileDescriptors()` for canonical Host Link profile metadata.
+
 ### Changed
 - Library: Fix normal command framing to CR, isolate maintainer trace-hook failures, cap response bodies at 65,536 bytes, and invalidate transport state after timeout, cancellation, malformed response, count mismatch, or overflow.
 - Library: Use one native `.D` request for Dword reads and writes, limited to 500 values; word requests remain limited to 1,000 values.
 - Library: Hold one client lock across bit-in-word read-modify-write sequences and validate BIT, integer, hexadecimal, signed, and unsigned values without masking or truncation.
 - Samples: Require explicit endpoint port and transport in multi-PLC CLI and JSON configuration paths.
 
-### Tests
-- Tests: Add contract coverage for required connection values, explicit-open state, raw bytes, comment padding, format and range rejection, response counts and cap, native Dword limits, compound locking, trace isolation, and queued cancellation.
-- Tests: Remove library-local cross-implementation frame vectors; cross-language verification is maintained as a separate repository and test concern.
-
-## [3.1.0] - 2026-07-10
-
-### Added
-- Library: Added `KvHostLinkPlcProfileDescriptor` and `KvHostLinkPlcProfiles.GetProfileDescriptors()` for canonical Host Link profile metadata.
-
-### Changed
 - Release: Bumped .NET package metadata to `3.1.0`.
+
+### Deprecated
+- Library: Deprecated the ineffective `ParseDevice(string, bool)` compatibility overload; device types remain explicit.
 
 ### Fixed
 - Library: Corrected ten KV device range cells against live PLC hardware and the KEYENCE simulator, and pinned the canonical profile source to `plc-comm-hostlink-profiles` `v1.2.0`. `VM` widens to `VM0-9999` on KV-NANO and `VM0-59999` on KV-3000/KV-5000; `Z` widens to `Z1-23` on KV-8000. `CTH` narrows to `CTH0-1` on the KV-3000 and KV-5000 XYM profiles, matching their base profiles: `CTH2` and `CTH3` were previously accepted there and are now rejected.
@@ -53,8 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tooling: Render XML `cref` method labels without leaking parameter-type suffixes into the generated API reference.
 - Docs: Correct the supported-profile scope, `CTH`/`CTC` parser behavior, and maintainer commands.
 
-### Deprecated
-- Library: Deprecated the ineffective `ParseDevice(string, bool)` compatibility overload; device types remain explicit.
+### Tests
+- Tests: Add contract coverage for required connection values, explicit-open state, raw bytes, comment padding, format and range rejection, response counts and cap, native Dword limits, compound locking, trace isolation, and queued cancellation.
+- Tests: Remove library-local cross-implementation frame vectors; cross-language verification is maintained as a separate repository and test concern.
 
 ## [3.0.0] - 2026-07-10
 
