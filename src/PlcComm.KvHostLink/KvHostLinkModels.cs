@@ -1,6 +1,9 @@
 namespace PlcComm.KvHostLink;
 
-/// <summary>Immutable lifetime traffic counters for one Host Link client.</summary>
+/// <summary>
+/// Immutable lifetime traffic counters for one Host Link client. TCP receive bytes count the body
+/// and first CR/LF terminator; UDP receive bytes count the complete datagram.
+/// </summary>
 public readonly record struct HostLinkTrafficStats(ulong RequestCount, ulong TxBytes, ulong RxBytes);
 
 /// <summary>

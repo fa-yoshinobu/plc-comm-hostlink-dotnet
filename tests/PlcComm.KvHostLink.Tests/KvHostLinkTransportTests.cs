@@ -32,6 +32,93 @@ public sealed class KvHostLinkTransportTests
 
         Assert.Contains("before the response terminator", error.Message, StringComparison.Ordinal);
         Assert.False(client.IsOpen);
+        Assert.Equal(0UL, client.TrafficStats.RxBytes);
+        await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+        listener.Stop();
+    }
+
+    [Fact]
+    public async Task TcpTimeoutDoesNotCountAnIncompleteResponse()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var serverTask = Task.Run(async () =>
+        {
+            using TcpClient accepted = await listener.AcceptTcpClientAsync();
+            NetworkStream stream = accepted.GetStream();
+            while (stream.ReadByte() is int value && value >= 0 && value != '\r') { }
+            await Task.Delay(250);
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Tcp, "keyence:kv-8000")
+        {
+            Timeout = TimeSpan.FromMilliseconds(50)
+        };
+        await client.OpenAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.SendRawAsync("READ"));
+        Assert.Equal(0UL, client.TrafficStats.RxBytes);
+        Assert.False(client.IsOpen);
+        await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+        listener.Stop();
+    }
+
+    [Fact]
+    public async Task TcpConsumesCrThatArrivesAfterAnLfTerminatedResponse()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var serverTask = Task.Run(async () =>
+        {
+            using TcpClient accepted = await listener.AcceptTcpClientAsync();
+            NetworkStream stream = accepted.GetStream();
+            for (int request = 0; request < 2; request++)
+            {
+                while (stream.ReadByte() is int value && value >= 0 && value != '\r') { }
+                byte[] response = request == 0
+                    ? "FIRST\n"u8.ToArray()
+                    : "\rSECOND\r"u8.ToArray();
+                await stream.WriteAsync(response);
+                await stream.FlushAsync();
+            }
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Tcp, "keyence:kv-8000");
+        await client.OpenAsync();
+
+        Assert.Equal("FIRST"u8.ToArray(), await client.SendRawAsync("ONE"));
+        Assert.Equal("SECOND"u8.ToArray(), await client.SendRawAsync("TWO"));
+        Assert.Equal(13UL, client.TrafficStats.RxBytes);
+        await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+        listener.Stop();
+    }
+
+    [Fact]
+    public async Task TcpOversizePartialResponseDoesNotIncrementReceiveStats()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var serverTask = Task.Run(async () =>
+        {
+            using TcpClient accepted = await listener.AcceptTcpClientAsync();
+            NetworkStream stream = accepted.GetStream();
+            while (stream.ReadByte() is int value && value >= 0 && value != '\r') { }
+            await stream.WriteAsync(new byte[65_537]);
+            await stream.FlushAsync();
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Tcp, "keyence:kv-8000");
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.SendRawAsync("READ"));
+        Assert.Equal(0UL, client.TrafficStats.RxBytes);
+        Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
         listener.Stop();
     }

@@ -331,3 +331,5 @@ The `samples/` directory contains ready-to-run projects for the most common high
 ## Traffic statistics
 
 Read `client.TrafficStats` (also available on the queued client) for cumulative `RequestCount`, `TxBytes`, and `RxBytes`.
+For TCP, a received line counts its body plus the first CR/LF terminator; extra CR/LF separators
+are consumed but not counted. For UDP, the complete response datagram is counted.

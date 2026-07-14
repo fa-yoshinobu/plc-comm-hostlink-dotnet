@@ -112,7 +112,7 @@ public HostLinkProtocolError(string message, Exception inner)
 public struct HostLinkTrafficStats
 ```
 
-Immutable lifetime traffic counters for one Host Link client.
+Immutable lifetime traffic counters for one Host Link client. TCP receive bytes count the body and first CR/LF terminator; UDP receive bytes count the complete datagram.
 
 #### Members
 
@@ -122,7 +122,7 @@ Immutable lifetime traffic counters for one Host Link client.
 public HostLinkTrafficStats(ulong RequestCount, ulong TxBytes, ulong RxBytes)
 ```
 
-Immutable lifetime traffic counters for one Host Link client.
+Immutable lifetime traffic counters for one Host Link client. TCP receive bytes count the body and first CR/LF terminator; UDP receive bytes count the complete datagram.
 
 ##### RequestCount
 
