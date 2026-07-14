@@ -45,6 +45,8 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
 
     /// <summary>Gets the canonical KEYENCE KV PLC profile selected for this session.</summary>
     public string PlcProfile => _client.PlcProfile;
+    /// <summary>Gets cumulative traffic for the underlying client lifetime.</summary>
+    public HostLinkTrafficStats TrafficStats => _client.TrafficStats;
 
     /// <summary>Gets or sets the communication timeout.</summary>
     public TimeSpan Timeout

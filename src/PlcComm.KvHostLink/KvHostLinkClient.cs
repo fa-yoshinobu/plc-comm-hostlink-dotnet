@@ -27,11 +27,14 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private byte[] _rxBuf = new byte[4096];
     private int _rxStart;
     private int _rxCount;
-    private bool _skipLeadingLf;
+    private bool _skipLeadingSeparators;
     private readonly byte[] _tcpReadBuf = new byte[8192];
     private TimeSpan _timeout = TimeSpan.FromSeconds(3);
     private int _monitorBitCount;
     private string[] _monitorWordFormats = [];
+    private long _requestCount;
+    private long _txBytes;
+    private long _rxBytes;
 
     public KvHostLinkClient(
         string host,
@@ -52,6 +55,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     }
 
     public string PlcProfile { get; }
+    /// <summary>Gets an immutable snapshot of cumulative traffic for this client lifetime.</summary>
+    public HostLinkTrafficStats TrafficStats => new(
+        unchecked((ulong)Interlocked.Read(ref _requestCount)),
+        unchecked((ulong)Interlocked.Read(ref _txBytes)),
+        unchecked((ulong)Interlocked.Read(ref _rxBytes)));
     /// <summary>Gets or sets the operation timeout from 1 through <see cref="int.MaxValue"/> milliseconds.</summary>
     public TimeSpan Timeout
     {
@@ -143,7 +151,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         _udp?.Dispose();
         _udp = null;
         _rxStart = 0; _rxCount = 0;
-        _skipLeadingLf = false;
+        _skipLeadingSeparators = false;
         _monitorBitCount = 0;
         _monitorWordFormats = [];
     }
@@ -219,7 +227,9 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             try
             {
                 await _tcpStream!.WriteAsync(frame, linked.Token).ConfigureAwait(false);
+                RecordSend(frame.Length);
                 var response = await RecvTcpFrameAsync(linked.Token).ConfigureAwait(false);
+                RecordReceive(response.CountedLength);
                 FireTrace(HostLinkTraceDirection.Receive, response.Frame);
                 return response.Body;
             }
@@ -236,9 +246,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             try
             {
                 await _udp!.SendAsync(frame, linked.Token).ConfigureAwait(false);
+                RecordSend(frame.Length);
                 var result = await _udp.ReceiveAsync(linked.Token).ConfigureAwait(false);
                 FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
                 byte[] responseBody = KvHostLinkProtocol.ExtractBody(result.Buffer);
+                RecordReceive(result.Buffer.Length);
                 if (responseBody.Length > MaxResponseBodyLength)
                     throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
                 return responseBody;
@@ -253,18 +265,28 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         }
     }
 
-    private async Task<(byte[] Body, byte[] Frame)> RecvTcpFrameAsync(CancellationToken cancellationToken)
+    private void RecordSend(int length)
+    {
+        Interlocked.Increment(ref _requestCount);
+        Interlocked.Add(ref _txBytes, length);
+    }
+
+    private void RecordReceive(int length) => Interlocked.Add(ref _rxBytes, length);
+
+    private async Task<(byte[] Body, byte[] Frame, int CountedLength)> RecvTcpFrameAsync(
+        CancellationToken cancellationToken)
     {
         while (true)
         {
-            if (_skipLeadingLf && _rxCount > 0)
+            if (_skipLeadingSeparators && _rxCount > 0)
             {
-                if (_rxBuf[_rxStart] == '\n')
+                while (_rxCount > 0 && (_rxBuf[_rxStart] == '\r' || _rxBuf[_rxStart] == '\n'))
                 {
                     _rxStart++;
                     _rxCount--;
                 }
-                _skipLeadingLf = false;
+                if (_rxCount > 0)
+                    _skipLeadingSeparators = false;
             }
 
             int foundIdx = -1;
@@ -282,8 +304,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                 int frameLength = foundIdx + 1;
                 while (frameLength < _rxCount && (_rxBuf[_rxStart + frameLength] == '\r' || _rxBuf[_rxStart + frameLength] == '\n'))
                     frameLength++;
-                bool includedLf = foundIdx + 1 < frameLength && _rxBuf[_rxStart + foundIdx + 1] == '\n';
-                _skipLeadingLf = _rxBuf[_rxStart + foundIdx] == '\r' && !includedLf;
+                _skipLeadingSeparators = true;
                 byte[] body = _rxBuf.AsSpan(_rxStart, foundIdx).ToArray();
                 byte[] receivedFrame = _rxBuf.AsSpan(_rxStart, frameLength).ToArray();
                 _rxStart += frameLength;
@@ -293,7 +314,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                     _rxBuf.AsSpan(_rxStart, _rxCount).CopyTo(_rxBuf);
                     _rxStart = 0;
                 }
-                return (body, receivedFrame);
+                return (body, receivedFrame, foundIdx + 1);
             }
 
             if (_rxCount > MaxResponseBodyLength)

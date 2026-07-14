@@ -65,8 +65,13 @@ public sealed class QualityOverhaulContractTests
         await using var server = new RawContractServer(_ => "E1\r"u8.ToArray());
         await using var client = await OpenClientAsync(server.Port);
 
+        Assert.Equal(default, client.TrafficStats);
         Assert.Equal("E1"u8.ToArray(), await client.SendRawAsync("UNKNOWN"));
+        Assert.Equal(new HostLinkTrafficStats(1, 8, 3), client.TrafficStats);
         await Assert.ThrowsAsync<HostLinkError>(() => client.QueryModelAsync());
+        Assert.Equal(new HostLinkTrafficStats(2, 11, 6), client.TrafficStats);
+        await client.CloseAsync();
+        Assert.Equal(new HostLinkTrafficStats(2, 11, 6), client.TrafficStats);
     }
 
     [Fact]
@@ -99,6 +104,35 @@ public sealed class QualityOverhaulContractTests
         Assert.Equal("A"u8.ToArray(), await client.SendRawAsync("CR"));
         Assert.Equal("B"u8.ToArray(), await client.SendRawAsync("LF"));
         Assert.Equal("C"u8.ToArray(), await client.SendRawAsync("CRLF"));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TcpTrafficStatsAreIndependentOfCrLfSegmentation(bool splitLf)
+    {
+        await using var server = new RawContractServer(command => command switch
+        {
+            "FIRST" => splitLf ? "FIRST\r"u8.ToArray() : "FIRST\r\n"u8.ToArray(),
+            "SECOND" => splitLf ? "\nSECOND\n\r"u8.ToArray() : "SECOND\n\r"u8.ToArray(),
+            _ => "E1\r"u8.ToArray(),
+        });
+        await using var client = await OpenClientAsync(server.Port);
+
+        Assert.Equal("FIRST"u8.ToArray(), await client.SendRawAsync("FIRST"));
+        Assert.Equal("SECOND"u8.ToArray(), await client.SendRawAsync("SECOND"));
+        Assert.Equal(new HostLinkTrafficStats(2, 13, 13), client.TrafficStats);
+    }
+
+    [Fact]
+    public async Task CompletePlcErrorLineIsCountedBeforeSemanticFailure()
+    {
+        await using var server = new RawContractServer(_ => "E1\r"u8.ToArray());
+        await using var client = await OpenClientAsync(server.Port);
+
+        await Assert.ThrowsAsync<HostLinkError>(() => client.ClearErrorAsync());
+
+        Assert.Equal(3UL, client.TrafficStats.RxBytes);
     }
 
     [Fact]

@@ -327,3 +327,9 @@ The `samples/` directory contains ready-to-run projects for the most common high
 | `samples\PlcComm.KvHostLink.HighLevelSample\PlcComm.KvHostLink.HighLevelSample.csproj` | Full high-level API: typed reads/writes, block reads, bit-in-word, named snapshots, and polling. |
 | `samples\PlcComm.KvHostLink.BasicReadWriteSample\PlcComm.KvHostLink.BasicReadWriteSample.csproj` | Basic typed read/write for unsigned, signed, double-word, and float values. |
 | `samples\PlcComm.KvHostLink.NamedPollingSample\PlcComm.KvHostLink.NamedPollingSample.csproj` | Named polling with `PollAsync`. |
+
+## Traffic statistics
+
+Read `client.TrafficStats` (also available on the queued client) for cumulative `RequestCount`, `TxBytes`, and `RxBytes`.
+For TCP, a received line counts its body plus the first CR/LF terminator; extra CR/LF separators
+are consumed but not counted. For UDP, the complete response datagram is counted.
