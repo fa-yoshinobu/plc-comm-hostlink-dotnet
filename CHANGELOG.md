@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.2.0] - 2026-07-17
 
 - Release: Bumped .NET package metadata to `3.2.0`.
+- CI: Excluded maintainer-only files, tests, and release tooling from generated source archives while retaining the complete sample set, and added source-archive contract checks to local, CI, and release gates.
 
 - Library: Added immutable client-lifetime traffic snapshots through `TrafficStats` on direct and queued clients.
 - Library: Made TCP receive-byte accounting independent of CR/LF segmentation by counting the response body and first terminator only; UDP datagram accounting is unchanged.
