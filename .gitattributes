@@ -1,1 +1,29 @@
 *.cs text eol=lf
+.gitattributes text eol=lf export-ignore
+.github export-ignore
+.github/** export-ignore
+.gitignore export-ignore
+.pre-commit-config.yaml export-ignore
+AGENTS.md export-ignore
+docsrc/maintainer export-ignore
+docsrc/maintainer/** export-ignore
+internal_docs export-ignore
+internal_docs/** export-ignore
+release-artifacts export-ignore
+release-artifacts/** export-ignore
+scripts export-ignore
+scripts/** export-ignore
+test export-ignore
+test/** export-ignore
+tests export-ignore
+tests/** export-ignore
+tools export-ignore
+tools/** export-ignore
+build export-ignore
+build/** export-ignore
+build_win export-ignore
+build_win/** export-ignore
+release_check.bat export-ignore
+run_ci.bat export-ignore
+run-local-node-red.bat export-ignore
+TODO.md export-ignore

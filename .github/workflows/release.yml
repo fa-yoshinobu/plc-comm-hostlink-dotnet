@@ -18,6 +18,11 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/v{0}', inputs.version) || github.ref }}
           fetch-depth: 0
+
+      - name: Check GitHub source archive contents
+        shell: pwsh
+        run: ./scripts/check_source_archive.ps1
+
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
