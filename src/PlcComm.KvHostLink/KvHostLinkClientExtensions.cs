@@ -109,8 +109,13 @@ public static class KvHostLinkClientExtensions
         if (string.IsNullOrEmpty(normalized))
             throw new HostLinkProtocolError("dtype is required.");
 
+        var parsedDevice = KvHostLinkDevice.RequireBaseDevice(device);
+        bool directBitDevice = KvHostLinkModels.DirectBitDeviceTypes.Contains(parsedDevice.DeviceType);
+
         if (normalized == "F")
         {
+            if (directBitDevice)
+                throw new HostLinkProtocolError("Float reads are not defined for direct bit devices.");
             ushort[] words = await client.ReadWordsAsync(device, 2, ct).ConfigureAwait(false);
             return BitConverter.Int32BitsToSingle(unchecked((int)(words[0] | (words[1] << 16))));
         }
@@ -127,7 +132,20 @@ public static class KvHostLinkClientExtensions
 
         string fmt = "." + normalized;
         var tokens = await client.ReadAsync(device, fmt, ct).ConfigureAwait(false);
-        var parsedDevice = KvHostLinkDevice.ParseDevice(device);
+        if (directBitDevice)
+        {
+            uint packed = PackDirectBitTokens(tokens, normalized is "D" or "L" ? 32 : 16, device);
+            return normalized switch
+            {
+                "U" => (object)(ushort)packed,
+                "S" => (object)unchecked((short)packed),
+                "D" => packed,
+                "L" => (object)unchecked((int)packed),
+                "H" => ((ushort)packed).ToString("X4", CultureInfo.InvariantCulture),
+                _ => throw new HostLinkProtocolError($"Unsupported direct-bit word dtype '{dtype}'."),
+            };
+        }
+
         bool timerCounterComposite = (parsedDevice.DeviceType is "T" or "C") && (normalized is "U" or "S" or "D" or "L" or "H");
         var raw = timerCounterComposite
             ? RequireLastDataToken(tokens, device)
@@ -357,7 +375,10 @@ public static class KvHostLinkClientExtensions
         await client.ExecuteExclusiveAsync(async () =>
         {
             var tokens = await client.ReadCoreAsync(device, ".U", 1, false, ct).ConfigureAwait(false);
-            int current = ushort.Parse(RequireDataToken(tokens, device), CultureInfo.InvariantCulture);
+            int current = KvHostLinkModels.DirectBitDeviceTypes.Contains(
+                KvHostLinkDevice.RequireBaseDevice(device).DeviceType)
+                ? (ushort)PackDirectBitTokens(tokens, 16, device)
+                : ushort.Parse(RequireDataToken(tokens, device), CultureInfo.InvariantCulture);
             if (value) current |= 1 << bitIndex;
             else current &= ~(1 << bitIndex);
             await client.WriteCoreAsync(device, (ushort)current, ".U", ct).ConfigureAwait(false);
@@ -722,7 +743,10 @@ public static class KvHostLinkClientExtensions
                 if (!bitIdx.HasValue)
                     throw new HostLinkProtocolError($"Bit index is required for bit-in-word address '{address}'.");
                 var tokens = await client.ReadAsync(baseAddr, ".U", ct).ConfigureAwait(false);
-                int w = ushort.Parse(RequireDataToken(tokens, baseAddr), CultureInfo.InvariantCulture);
+                var parsed = KvHostLinkDevice.ParseDevice(baseAddr);
+                int w = DirectBitDeviceTypes.Contains(parsed.DeviceType)
+                    ? (ushort)PackDirectBitTokens(tokens, 16, baseAddr)
+                    : ushort.Parse(RequireDataToken(tokens, baseAddr), CultureInfo.InvariantCulture);
                 result[address] = ((w >> bitIdx.Value) & 1) != 0;
             }
             else if (dtype == "BIT")
@@ -792,8 +816,12 @@ public static class KvHostLinkClientExtensions
                 int requestEndExclusive = requestStart + GetWordWidth(request.Kind);
                 ReadPlanSegmentMode requestMode =
                     request.Kind == ReadPlanValueKind.DirectBit ? ReadPlanSegmentMode.DirectBits : ReadPlanSegmentMode.Words;
+                int segmentLimit = ReadPlanSegmentLimit(request.BaseAddress.DeviceType, requestMode);
+                bool exceedsSegmentLimit = currentStart is not null &&
+                    requestEndExclusive - currentStartNumber > segmentLimit;
 
-                if (currentStart is null || requestStart > currentEndExclusive || currentMode != requestMode)
+                if (currentStart is null || requestStart > currentEndExclusive ||
+                    currentMode != requestMode || exceedsSegmentLimit)
                 {
                     if (currentStart is not null)
                     {
@@ -986,6 +1014,18 @@ public static class KvHostLinkClientExtensions
     private static int GetWordWidth(ReadPlanValueKind kind)
         => kind is ReadPlanValueKind.Unsigned32 or ReadPlanValueKind.Signed32 or ReadPlanValueKind.Float32 ? 2 : 1;
 
+    private static int ReadPlanSegmentLimit(string deviceType, ReadPlanSegmentMode mode)
+    {
+        if (mode == ReadPlanSegmentMode.DirectBits)
+            return 1000;
+        return deviceType switch
+        {
+            "TM" => 512,
+            "Z" => 12,
+            _ => 1000,
+        };
+    }
+
     private static int ReadPlanNumber(ReadPlanRequest request) =>
         request.Kind == ReadPlanValueKind.DirectBit &&
         KvHostLinkDevice.UsesBitBankAddress(request.BaseAddress.DeviceType)
@@ -1009,6 +1049,21 @@ public static class KvHostLinkClientExtensions
             default:
                 throw new HostLinkProtocolError($"Invalid direct bit response token: {token}");
         }
+    }
+
+    private static uint PackDirectBitTokens(string[] tokens, int expectedCount, string context)
+    {
+        if (tokens.Length != expectedCount)
+            throw new HostLinkProtocolError(
+                $"Direct-bit word response for '{context}' contained {tokens.Length} tokens; expected {expectedCount}.");
+
+        uint value = 0;
+        for (int bit = 0; bit < tokens.Length; bit++)
+        {
+            if (ParseBoolToken(tokens[bit]))
+                value |= 1u << bit;
+        }
+        return value;
     }
 
     private static string RequireDataToken(string[] tokens, string context)

@@ -39,39 +39,15 @@ internal static class KvHostLinkModels
         { "48", "KV-700 (No expansion memory)" }
     };
 
-    public static readonly Dictionary<string, (int Lo, int Hi, int Base)> DeviceRanges = new()
+    // Syntax-level number bases only. PLC/profile address ranges belong to the public
+    // device-range catalog and must never be reused as transport send guards.
+    public static readonly Dictionary<string, int> DeviceNumberBases = new()
     {
-        { "R", (0, 199915, 10) },
-        { "B", (0, 0x7FFF, 16) },
-        { "MR", (0, 399915, 10) },
-        { "LR", (0, 99915, 10) },
-        { "CR", (0, 7915, 10) },
-        { "VB", (0, 0xF9FF, 16) },
-        { "DM", (0, 65534, 10) },
-        { "EM", (0, 65534, 10) },
-        { "FM", (0, 32767, 10) },
-        { "ZF", (0, 524287, 10) },
-        { "W", (0, 0x7FFF, 16) },
-        { "TM", (0, 511, 10) },
-        { "Z", (1, 12, 10) },
-        { "T", (0, 3999, 10) },
-        { "TC", (0, 3999, 10) },
-        { "TS", (0, 3999, 10) },
-        { "C", (0, 3999, 10) },
-        { "CC", (0, 3999, 10) },
-        { "CS", (0, 3999, 10) },
-        { "CTH", (0, 3, 10) },
-        { "CTC", (0, 7, 10) },
-        { "AT", (0, 7, 10) },
-        { "CM", (0, 7599, 10) },
-        { "VM", (0, 589823, 10) },
-        { "X", (0, 1999 * 16 + 15, 10) },
-        { "Y", (0, 1999 * 16 + 15, 10) },
-        { "M", (0, 63999, 10) },
-        { "L", (0, 15999, 10) },
-        { "D", (0, 65534, 10) },
-        { "E", (0, 65534, 10) },
-        { "F", (0, 32767, 10) }
+        { "R", 10 }, { "B", 16 }, { "MR", 10 }, { "LR", 10 }, { "CR", 10 }, { "VB", 16 },
+        { "DM", 10 }, { "EM", 10 }, { "FM", 10 }, { "ZF", 10 }, { "W", 16 }, { "TM", 10 },
+        { "Z", 10 }, { "T", 10 }, { "TC", 10 }, { "TS", 10 }, { "C", 10 }, { "CC", 10 },
+        { "CS", 10 }, { "CTH", 10 }, { "CTC", 10 }, { "AT", 10 }, { "CM", 10 }, { "VM", 10 },
+        { "X", 10 }, { "Y", 10 }, { "M", 10 }, { "L", 10 }, { "D", 10 }, { "E", 10 }, { "F", 10 }
     };
 
     public static readonly HashSet<string> Native32BitDeviceTypes = new() { "T", "TC", "TS", "C", "CC", "CS", "CTH", "CTC", "Z", "AT" };

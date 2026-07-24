@@ -7,13 +7,13 @@ public record KvDeviceAddress(string DeviceType, int Number, string Suffix = "")
 {
     public string ToText()
     {
-        if (!KvHostLinkModels.DeviceRanges.TryGetValue(DeviceType, out var range))
+        if (!KvHostLinkModels.DeviceNumberBases.TryGetValue(DeviceType, out var numberBase))
             throw new HostLinkProtocolError($"Unsupported device type: {DeviceType}");
 
         string numberStr = UsesBitBankAddress(DeviceType)
             ? FormatBitBankNumber(Number)
             : UsesXymBitAddress(DeviceType) ? FormatXymBitNumber(Number)
-            : range.Base == 16 ? Number.ToString("X", CultureInfo.InvariantCulture) : Number.ToString(CultureInfo.InvariantCulture);
+            : numberBase == 16 ? Number.ToString("X", CultureInfo.InvariantCulture) : Number.ToString(CultureInfo.InvariantCulture);
         return $"{DeviceType}{numberStr}{Suffix}";
     }
 
@@ -45,7 +45,7 @@ public static class KvHostLinkDevice
 
     static KvHostLinkDevice()
     {
-        var types = KvHostLinkModels.DeviceRanges.Keys.OrderByDescending(k => k.Length);
+        var types = KvHostLinkModels.DeviceNumberBases.Keys.OrderByDescending(k => k.Length);
         var pattern = $"^(?<type>{string.Join("|", types)})(?<number>[0-9A-F]+)(?<suffix>\\.[USDLH])?$";
         DeviceRegex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
@@ -70,7 +70,7 @@ public static class KvHostLinkDevice
 
         if (!match.Success)
         {
-            var validTypes = string.Join(", ", KvHostLinkModels.DeviceRanges.Keys.OrderBy(k => k));
+            var validTypes = string.Join(", ", KvHostLinkModels.DeviceNumberBases.Keys.OrderBy(k => k));
             throw new HostLinkProtocolError(
                 $"Invalid device string '{text}'. " +
                 $"Valid device types: {validTypes}.");
@@ -80,9 +80,9 @@ public static class KvHostLinkDevice
         string numberText = match.Groups["number"].Value;
         string suffix = NormalizeSuffix(match.Groups["suffix"].Value);
 
-        if (!KvHostLinkModels.DeviceRanges.TryGetValue(deviceType, out var range))
+        if (!KvHostLinkModels.DeviceNumberBases.TryGetValue(deviceType, out var numberBase))
         {
-            var validTypes = string.Join(", ", KvHostLinkModels.DeviceRanges.Keys.OrderBy(k => k));
+            var validTypes = string.Join(", ", KvHostLinkModels.DeviceNumberBases.Keys.OrderBy(k => k));
             throw new HostLinkProtocolError(
                 $"Unknown device type '{deviceType}' in '{text}'. " +
                 $"Valid types: {validTypes}.");
@@ -92,9 +92,12 @@ public static class KvHostLinkDevice
         {
             int number = UsesXymBitAddress(deviceType)
                 ? ParseXymBitNumber(deviceType, numberText)
-                : Convert.ToInt32(numberText, range.Base);
-            if (number < range.Lo || number > range.Hi)
-                throw new HostLinkProtocolError($"Device number out of range: {deviceType}{numberText} (allowed: {FormatDeviceNumber(deviceType, range.Lo)}..{FormatDeviceNumber(deviceType, range.Hi)})");
+                : Convert.ToInt32(numberText, numberBase);
+            // PROFILE_RANGE_NOT_A_TRANSPORT_GUARD: profile/device catalog upper bounds are
+            // application metadata, not a reason for the communication library to block a send.
+            // Keep only syntax, supported-family, non-negative, and wire/text representation checks here.
+            if (number < 0)
+                throw new HostLinkProtocolError($"Device number must not be negative: {deviceType}{numberText}");
             if (UsesBitBankAddress(deviceType) && number % 100 > 15)
                 throw new HostLinkProtocolError($"Invalid bit-bank device number: {deviceType}{numberText} (lower two digits must be 00..15)");
 
@@ -176,10 +179,10 @@ public static class KvHostLinkDevice
             return FormatBitBankNumber(number);
         if (UsesXymBitAddress(deviceType))
             return FormatXymBitNumber(number);
-        if (!KvHostLinkModels.DeviceRanges.TryGetValue(deviceType, out var range))
+        if (!KvHostLinkModels.DeviceNumberBases.TryGetValue(deviceType, out var numberBase))
             return number.ToString(CultureInfo.InvariantCulture);
 
-        return range.Base == 16
+        return numberBase == 16
             ? number.ToString("X", CultureInfo.InvariantCulture)
             : number.ToString(CultureInfo.InvariantCulture);
     }
@@ -264,7 +267,7 @@ public static class KvHostLinkDevice
 
     public static void ValidateDeviceSpan(string deviceType, int startNumber, string effectiveFormat, int count = 1)
     {
-        if (!KvHostLinkModels.DeviceRanges.TryGetValue(deviceType, out var range))
+        if (!KvHostLinkModels.DeviceNumberBases.ContainsKey(deviceType))
             throw new HostLinkProtocolError($"Unsupported device type: {deviceType}");
         if (count < 1)
             throw new HostLinkProtocolError($"count out of range: {count} (allowed: 1..)");
@@ -273,21 +276,7 @@ public static class KvHostLinkDevice
         int startSpanNumber = UsesBitBankAddress(deviceType)
             ? BitBankLogicalNumber(startNumber)
             : startNumber;
-        int hiSpanNumber = UsesBitBankAddress(deviceType)
-            ? BitBankLogicalNumber(range.Hi)
-            : range.Hi;
-        int endSpanNumber = checked(startSpanNumber + (count * deviceWidth) - 1);
-        if (startNumber < range.Lo || startNumber > range.Hi || endSpanNumber > hiSpanNumber)
-        {
-            string startText = FormatDeviceNumber(deviceType, startNumber);
-            int endNumber = UsesBitBankAddress(deviceType)
-                ? BitBankNumberFromLogical(endSpanNumber)
-                : endSpanNumber;
-            string endText = FormatDeviceNumber(deviceType, endNumber);
-            throw new HostLinkProtocolError(
-                $"Device span out of range: {deviceType}{startText}..{deviceType}{endText} " +
-                $"with format '{effectiveFormat}'");
-        }
+        _ = checked(startSpanNumber + (count * deviceWidth) - 1);
     }
 
     private static int DeviceSpanWidth(string deviceType, string effectiveFormat)
