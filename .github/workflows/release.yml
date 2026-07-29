@@ -95,13 +95,35 @@ jobs:
         env:
           GH_TOKEN: "${{ github.token }}"
         run: |
+          $tag = $env:RELEASE_TAG
+          $version = $tag -replace '^v', ''
+          $header = "## [$version]"
+          $lines = @(Get-Content CHANGELOG.md)
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i].StartsWith($header)) { $start = $i; break }
+          }
+          if ($start -lt 0) { throw "CHANGELOG.md is missing release section $header." }
+          $end = $lines.Count
+          for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+            if ($lines[$i].StartsWith("## [")) { $end = $i; break }
+          }
+          $changelogNotes = ($lines[$start..($end - 1)] -join "`n").Trim()
+          if ([string]::IsNullOrWhiteSpace($changelogNotes)) { throw "Release section $header is empty." }
           $assets = @(Get-ChildItem out -File | Select-Object -ExpandProperty FullName)
           if ($assets.Count -eq 0) { throw "No release assets found in out." }
-          gh release view $env:RELEASE_TAG *> $null
+          gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:RELEASE_TAG $assets --clobber
-            if ($LASTEXITCODE -ne 0) { throw "Failed to upload assets for $env:RELEASE_TAG." }
+            $currentBody = (gh release view $tag --json body --jq .body | Out-String).TrimEnd()
+            if (-not $currentBody.Contains($header)) {
+              $notesFile = Join-Path $env:RUNNER_TEMP "release-notes-$version.md"
+              [IO.File]::WriteAllText($notesFile, "$changelogNotes`n`n$currentBody`n", [Text.UTF8Encoding]::new($false))
+              gh release edit $tag --title "Release $tag" --notes-file $notesFile
+              if ($LASTEXITCODE -ne 0) { throw "Failed to update GitHub Release notes for $tag." }
+            }
+            gh release upload $tag $assets --clobber
+            if ($LASTEXITCODE -ne 0) { throw "Failed to upload assets for $tag." }
           } else {
-            gh release create $env:RELEASE_TAG $assets --verify-tag --title "Release $env:RELEASE_TAG" --generate-notes --draft
-            if ($LASTEXITCODE -ne 0) { throw "Failed to create release $env:RELEASE_TAG." }
+            gh release create $tag $assets --verify-tag --title "Release $tag" --notes $changelogNotes --generate-notes --draft
+            if ($LASTEXITCODE -ne 0) { throw "Failed to create release $tag." }
           }
