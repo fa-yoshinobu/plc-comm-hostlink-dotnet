@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.1] - 2026-07-29
+
+- Release: Bumped .NET package metadata to `3.2.1`.
+
 ### Changed
 
 - Library: Profile/device catalog upper bounds no longer reject sends. The parser retains only supported-family, syntax, non-negative, text-representation, and command-count validation; its internal device table now stores number bases rather than profile limits.
