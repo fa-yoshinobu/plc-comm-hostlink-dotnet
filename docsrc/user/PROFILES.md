@@ -24,24 +24,25 @@ amount of work.
 
 Device-family notation, type suffixes, XYM aliases, and static range tables are shared across the KV Host Link libraries. Use the common [KV Host Link Device Ranges](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/device-ranges/) page for those details.
 
-The tables below only identify the canonical profile names and the major device families enabled by each profile.
+The table below identifies the canonical profile names, intended hardware, and
+address notation. Device ranges remain in the shared reference above.
 
 ## Supported PLC profiles
 
-| Canonical profile | Key available devices | Notes |
-|---|---|---|
-| `keyence:kv-nano` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `W`, `TM`, `VM`, `VB`, `Z` | Standard KV-NANO profile. `EM`, `FM`, `ZF`, and `AT` are not in this profile. |
-| `keyence:kv-nano-xym` | `X`, `Y`, `M`, `L`, `D`, plus standard KV-NANO devices | KV-NANO profile with XYM aliases. `E`, `F`, `ZF`, and `AT` are not in this profile. |
-| `keyence:kv-3000` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `VM`, `VB`, `Z`, `AT` | Standard KV-3000 profile. |
-| `keyence:kv-3000-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-3000 devices | KV-3000 profile with XYM aliases. |
-| `keyence:kv-5000` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `VM`, `VB`, `Z`, `AT` | Standard KV-5000 profile. |
-| `keyence:kv-5000-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-5000 devices | KV-5000 profile with XYM aliases. |
-| `keyence:kv-7000` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `VM`, `VB`, `Z`, `AT` | Standard profile for KV-7000, KV-7300, and KV-7500 family models. `CTH` and `CTC` are not in this profile. |
-| `keyence:kv-7000-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-7000 devices | KV-7000 profile with XYM aliases. `CTH` and `CTC` are not in this profile. |
-| `keyence:kv-8000` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `VM`, `VB`, `Z`, `AT` | Standard KV-8000 profile. `CTH` and `CTC` are not in this profile. |
-| `keyence:kv-8000-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-8000 devices | KV-8000 profile with XYM aliases. `CTH` and `CTC` are not in this profile. |
-| `keyence:kv-x500` | `R`, `B`, `MR`, `LR`, `CR`, `CM`, `T`, `C`, `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `Z` | Standard profile for KV-X500, KV-X520, KV-X530, KV-X550, and KV-X310 family models. `AT`, `VM`, `VB`, `CTH`, and `CTC` are not in this profile. |
-| `keyence:kv-x500-xym` | `X`, `Y`, `M`, `L`, `D`, `E`, `F`, plus standard KV-X500 devices | KV-X500 profile with XYM aliases. `AT`, `VM`, `VB`, `CTH`, and `CTC` are not in this profile. |
+| Canonical profile | Display name | Intended hardware | Address notation |
+| --- | --- | --- | --- |
+| `keyence:kv-nano` | KEYENCE KV-NANO | `KV-N24nn`, `KV-N40nn`, `KV-N60nn`, `KV-NC32T` | Native KV notation. |
+| `keyence:kv-nano-xym` | KEYENCE KV-NANO (XYM) | Same KV-NANO family | XYM aliases over `keyence:kv-nano`. |
+| `keyence:kv-3000` | KEYENCE KV-3000 | `KV-3000` | Native KV notation. |
+| `keyence:kv-3000-xym` | KEYENCE KV-3000 (XYM) | Same KV-3000 family | XYM aliases over `keyence:kv-3000`. |
+| `keyence:kv-5000` | KEYENCE KV-5000 | `KV-5000`, `KV-5500` | Native KV notation. |
+| `keyence:kv-5000-xym` | KEYENCE KV-5000 (XYM) | Same KV-5000 family | XYM aliases over `keyence:kv-5000`. |
+| `keyence:kv-7000` | KEYENCE KV-7000 | `KV-7000`, `KV-7300`, `KV-7500` | Native KV notation. |
+| `keyence:kv-7000-xym` | KEYENCE KV-7000 (XYM) | Same KV-7000 family | XYM aliases over `keyence:kv-7000`. |
+| `keyence:kv-8000` | KEYENCE KV-8000 | `KV-8000`, `KV-8000A` | Native KV notation. |
+| `keyence:kv-8000-xym` | KEYENCE KV-8000 (XYM) | Same KV-8000 family | XYM aliases over `keyence:kv-8000`. |
+| `keyence:kv-x500` | KEYENCE KV-X500 | `KV-X310`, `KV-X500`, `KV-X520`, `KV-X530`, `KV-X550` | Native KV notation. |
+| `keyence:kv-x500-xym` | KEYENCE KV-X500 (XYM) | Same KV-X500 family | XYM aliases over `keyence:kv-x500`. |
 
 ## How to select a catalog
 
