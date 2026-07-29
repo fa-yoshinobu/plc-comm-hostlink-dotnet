@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Library: Parse hexadecimal profile range endpoints such as `VB0-F9FF` without discarding valid leading hexadecimal letters.
+- Library: Report device-span arithmetic overflow as the stable `HostLinkProtocolError` contract instead of leaking `OverflowException`.
 - Library: Direct-bit numeric reads and writes pack/unpack the complete 16- or 32-bit token set, including bit-in-word access, instead of treating each response as one scalar token.
 - Library: Consecutive RDS requests are split at the command-specific count limit, including TM and Z routes.
 - Tests: Added permissive-address, direct-bit packing, bit-in-word preservation, and split-boundary coverage.

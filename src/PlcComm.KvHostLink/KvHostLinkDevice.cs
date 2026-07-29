@@ -276,7 +276,14 @@ public static class KvHostLinkDevice
         int startSpanNumber = UsesBitBankAddress(deviceType)
             ? BitBankLogicalNumber(startNumber)
             : startNumber;
-        _ = checked(startSpanNumber + (count * deviceWidth) - 1);
+        try
+        {
+            _ = checked(startSpanNumber + (count * deviceWidth) - 1);
+        }
+        catch (OverflowException ex)
+        {
+            throw new HostLinkProtocolError("Device span exceeds the supported numeric representation.", ex);
+        }
     }
 
     private static int DeviceSpanWidth(string deviceType, string effectiveFormat)

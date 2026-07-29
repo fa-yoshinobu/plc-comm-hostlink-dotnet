@@ -172,6 +172,16 @@ public class KvHostLinkDeviceTests
         KvHostLinkDevice.ValidateDeviceSpan(deviceType, startNumber, format, count);
     }
 
+    [Fact]
+    public void ValidateDeviceSpan_OverflowUsesStableProtocolError()
+    {
+        var error = Assert.Throws<HostLinkProtocolError>(() =>
+            KvHostLinkDevice.ValidateDeviceSpan("B", int.MaxValue, ".D"));
+
+        Assert.Equal("Device span exceeds the supported numeric representation.", error.Message);
+        Assert.IsType<OverflowException>(error.InnerException);
+    }
+
     [Theory]
     [InlineData(59999, ".U", 1)]
     [InlineData(59998, ".D", 1)]

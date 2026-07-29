@@ -214,6 +214,10 @@ public sealed class KvHostLinkDeviceRangeTests
 
         var kvx = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-x500");
         Assert.Equal("Z1-10", kvx.Entry("Z")!.AddressRange);
+
+        var kv8000 = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile("keyence:kv-8000");
+        Assert.Equal("VB0-F9FF", kv8000.Entry("VB")!.AddressRange);
+        Assert.Equal(0xF9FFu, kv8000.Entry("VB")!.UpperBound);
     }
 
     [Fact]
