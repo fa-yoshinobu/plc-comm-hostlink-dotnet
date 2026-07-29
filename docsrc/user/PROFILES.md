@@ -6,19 +6,8 @@ schema needs the canonical name, display name, connection availability, and
 base-profile relationship in one list. This descriptor list is the stable
 source for selectors; store `CanonicalName`, not `DisplayName`.
 
-## Verified hardware available for validation
-
-The maintainer owns the hardware listed below. Communication has been verified
-on this hardware, and it is available for focused reproduction and validation
-when a problem is reported.
-
-"Verified" does not mean that every library feature has been tested on every
-listed PLC or module. Exhaustively testing every combination would require a prohibitive
-amount of work.
-
-| PLC family | Hardware owned by the maintainer |
-| --- | --- |
-| KEYENCE KV series | `KV-X500`, `KV-5000`, `KV-7000`, `KV-XLE02` |
+Verified hardware available for focused validation is maintained once in the
+shared [KEYENCE KV Host Link profile catalog](https://github.com/fa-yoshinobu/plc-comm-hostlink-profiles#verified-hardware-available-for-validation).
 
 ## Device families and ranges
 
