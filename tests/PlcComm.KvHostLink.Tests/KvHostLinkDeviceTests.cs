@@ -31,19 +31,27 @@ public class KvHostLinkDeviceTests
     }
 
     [Theory]
-    [InlineData("DM65535")] // Out of range
-    [InlineData("Z13")] // Out of range
     [InlineData("DM100.F")]
     [InlineData("INVALID123")]
-    [InlineData("M64000")]
     [InlineData("X3F0")]
     [InlineData("X3FF")]
     [InlineData("Y19A0")]
-    [InlineData("Y20000")]
     [InlineData("100")]
     public void ParseDevice_InvalidInput_ThrowsException(string input)
     {
         Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ParseDevice(input));
+    }
+
+    [Theory]
+    [InlineData("DM65535")]
+    [InlineData("Z13")]
+    [InlineData("CR8000")]
+    [InlineData("CM7600")]
+    [InlineData("M64000")]
+    [InlineData("Y20000")]
+    public void ParseDevice_DoesNotUseCatalogUpperBoundAsTransportGuard(string input)
+    {
+        Assert.Equal(input, KvHostLinkDevice.ParseDevice(input).ToText());
     }
 
     [Theory]
@@ -151,21 +159,27 @@ public class KvHostLinkDeviceTests
 
     [Theory]
     [InlineData("DM", 65534, ".D", 1)]
-    [InlineData("DM", 65534, ".L", 1)]
-    [InlineData("DM", 65534, ".U", 2)]
     [InlineData("B", 0x7FFF, ".U", 2)]
-    [InlineData("X", 1999 * 16 + 15, "", 2)]
-    [InlineData("Y", 1999 * 16 + 15, "", 2)]
     [InlineData("CR", 7900, "", 17)]
-    [InlineData("R", 199900, ".U", 2)]
     [InlineData("R", 199900, ".D", 1)]
-    [InlineData("CR", 7900, ".U", 2)]
-    [InlineData("AT", 1, ".D", 8)]
-    [InlineData("T", 3881, ".D", 120)]
     [InlineData("Z", 2, ".D", 12)]
-    public void ValidateDeviceSpan_InvalidInput_Throws(string deviceType, int startNumber, string format, int count)
+    public void ValidateDeviceSpan_DoesNotUseCatalogUpperBoundAsTransportGuard(
+        string deviceType,
+        int startNumber,
+        string format,
+        int count)
     {
-        Assert.Throws<HostLinkProtocolError>(() => KvHostLinkDevice.ValidateDeviceSpan(deviceType, startNumber, format, count));
+        KvHostLinkDevice.ValidateDeviceSpan(deviceType, startNumber, format, count);
+    }
+
+    [Fact]
+    public void ValidateDeviceSpan_OverflowUsesStableProtocolError()
+    {
+        var error = Assert.Throws<HostLinkProtocolError>(() =>
+            KvHostLinkDevice.ValidateDeviceSpan("B", int.MaxValue, ".D"));
+
+        Assert.Equal("Device span exceeds the supported numeric representation.", error.Message);
+        Assert.IsType<OverflowException>(error.InnerException);
     }
 
     [Theory]

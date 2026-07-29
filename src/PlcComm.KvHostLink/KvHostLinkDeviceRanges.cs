@@ -283,7 +283,6 @@ public static class KvHostLinkDeviceRanges
         var trimmed = normalized.StartsWith(defaultDevice, StringComparison.Ordinal)
             ? normalized[defaultDevice.Length..]
             : normalized;
-        trimmed = TrimLeadingAsciiLetters(trimmed);
         if (trimmed.Length == 0)
         {
             return null;
@@ -321,17 +320,6 @@ public static class KvHostLinkDeviceRanges
             ? 0
             : uint.Parse(bankText, NumberStyles.Integer, CultureInfo.InvariantCulture);
         return checked((bank * 16) + bit);
-    }
-
-    private static string TrimLeadingAsciiLetters(string value)
-    {
-        var index = 0;
-        while (index < value.Length && char.IsAsciiLetter(value[index]))
-        {
-            index++;
-        }
-
-        return value[index..];
     }
 
     private static (KvDeviceRangeCategory Category, bool IsBitDevice) DeviceMetadata(string deviceType)

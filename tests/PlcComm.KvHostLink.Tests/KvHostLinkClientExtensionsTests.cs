@@ -112,6 +112,94 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
+    public async Task DirectBitWordReadsPackEveryReturnedBitInProtocolOrder()
+    {
+        static string Bits(params int[] setBits) => string.Join(
+            ' ',
+            Enumerable.Range(0, setBits.Contains(31) ? 32 : 16)
+                .Select(bit => setBits.Contains(bit) ? "1" : "0"));
+
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD R000.U" => Bits(0, 3, 15),
+            "RD R000.S" => Bits(0, 3, 15),
+            "RD R000.D" => Bits(0, 16, 31),
+            "RD R000.L" => Bits(0, 16, 31),
+            "RD R000.H" => Bits(0, 3, 15),
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        Assert.Equal((ushort)0x8009, Assert.IsType<ushort>(await client.ReadTypedAsync("R0", "U")));
+        Assert.Equal(unchecked((short)0x8009), Assert.IsType<short>(await client.ReadTypedAsync("R0", "S")));
+        Assert.Equal(0x8001_0001u, Assert.IsType<uint>(await client.ReadTypedAsync("R0", "D")));
+        Assert.Equal(unchecked((int)0x8001_0001u), Assert.IsType<int>(await client.ReadTypedAsync("R0", "L")));
+        Assert.Equal("8009", Assert.IsType<string>(await client.ReadTypedAsync("R0", "H")));
+    }
+
+    [Fact]
+    public async Task DirectBitBitInWordReadAndWritePreserveEveryOtherBit()
+    {
+        string initialBits = string.Join(
+            ' ',
+            Enumerable.Range(0, 16).Select(bit => bit is 0 or 3 or 15 ? "1" : "0"));
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD R000.U" => initialBits,
+            "WR R000.U 32777" => "OK",
+            "WR R000.U 32769" => "OK",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        var named = await client.ReadNamedAsync(["R0.0", "R0.3", "R0.F"]);
+        Assert.True(Assert.IsType<bool>(named["R0.0"]));
+        Assert.True(Assert.IsType<bool>(named["R0.3"]));
+        Assert.True(Assert.IsType<bool>(named["R0.F"]));
+
+        await client.WriteBitInWordAsync("R0", 3, true);
+        await client.WriteBitInWordAsync("R0", 3, false);
+
+        Assert.Equal(
+            [
+                "RD R000.U", "RD R000.U", "RD R000.U", "RD R000.U",
+                "WR R000.U 32777", "RD R000.U", "WR R000.U 32769",
+            ],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task ReadNamedAsync_SplitsContiguousRdsPlanAtPointLimit()
+    {
+        await using var server = new ScriptedHostLinkServer(command =>
+        {
+            string[] parts = command.Split(' ');
+            return parts is ["RDS", _, var count]
+                ? string.Join(' ', Enumerable.Repeat("7", int.Parse(count, System.Globalization.CultureInfo.InvariantCulture)))
+                : "E1";
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+        string[] addresses = Enumerable.Range(0, 2001).Select(index => $"DM{index}:U").ToArray();
+
+        var result = await client.ReadNamedAsync(addresses);
+
+        Assert.Equal(2001, result.Count);
+        Assert.All(addresses, address => Assert.Equal((ushort)7, Assert.IsType<ushort>(result[address])));
+        Assert.Equal(
+            ["RDS DM0.U 1000", "RDS DM1000.U 1000", "RDS DM2000.U 1"],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
     public async Task ReadTypedAsync_And_WriteTypedAsync_SupportFloatSuffix()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
@@ -526,16 +614,15 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
-    public async Task ReadAsync_Rejects32BitDeviceEndCrossingBeforeSend()
+    public async Task ReadAsync_DoesNotReject32BitDeviceAtCatalogUpperBoundary()
     {
-        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var server = new ScriptedHostLinkServer(command => command == "RD DM65534.D" ? "1" : "E1");
         await using var client = new KvHostLinkClient("127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
         await client.OpenAsync();
 
-        await Assert.ThrowsAsync<HostLinkProtocolError>(
-            () => client.ReadAsync("DM65534", ".D"));
+        Assert.Equal(["1"], await client.ReadAsync("DM65534", ".D"));
 
-        Assert.Empty(server.ReceivedCommands);
+        Assert.Equal(["RD DM65534.D"], server.ReceivedCommands.ToArray());
     }
 
     [Fact]
