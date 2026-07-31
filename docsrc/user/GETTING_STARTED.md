@@ -63,10 +63,11 @@ await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(optio
 
 const string testAddress = "DM100";
 ushort original = (ushort)await client.ReadTypedAsync(testAddress, "U");
+ushort testValue = (ushort)Random.Shared.Next(0, ushort.MaxValue + 1);
 
 try
 {
-    await client.WriteTypedAsync(testAddress, "U", (ushort)1234);
+    await client.WriteTypedAsync(testAddress, "U", testValue);
     ushort readback = (ushort)await client.ReadTypedAsync(testAddress, "U");
     Console.WriteLine($"{testAddress} = {readback}");
 }
@@ -91,5 +92,6 @@ Only write to a test address that is safe for your machine and program.
 |---|---|
 | The connection fails immediately. | Confirm that the explicitly configured port and TCP/UDP transport match the PLC connection settings. |
 | A command reports `HostLinkNotConnectedError`. | Call `OpenAsync` after construction or after a timeout, cancellation, close, EOF, or transport failure. |
+| A command reports `HostLinkTimeoutError`. | The library's connect/send/receive timer expired and invalidated the connection. Check the endpoint and timeout, then explicitly call `OpenAsync` before another command. |
 | Reads fail while you are trying the first example. | Start with `DM` word reads; do not start with timer/counter or expansion buffer access. |
 | Timer/counter preset writes return `E1`. | Timer/Counter preset writes (`WS`/`WSS`) are only supported on KV-8000/7000-series. |

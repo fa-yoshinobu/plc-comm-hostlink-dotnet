@@ -33,10 +33,10 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-echo [5/5] Packing NuGet package...
-dotnet pack src\PlcComm.KvHostLink\PlcComm.KvHostLink.csproj -c Release
+echo [5/5] Packing and validating NuGet package contents...
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\check_package_contents.ps1 -Configuration Release
 if %errorlevel% neq 0 (
-    echo [ERROR] Pack failed.
+    echo [ERROR] NuGet package content check failed.
     exit /b %errorlevel%
 )
 

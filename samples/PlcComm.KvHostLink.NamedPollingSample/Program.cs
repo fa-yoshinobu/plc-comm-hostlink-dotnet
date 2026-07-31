@@ -2,7 +2,7 @@ using PlcComm.KvHostLink;
 
 if (args.Length < 4)
 {
-    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- <host> <port> <transport> <plc-profile>");
+    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- <host> <port> <transport> <plc-profile> [--allow-writes]");
     Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.NamedPollingSample -- 192.168.250.100 8501 tcp keyence:kv-8000");
     return;
 }
@@ -16,6 +16,7 @@ var transport = args[2].ToLowerInvariant() switch
     _ => throw new ArgumentException("transport must be tcp or udp."),
 };
 var plcProfile = args[3];
+var allowWrites = args.Skip(4).Contains("--allow-writes", StringComparer.Ordinal);
 const string bitWordAddress = "DM126";
 string bit0Address = $"{bitWordAddress}.0";
 string bit3Address = $"{bitWordAddress}.3";
@@ -31,18 +32,28 @@ bool originalBit3 = (bool)originalBits[bit3Address];
 
 try
 {
-    // Set individual bits in a word device; see docsrc/user/GOTCHAS.md before adapting bit address notation.
-    await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 0, value: true);
-    await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 3, value: false);
-    Console.WriteLine($"Updated {bitWordAddress} bit0=True bit3=False");
+    bool expectedBit0 = originalBit0;
+    bool expectedBit3 = originalBit3;
+    if (allowWrites)
+    {
+        expectedBit0 = !originalBit0;
+        expectedBit3 = !originalBit3;
+        await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 0, value: expectedBit0);
+        await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 3, value: expectedBit3);
+        Console.WriteLine($"Updated {bitWordAddress} bit0={expectedBit0} bit3={expectedBit3}");
+    }
+    else
+    {
+        Console.WriteLine("[Read-only] Bit writes skipped. Add --allow-writes only for a controlled test word.");
+    }
 
     string[] snapshotAddresses = ["DM0:U", "DM1:S", "DM2:D", "DM4:F", bit0Address, bit3Address];
     // Read a mixed snapshot containing word values and bit-in-word values.
     var snapshot = await client.ReadNamedAsync(snapshotAddresses);
 
-    if ((bool)snapshot[bit0Address] != true)
+    if ((bool)snapshot[bit0Address] != expectedBit0)
         throw new InvalidOperationException($"{bit0Address} readback mismatch");
-    if ((bool)snapshot[bit3Address] != false)
+    if ((bool)snapshot[bit3Address] != expectedBit3)
         throw new InvalidOperationException($"{bit3Address} readback mismatch");
 
     foreach (var (address, value) in snapshot)
@@ -69,10 +80,13 @@ try
 }
 finally
 {
-    // Restore the bits this sample changed.
-    await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 0, value: originalBit0);
-    await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 3, value: originalBit3);
-    Console.WriteLine($"Restored {bit0Address}/{bit3Address}");
+    if (allowWrites)
+    {
+        // Restore the bits this sample changed.
+        await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 0, value: originalBit0);
+        await client.WriteBitInWordAsync(bitWordAddress, bitIndex: 3, value: originalBit3);
+        Console.WriteLine($"Restored {bit0Address}/{bit3Address}");
+    }
 }
 
 Console.WriteLine("Done.");

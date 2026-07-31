@@ -24,6 +24,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private NetworkStream? _tcpStream;
     private UdpClient? _udp;
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly object _lifecycleSync = new();
+    private CancellationTokenSource _lifetimeCancellation = new();
+    private Task? _closeTask;
+    private int _closing;
+    private int _disposed;
     private byte[] _rxBuf = new byte[4096];
     private int _rxStart;
     private int _rxCount;
@@ -74,75 +79,109 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Action<HostLinkTraceFrame>? TraceHook { get; set; }
 
-    public bool IsOpen => _transportMode == HostLinkTransportMode.Tcp ? _tcpStream is not null : _udp is not null;
+    /// <summary>Gets whether the selected TCP or UDP transport is currently open.</summary>
+    public bool IsOpen
+    {
+        get
+        {
+            lock (_lifecycleSync)
+                return _transportMode == HostLinkTransportMode.Tcp ? _tcpStream is not null : _udp is not null;
+        }
+    }
 
-    public async Task OpenAsync(CancellationToken cancellationToken = default)
+    /// <summary>Opens the configured transport without retrying.</summary>
+    /// <remarks>
+    /// An internal connect timeout throws <see cref="HostLinkTimeoutError"/>;
+    /// caller cancellation throws <see cref="OperationCanceledException"/>.
+    /// </remarks>
+    public Task OpenAsync(CancellationToken cancellationToken = default)
+        => ExecuteExclusiveAsync(() => OpenCoreAsync(cancellationToken), cancellationToken);
+
+    private async Task OpenCoreAsync(CancellationToken cancellationToken)
     {
         if (IsOpen) return;
 
-        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        CancellationTokenSource lifetime = CaptureLifetime();
+        if (_transportMode == HostLinkTransportMode.Tcp)
         {
-            if (IsOpen) return;
-
-            if (_transportMode == HostLinkTransportMode.Tcp)
+            var tcp = new TcpClient();
+            using var operationCancellation = new KvHostLinkOperationCancellation(
+                cancellationToken,
+                lifetime.Token,
+                Timeout);
+            try
             {
-                var tcp = new TcpClient();
-                using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                linked.CancelAfter(Timeout);
-                try
+                await tcp.ConnectAsync(_host, _port, operationCancellation.Token).ConfigureAwait(false);
+                tcp.NoDelay = true;
+                NetworkStream stream = tcp.GetStream();
+                lock (_lifecycleSync)
                 {
-                    await tcp.ConnectAsync(_host, _port, linked.Token).ConfigureAwait(false);
-                    tcp.NoDelay = true;
+                    if (_disposed != 0 || _closing != 0 ||
+                        !ReferenceEquals(lifetime, _lifetimeCancellation) || lifetime.IsCancellationRequested ||
+                        operationCancellation.Token.IsCancellationRequested)
+                    {
+                        throw operationCancellation.Translate(
+                            new OperationCanceledException(operationCancellation.Token),
+                            "TCP connect");
+                    }
                     _tcp = tcp;
-                    _tcpStream = tcp.GetStream();
-                }
-                catch
-                {
-                    tcp.Dispose();
-                    throw;
+                    _tcpStream = stream;
+                    ResetProtocolStateNoLock();
                 }
             }
-            else
+            catch (Exception error)
             {
-                var udp = new UdpClient();
-                using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                linked.CancelAfter(Timeout);
-                try
+                tcp.Dispose();
+                throw operationCancellation.Translate(error, "TCP connect");
+            }
+            return;
+        }
+
+        var udp = new UdpClient();
+        using (var operationCancellation = new KvHostLinkOperationCancellation(
+            cancellationToken,
+            lifetime.Token,
+            Timeout))
+        {
+            try
+            {
+                await udp.Client.ConnectAsync(_host, _port, operationCancellation.Token).ConfigureAwait(false);
+                lock (_lifecycleSync)
                 {
-                    await udp.Client.ConnectAsync(_host, _port, linked.Token).ConfigureAwait(false);
+                    if (_disposed != 0 || _closing != 0 ||
+                        !ReferenceEquals(lifetime, _lifetimeCancellation) || lifetime.IsCancellationRequested ||
+                        operationCancellation.Token.IsCancellationRequested)
+                    {
+                        throw operationCancellation.Translate(
+                            new OperationCanceledException(operationCancellation.Token),
+                            "UDP connect");
+                    }
                     _udp = udp;
-                }
-                catch
-                {
-                    udp.Dispose();
-                    throw;
+                    ResetProtocolStateNoLock();
                 }
             }
-            _rxStart = 0; _rxCount = 0;
-        }
-        finally
-        {
-            _lock.Release();
+            catch (Exception error)
+            {
+                udp.Dispose();
+                throw operationCancellation.Translate(error, "UDP connect");
+            }
         }
     }
 
+    /// <summary>Opens the configured transport synchronously without retrying.</summary>
     public void Open() => OpenAsync().GetAwaiter().GetResult();
 
+    /// <summary>Closes the transport and interrupts active I/O.</summary>
     public void Close()
-    {
-        _lock.Wait();
-        try
-        {
-            CloseTransport();
-        }
-        finally
-        {
-            _lock.Release();
-        }
-    }
+        => BeginClose(disposing: false).GetAwaiter().GetResult();
 
     private void CloseTransport()
+    {
+        lock (_lifecycleSync)
+            CloseTransportNoLock();
+    }
+
+    private void CloseTransportNoLock()
     {
         _tcpStream?.Dispose();
         _tcpStream = null;
@@ -150,24 +189,90 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         _tcp = null;
         _udp?.Dispose();
         _udp = null;
+        ResetProtocolStateNoLock();
+    }
+
+    private void ResetProtocolStateNoLock()
+    {
         _rxStart = 0; _rxCount = 0;
         _skipLeadingSeparators = false;
         _monitorBitCount = 0;
         _monitorWordFormats = [];
     }
 
-    public Task CloseAsync()
+    /// <summary>Closes the transport, promptly interrupts active I/O, and asynchronously awaits cleanup.</summary>
+    public Task CloseAsync() => BeginClose(disposing: false);
+
+    /// <summary>Closes the transport, interrupts active I/O, and disposes the client.</summary>
+    public void Dispose()
+        => BeginClose(disposing: true).GetAwaiter().GetResult();
+
+    /// <summary>Closes the transport, interrupts active I/O, and asynchronously disposes the client.</summary>
+    public ValueTask DisposeAsync() => new(BeginClose(disposing: true));
+
+    private Task BeginClose(bool disposing)
     {
-        Close();
-        return Task.CompletedTask;
+        lock (_lifecycleSync)
+        {
+            if (disposing)
+            {
+                if (_disposed != 0)
+                    return _closeTask ?? Task.CompletedTask;
+                _disposed = 1;
+            }
+            else if (_disposed != 0)
+                return _closeTask ?? Task.CompletedTask;
+
+            if (_closeTask is not null)
+                return _closeTask;
+
+            _closing = 1;
+            _lifetimeCancellation.Cancel();
+            CloseTransportNoLock();
+            var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _closeTask = completion.Task;
+            _ = FinishCloseAsync(completion);
+            return completion.Task;
+        }
     }
 
-    public void Dispose() => Close();
-
-    public ValueTask DisposeAsync()
+    private async Task FinishCloseAsync(TaskCompletionSource completion)
     {
-        Close();
-        return ValueTask.CompletedTask;
+        CancellationTokenSource? retiredLifetime = null;
+        try
+        {
+            await _lock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                lock (_lifecycleSync)
+                {
+                    CloseTransportNoLock();
+                    retiredLifetime = _lifetimeCancellation;
+                    if (_disposed == 0)
+                        _lifetimeCancellation = new CancellationTokenSource();
+                    _closing = 0;
+                    _closeTask = null;
+                }
+            }
+            finally
+            {
+                _lock.Release();
+            }
+            completion.SetResult();
+        }
+        catch (Exception error)
+        {
+            lock (_lifecycleSync)
+            {
+                _closing = 0;
+                _closeTask = null;
+            }
+            completion.SetException(error);
+        }
+        finally
+        {
+            retiredLifetime?.Dispose();
+        }
     }
 
     private void FireTrace(HostLinkTraceDirection direction, byte[] data)
@@ -189,9 +294,21 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
     internal async Task<T> ExecuteExclusiveAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
     {
-        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        CancellationTokenSource lifetime = CaptureLifetime();
+        using var operationCancellation = new KvHostLinkOperationCancellation(
+            cancellationToken,
+            lifetime.Token);
         try
         {
+            await _lock.WaitAsync(operationCancellation.Token).ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            throw operationCancellation.Translate(error, "gate wait");
+        }
+        try
+        {
+            EnsureLifetimeCurrent(lifetime);
             return await operation().ConfigureAwait(false);
         }
         finally
@@ -202,9 +319,21 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
     internal async Task ExecuteExclusiveAsync(Func<Task> operation, CancellationToken cancellationToken)
     {
-        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        CancellationTokenSource lifetime = CaptureLifetime();
+        using var operationCancellation = new KvHostLinkOperationCancellation(
+            cancellationToken,
+            lifetime.Token);
         try
         {
+            await _lock.WaitAsync(operationCancellation.Token).ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            throw operationCancellation.Translate(error, "gate wait");
+        }
+        try
+        {
+            EnsureLifetimeCurrent(lifetime);
             await operation().ConfigureAwait(false);
         }
         finally
@@ -213,41 +342,67 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         }
     }
 
+    private CancellationTokenSource CaptureLifetime()
+    {
+        lock (_lifecycleSync)
+        {
+            ObjectDisposedException.ThrowIf(_disposed != 0, this);
+            if (_closing != 0)
+                throw new HostLinkConnectionError("Host Link client is closing.");
+            return _lifetimeCancellation;
+        }
+    }
+
+    private void EnsureLifetimeCurrent(CancellationTokenSource lifetime)
+    {
+        lock (_lifecycleSync)
+        {
+            ObjectDisposedException.ThrowIf(_disposed != 0, this);
+            if (_closing != 0 || !ReferenceEquals(lifetime, _lifetimeCancellation) || lifetime.IsCancellationRequested)
+                throw new HostLinkConnectionError("Host Link connection lifetime changed before the operation could run.");
+        }
+    }
+
     private async Task<byte[]> SendRawCoreAsync(string body, CancellationToken cancellationToken)
     {
         if (!IsOpen)
             throw new HostLinkNotConnectedError();
 
+        CancellationTokenSource lifetime = CaptureLifetime();
         var frame = KvHostLinkProtocol.BuildFrame(body);
         FireTrace(HostLinkTraceDirection.Send, frame);
         if (_transportMode == HostLinkTransportMode.Tcp)
         {
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            linked.CancelAfter(Timeout);
+            using var operationCancellation = new KvHostLinkOperationCancellation(
+                cancellationToken,
+                lifetime.Token,
+                Timeout);
             try
             {
-                await _tcpStream!.WriteAsync(frame, linked.Token).ConfigureAwait(false);
+                await _tcpStream!.WriteAsync(frame, operationCancellation.Token).ConfigureAwait(false);
                 RecordSend(frame.Length);
-                var response = await RecvTcpFrameAsync(linked.Token).ConfigureAwait(false);
+                var response = await RecvTcpFrameAsync(operationCancellation.Token).ConfigureAwait(false);
                 RecordReceive(response.CountedLength);
                 FireTrace(HostLinkTraceDirection.Receive, response.Frame);
                 return response.Body;
             }
-            catch
+            catch (Exception error)
             {
                 CloseTransport();
-                throw;
+                throw operationCancellation.Translate(error, "TCP exchange");
             }
         }
 
-        using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+        using (var operationCancellation = new KvHostLinkOperationCancellation(
+            cancellationToken,
+            lifetime.Token,
+            Timeout))
         {
-            linked.CancelAfter(Timeout);
             try
             {
-                await _udp!.SendAsync(frame, linked.Token).ConfigureAwait(false);
+                await _udp!.SendAsync(frame, operationCancellation.Token).ConfigureAwait(false);
                 RecordSend(frame.Length);
-                var result = await _udp.ReceiveAsync(linked.Token).ConfigureAwait(false);
+                var result = await _udp.ReceiveAsync(operationCancellation.Token).ConfigureAwait(false);
                 FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
                 byte[] responseBody = KvHostLinkProtocol.ExtractBody(result.Buffer);
                 RecordReceive(result.Buffer.Length);
@@ -255,12 +410,12 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                     throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
                 return responseBody;
             }
-            catch
+            catch (Exception error)
             {
                 // Host Link has no transaction ID. A failed datagram exchange
                 // must never leave a delayed response for the next request.
                 CloseTransport();
-                throw;
+                throw operationCancellation.Translate(error, "UDP exchange");
             }
         }
     }

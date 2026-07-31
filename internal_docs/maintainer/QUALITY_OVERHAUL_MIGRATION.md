@@ -457,3 +457,85 @@ Acceptance criteria:
 - [x] Live PLC verification is not required for this deterministic local framing and counter contract.
 - [x] Documentation, migration notes, changelog, and generated API reference agree with the implementation.
 - [x] Final acceptance criteria verified and the item marked complete.
+
+## 2026-08 Host Link evaluation corrections
+
+The approved GOAL records and machine-verifiable acceptance criteria are kept
+in `TODO.md` under the stable identifiers below. These are intentional contract
+corrections; no compatibility aliases or fallback behavior are retained.
+
+### HL-EVAL-001: Float32 direct-bit writes
+
+Scope: `WriteTypedAsync` on direct and queued clients.
+
+Target contract: Float32 writes require a word device and every direct bit
+family is rejected before frame construction or transport I/O.
+
+Compatibility impact and migration: code that passed `F` with `R`, `B`, `MR`,
+`LR`, `CR`, `VB`, `X`, `Y`, `M`, or `L` must choose a word device or a bit data
+type. The former consecutive-bit emission is intentionally unavailable.
+
+### HL-EVAL-005: Banked bit range metadata
+
+Scope: numeric bounds and point counts for `R`, `MR`, `LR`, and `CR` profile rows.
+
+Target contract: the decimal bank and final `00..15` bit field map to
+`bank * 16 + bit`; display strings remain in PLC notation and are not transport
+guards.
+
+Compatibility impact and migration: consumers that cached the former decimal
+interpretation must refresh catalog-derived bounds and counts. Display values
+and communication behavior do not change.
+
+### HL-EVAL-017: Timeout exception identity
+
+Scope: direct and queued TCP/UDP connect, send, and receive operations.
+
+Target contract: an internal timeout throws `HostLinkTimeoutError` (derived
+from `HostLinkConnectionError`); only the caller's token produces
+`OperationCanceledException`. The failed connection is invalidated without
+retry.
+
+Compatibility impact and migration: cancellation handling that treated every
+`OperationCanceledException` as a timeout must catch `HostLinkTimeoutError`
+instead. Existing broad `HostLinkConnectionError` handling continues to catch
+the new timeout leaf.
+
+### HL-EVAL-018: Prompt close and disposal
+
+Scope: direct and queued `Close`, `CloseAsync`, `Dispose`, and `DisposeAsync`.
+
+Target contract: close begins by blocking new work, cancelling the connection
+lifetime, and closing the socket before awaiting gate cleanup. Old queued work
+is never sent on a reopened connection.
+
+Compatibility impact and migration: in-flight work now fails promptly with
+`HostLinkConnectionError` instead of waiting for the configured response
+timeout. Callers must explicitly reopen and decide whether a new operation is
+appropriate; the library never retries it.
+
+### HL-EVAL-019: Immutable profile collections
+
+Scope: `KvHostLinkPlcProfiles.GetNames()` and
+`GetProfileDescriptors()` shared backing storage.
+
+Target contract: cached read-only collection objects preserve names and order
+without exposing a mutable backing array or mutable collection operations.
+
+Compatibility impact and migration: supported enumeration is unchanged. Code
+that cast the returned object and mutated library state must copy it into its
+own collection before making application-local changes.
+
+### HL-EVAL-024: GitHub source archive and NuGet separation
+
+Scope: Git attributes, archive validation, test fixtures, documentation tools,
+sample builds, and NuGet package-content validation.
+
+Target contract: GitHub source archives are self-contained for restore, build,
+nonzero tests, format, documentation, all samples, and package checks. NuGet
+packages independently remain limited to assemblies/XML docs, package
+metadata, README, and license.
+
+Compatibility impact and migration: source archives are larger because tests
+and their required validation scripts are included. NuGet consumers receive no
+additional repository-only content.

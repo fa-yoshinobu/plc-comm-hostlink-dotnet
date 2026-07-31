@@ -219,6 +219,45 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.Equal(["RDS DM200.U 2", "WRS DM200.U 2 0 16712"], server.ReceivedCommands.ToArray());
     }
 
+    [Theory]
+    [InlineData("R0")]
+    [InlineData("B0")]
+    [InlineData("MR0")]
+    [InlineData("LR0")]
+    [InlineData("CR0")]
+    [InlineData("VB0")]
+    [InlineData("X0")]
+    [InlineData("Y0")]
+    [InlineData("M0")]
+    [InlineData("L0")]
+    public async Task WriteTypedAsync_RejectsFloatForEveryDirectBitFamilyBeforeSend(string device)
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(
+            () => client.WriteTypedAsync(device, "F", 12.5f));
+
+        Assert.Empty(server.ReceivedCommands);
+    }
+
+    [Fact]
+    public async Task QueuedWriteTypedAsync_RejectsDirectBitFloatBeforeSend()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        using var inner = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await using var queued = new QueuedKvHostLinkClient(inner);
+        await queued.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(
+            () => queued.WriteTypedAsync("R0", "F", 12.5f));
+
+        Assert.Empty(server.ReceivedCommands);
+    }
+
     [Fact]
     public async Task ReadTypedAsync_WriteTypedAsync_And_ReadNamedAsync_SupportHexSuffix()
     {

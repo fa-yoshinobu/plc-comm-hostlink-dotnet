@@ -106,6 +106,28 @@ public HostLinkProtocolError(string message)
 public HostLinkProtocolError(string message, Exception inner)
 ```
 
+### HostLinkTimeoutError
+
+```csharp
+public sealed class HostLinkTimeoutError
+```
+
+Thrown when the library's configured connect, send, or receive timeout expires.
+
+#### Members
+
+##### HostLinkTimeoutError
+
+```csharp
+public HostLinkTimeoutError(string message)
+```
+
+##### HostLinkTimeoutError
+
+```csharp
+public HostLinkTimeoutError(string message, Exception inner)
+```
+
 ### HostLinkTrafficStats
 
 ```csharp
@@ -599,11 +621,17 @@ public KvHostLinkClient(string host, int port, HostLinkTransportMode transportMo
 public Task OpenAsync(CancellationToken cancellationToken = default)
 ```
 
+Opens the configured transport without retrying.
+
+Remarks: An internal connect timeout throws `HostLinkTimeoutError`; caller cancellation throws `OperationCanceledException`.
+
 ##### Open
 
 ```csharp
 public void Open()
 ```
+
+Opens the configured transport synchronously without retrying.
 
 ##### Close
 
@@ -611,11 +639,15 @@ public void Open()
 public void Close()
 ```
 
+Closes the transport and interrupts active I/O.
+
 ##### CloseAsync
 
 ```csharp
 public Task CloseAsync()
 ```
+
+Closes the transport, promptly interrupts active I/O, and asynchronously awaits cleanup.
 
 ##### Dispose
 
@@ -623,11 +655,15 @@ public Task CloseAsync()
 public void Dispose()
 ```
 
+Closes the transport, interrupts active I/O, and disposes the client.
+
 ##### DisposeAsync
 
 ```csharp
 public ValueTask DisposeAsync()
 ```
+
+Closes the transport, interrupts active I/O, and asynchronously disposes the client.
 
 ##### ChangeModeAsync
 
@@ -871,6 +907,8 @@ Gets or sets the operation timeout from 1 through `MaxValue` milliseconds.
 public bool IsOpen { get; }
 ```
 
+Gets whether the selected TCP or UDP transport is currently open.
+
 ### KvHostLinkClientExtensions
 
 ```csharp
@@ -965,7 +1003,7 @@ public static Task WriteTypedAsync<T>(KvHostLinkClient client, string device, st
 
 Writes a single device value using a high-level data type code.
 
-Remarks: The float helper is implemented at the extension layer by converting the input value to IEEE 754 float32 and writing two consecutive `.U` words.
+Remarks: The float helper is implemented at the extension layer by converting the input value to IEEE 754 float32 and writing two consecutive `.U` words. Direct bit device families cannot represent that two-word value and are rejected before transport I/O.
 
 Parameters:
 - `client`: The client to use.
@@ -990,7 +1028,7 @@ public static Task WriteTypedAsync<T>(QueuedKvHostLinkClient client, string devi
 
 Writes a single device value using a high-level data type code.
 
-Remarks: The float helper is implemented at the extension layer by converting the input value to IEEE 754 float32 and writing two consecutive `.U` words.
+Remarks: The float helper is implemented at the extension layer by converting the input value to IEEE 754 float32 and writing two consecutive `.U` words. Direct bit device families cannot represent that two-word value and are rejected before transport I/O.
 
 Parameters:
 - `client`: The client to use.
@@ -1817,7 +1855,9 @@ Remarks: Call this once after construction or again after an intentional disconn
 public Task CloseAsync(CancellationToken cancellationToken = default)
 ```
 
-Closes the connection asynchronously with exclusive access.
+Closes the connection, interrupts active I/O, and rejects queued work from that connection.
+
+Remarks: Cancellation stops only the caller's wait for close completion; the initiated close continues.
 
 ##### ExecuteAsync
 

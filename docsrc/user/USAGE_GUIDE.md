@@ -52,6 +52,14 @@ accept only `0`, `1`, `OFF`, or `ON`; numeric reads of direct-bit devices requir
 corresponding 16- or 32-point response. A malformed response shape invalidates
 the session before another request.
 
+The configured timeout applies to TCP and UDP connect/send/receive work. When
+that library timer expires, the operation throws `HostLinkTimeoutError`, which
+derives from `HostLinkConnectionError`, and the connection is invalidated.
+`OperationCanceledException` is reserved for a cancellation token supplied by
+the caller. `CloseAsync` and `DisposeAsync` promptly interrupt active I/O with
+`HostLinkConnectionError`, reject queued work from the old connection, and do
+not reconnect or retry it.
+
 ## Performance notes
 
 Choose TCP or UDP explicitly for every endpoint. TCP provides stream delivery;
@@ -128,6 +136,8 @@ finally
 ```
 
 This is a matched read/write/readback pattern. Keep it on a test address until you know the register is safe for your machine.
+Float32 (`F`) writes require a word device. Direct bit targets such as `R0`,
+`MR0`, `X0`, or `Y0` are rejected before any frame is sent.
 
 ## Named snapshot read
 
@@ -324,9 +334,13 @@ The `samples/` directory contains ready-to-run projects for the most common high
 
 | Project | What it demonstrates |
 |---|---|
-| `samples\PlcComm.KvHostLink.HighLevelSample\PlcComm.KvHostLink.HighLevelSample.csproj` | Full high-level API: typed reads/writes, block reads, bit-in-word, named snapshots, and polling. |
-| `samples\PlcComm.KvHostLink.BasicReadWriteSample\PlcComm.KvHostLink.BasicReadWriteSample.csproj` | Basic typed read/write for unsigned, signed, double-word, and float values. |
-| `samples\PlcComm.KvHostLink.NamedPollingSample\PlcComm.KvHostLink.NamedPollingSample.csproj` | Named polling with `PollAsync`. |
+| `samples\PlcComm.KvHostLink.HighLevelSample\PlcComm.KvHostLink.HighLevelSample.csproj` | Full high-level API with read-only defaults and opt-in write/restore demonstrations. |
+| `samples\PlcComm.KvHostLink.BasicReadWriteSample\PlcComm.KvHostLink.BasicReadWriteSample.csproj` | Typed and block reads plus an opt-in random write/readback/restore demonstration. |
+| `samples\PlcComm.KvHostLink.NamedPollingSample\PlcComm.KvHostLink.NamedPollingSample.csproj` | Named polling plus opt-in bit-in-word write/restore. |
+
+All six runnable samples are read-only by default. The three write
+demonstrations require `--allow-writes` and must be used only with controlled
+test addresses; see `samples/README.md` for the exact commands.
 
 ## Traffic statistics
 

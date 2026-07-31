@@ -263,7 +263,8 @@ public static class KvHostLinkClientExtensions
     /// <remarks>
     /// The float helper is implemented at the extension layer by converting
     /// the input value to IEEE 754 float32 and writing two consecutive
-    /// <c>.U</c> words.
+    /// <c>.U</c> words. Direct bit device families cannot represent that
+    /// two-word value and are rejected before transport I/O.
     /// </remarks>
     public static async Task WriteTypedAsync<T>(
         this KvHostLinkClient client,
@@ -278,6 +279,13 @@ public static class KvHostLinkClientExtensions
 
         if (normalized == "F")
         {
+            var address = KvHostLinkDevice.RequireBaseDevice(device);
+            if (KvHostLinkModels.DirectBitDeviceTypes.Contains(address.DeviceType))
+            {
+                throw new HostLinkProtocolError(
+                    $"Float32 writes are not valid for direct bit device '{address.DeviceType}'.");
+            }
+
             float single = Convert.ToSingle(value, CultureInfo.InvariantCulture);
             int bits = BitConverter.SingleToInt32Bits(single);
             ushort loWord = unchecked((ushort)(bits & 0xFFFF));

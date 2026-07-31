@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Library: Added `HostLinkTimeoutError` to distinguish internal TCP/UDP connect, send, and receive timeouts from caller-requested `OperationCanceledException`.
+- Library: `Close`, `CloseAsync`, `Dispose`, and `DisposeAsync` now invalidate the connection lifetime and promptly interrupt active direct or queued I/O; queued work from the old connection is rejected and never replayed.
+- Library: Float32 writes to every direct bit device family are rejected before transport instead of being emitted as consecutive bit writes.
+- Library: Corrected `R`, `MR`, `LR`, and `CR` catalog bounds and point counts by decoding the final decimal `00..15` bit field as `bank * 16 + bit` while preserving PLC display notation.
+- Library: Protected the cached profile-name and profile-descriptor collections from mutation through backing-array or mutable-interface casts.
+- Samples: Made every runnable sample read-only by default; write demonstrations now require `--allow-writes`, use changing test values, and restore captured values.
+- Tests: Added deterministic timeout/caller-cancellation/close race coverage, direct-bit Float rejection vectors, full banked-range checks, immutable-collection mutation attempts, and sample safety checks.
+- CI: GitHub source archives now include tests, fixtures, and the scripts needed for restore/build/test/format/documentation/package verification; a separate guard keeps NuGet packages minimal.
 - Docs: README documentation links now include the shared Performance and Choosing a Language pages, and package registry metadata was expanded for discoverability. No functional change.
 
 ## [3.2.1] - 2026-07-29

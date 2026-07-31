@@ -2,7 +2,7 @@ using PlcComm.KvHostLink;
 
 if (args.Length < 4)
 {
-    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.BasicReadWriteSample -- <host> <port> <transport> <plc-profile>");
+    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.BasicReadWriteSample -- <host> <port> <transport> <plc-profile> [--allow-writes]");
     Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.BasicReadWriteSample -- 192.168.250.100 8501 tcp keyence:kv-8000");
     return;
 }
@@ -16,6 +16,7 @@ var transport = args[2].ToLowerInvariant() switch
     _ => throw new ArgumentException("transport must be tcp or udp."),
 };
 var plcProfile = args[3];
+var allowWrites = args.Skip(4).Contains("--allow-writes", StringComparer.Ordinal);
 const string targetU16 = "DM120";
 const string targetI16 = "DM121";
 const string targetU32 = "DM122";
@@ -36,46 +37,57 @@ Console.WriteLine($"DM1(S)={dm1}");
 Console.WriteLine($"DM2(D)={dm2}");
 Console.WriteLine($"DM4(F)={dm4}");
 
-// Capture original test-register values so the sample can restore them.
-ushort originalU16 = (ushort)await client.ReadTypedAsync(targetU16, "U");
-short originalI16 = (short)await client.ReadTypedAsync(targetI16, "S");
-uint originalU32 = (uint)await client.ReadTypedAsync(targetU32, "D");
-float originalF32 = (float)await client.ReadTypedAsync(targetF32, "F");
-
-try
+if (allowWrites)
 {
-    // Write only to DM addresses that are safe in your PLC program; see docsrc/user/GOTCHAS.md before adapting this.
-    await client.WriteTypedAsync(targetU16, "U", dm0);
-    await client.WriteTypedAsync(targetI16, "S", dm1);
-    await client.WriteTypedAsync(targetU32, "D", dm2);
-    await client.WriteTypedAsync(targetF32, "F", dm4);
+    // Capture original test-register values so the sample can restore them.
+    ushort originalU16 = (ushort)await client.ReadTypedAsync(targetU16, "U");
+    short originalI16 = (short)await client.ReadTypedAsync(targetI16, "S");
+    uint originalU32 = (uint)await client.ReadTypedAsync(targetU32, "D");
+    float originalF32 = (float)await client.ReadTypedAsync(targetF32, "F");
+    ushort testU16 = (ushort)Random.Shared.Next(0, ushort.MaxValue + 1);
+    short testI16 = (short)Random.Shared.Next(short.MinValue, short.MaxValue + 1);
+    uint testU32 = (uint)Random.Shared.NextInt64(0, (long)uint.MaxValue + 1);
+    float testF32 = (Random.Shared.NextSingle() * 20_000f) - 10_000f;
 
-    // Read back each test address with the matching type suffix.
-    ushort readbackU16 = (ushort)await client.ReadTypedAsync(targetU16, "U");
-    short readbackI16 = (short)await client.ReadTypedAsync(targetI16, "S");
-    uint readbackU32 = (uint)await client.ReadTypedAsync(targetU32, "D");
-    float readbackF32 = (float)await client.ReadTypedAsync(targetF32, "F");
+    try
+    {
+        // Use only DM addresses that are safe in a controlled PLC test program.
+        await client.WriteTypedAsync(targetU16, "U", testU16);
+        await client.WriteTypedAsync(targetI16, "S", testI16);
+        await client.WriteTypedAsync(targetU32, "D", testU32);
+        await client.WriteTypedAsync(targetF32, "F", testF32);
 
-    if (readbackU16 != dm0)
-        throw new InvalidOperationException($"{targetU16} readback mismatch: expected {dm0}, got {readbackU16}");
-    if (readbackI16 != dm1)
-        throw new InvalidOperationException($"{targetI16} readback mismatch: expected {dm1}, got {readbackI16}");
-    if (readbackU32 != dm2)
-        throw new InvalidOperationException($"{targetU32} readback mismatch: expected {dm2}, got {readbackU32}");
-    if (Math.Abs(readbackF32 - dm4) > 0.0001f)
-        throw new InvalidOperationException($"{targetF32} readback mismatch: expected {dm4}, got {readbackF32}");
+        // Read back each test address with the matching type suffix.
+        ushort readbackU16 = (ushort)await client.ReadTypedAsync(targetU16, "U");
+        short readbackI16 = (short)await client.ReadTypedAsync(targetI16, "S");
+        uint readbackU32 = (uint)await client.ReadTypedAsync(targetU32, "D");
+        float readbackF32 = (float)await client.ReadTypedAsync(targetF32, "F");
 
-    Console.WriteLine($"Mirrored source values into {targetU16}/{targetI16}/{targetU32}/{targetF32}");
-    Console.WriteLine("Readback verified");
+        if (readbackU16 != testU16)
+            throw new InvalidOperationException($"{targetU16} readback mismatch: expected {testU16}, got {readbackU16}");
+        if (readbackI16 != testI16)
+            throw new InvalidOperationException($"{targetI16} readback mismatch: expected {testI16}, got {readbackI16}");
+        if (readbackU32 != testU32)
+            throw new InvalidOperationException($"{targetU32} readback mismatch: expected {testU32}, got {readbackU32}");
+        if (Math.Abs(readbackF32 - testF32) > 0.0001f)
+            throw new InvalidOperationException($"{targetF32} readback mismatch: expected {testF32}, got {readbackF32}");
+
+        Console.WriteLine($"Wrote random test values into {targetU16}/{targetI16}/{targetU32}/{targetF32}");
+        Console.WriteLine("Readback verified");
+    }
+    finally
+    {
+        // Restore the original values even if a readback check fails.
+        await client.WriteTypedAsync(targetU16, "U", originalU16);
+        await client.WriteTypedAsync(targetI16, "S", originalI16);
+        await client.WriteTypedAsync(targetU32, "D", originalU32);
+        await client.WriteTypedAsync(targetF32, "F", originalF32);
+        Console.WriteLine($"Restored {targetU16}/{targetI16}/{targetU32}/{targetF32}");
+    }
 }
-finally
+else
 {
-    // Restore the original values even if a readback check fails.
-    await client.WriteTypedAsync(targetU16, "U", originalU16);
-    await client.WriteTypedAsync(targetI16, "S", originalI16);
-    await client.WriteTypedAsync(targetU32, "D", originalU32);
-    await client.WriteTypedAsync(targetF32, "F", originalF32);
-    Console.WriteLine($"Restored {targetU16}/{targetI16}/{targetU32}/{targetF32}");
+    Console.WriteLine("Write/readback example skipped. Add --allow-writes only for controlled test addresses.");
 }
 
 // Read contiguous blocks when values occupy adjacent DM words.

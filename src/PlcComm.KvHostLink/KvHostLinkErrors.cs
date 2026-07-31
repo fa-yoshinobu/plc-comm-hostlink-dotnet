@@ -37,6 +37,15 @@ public class HostLinkConnectionError : HostLinkError
 }
 
 /// <summary>
+/// Thrown when the library's configured connect, send, or receive timeout expires.
+/// </summary>
+public sealed class HostLinkTimeoutError : HostLinkConnectionError
+{
+    public HostLinkTimeoutError(string message) : base(message) { }
+    public HostLinkTimeoutError(string message, Exception inner) : base(message, inner) { }
+}
+
+/// <summary>
 /// Thrown when a command is attempted before an explicit open or after the transport was closed.
 /// </summary>
 public sealed class HostLinkNotConnectedError : HostLinkConnectionError

@@ -7,13 +7,13 @@
 //   ReadNamedAsync, PollAsync, and KvHostLinkAddress.Normalize.
 //
 // Usage:
-//   dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <transport> <plc-profile>
+//   dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <transport> <plc-profile> [--allow-writes]
 
 using PlcComm.KvHostLink;
 
 if (args.Length < 4)
 {
-    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <transport> <plc-profile>");
+    Console.Error.WriteLine("Usage: dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- <host> <port> <transport> <plc-profile> [--allow-writes]");
     Console.Error.WriteLine("Example: dotnet run --project samples/PlcComm.KvHostLink.HighLevelSample -- 192.168.250.100 8501 tcp keyence:kv-8000");
     return;
 }
@@ -27,6 +27,7 @@ var transport = args[2].ToLowerInvariant() switch
     _ => throw new ArgumentException("transport must be tcp or udp."),
 };
 var plcProfile = args[3];
+var allowWrites = args.Skip(4).Contains("--allow-writes", StringComparer.Ordinal);
 
 // -------------------------------------------------------------------------
 // 1. OpenAndConnectAsync  (recommended entry point)
@@ -80,11 +81,22 @@ var originalDm50Bit4 = (bool)originalBitSnapshot["DM50.4"];
 
 try
 {
-    // Write only to test addresses on your PLC program.
-    await client.WriteTypedAsync("DM100", "U", (ushort)99);
-    await client.WriteTypedAsync("DM200", "L", 123456);
-    await client.WriteTypedAsync("DM300", "F", 12.5f);
-    Console.WriteLine("[WriteTypedAsync] Wrote 99->DM100, 123456->DM200, 12.5->DM300");
+    if (allowWrites)
+    {
+        // The opt-in write path uses random test values and restores the saved values in finally.
+        ushort testDm100 = (ushort)Random.Shared.Next(0, ushort.MaxValue + 1);
+        int testDm200 = (int)Random.Shared.NextInt64(int.MinValue, (long)int.MaxValue + 1);
+        float testDm300 = (Random.Shared.NextSingle() * 20_000f) - 10_000f;
+        await client.WriteTypedAsync("DM100", "U", testDm100);
+        await client.WriteTypedAsync("DM200", "L", testDm200);
+        await client.WriteTypedAsync("DM300", "F", testDm300);
+        Console.WriteLine(
+            $"[WriteTypedAsync] Wrote random test values {testDm100}->DM100, {testDm200}->DM200, {testDm300}->DM300");
+    }
+    else
+    {
+        Console.WriteLine("[Read-only] Write examples skipped. Add --allow-writes only for controlled test addresses.");
+    }
 
     // -------------------------------------------------------------------------
     // 3. ReadWordsSingleRequestAsync
@@ -125,10 +137,11 @@ try
     //           word without disturbing the other 15 bits.
     // -------------------------------------------------------------------------
     // See docsrc/user/GOTCHAS.md before adapting bit addresses for X/Y or relay devices.
-    await client.WriteBitInWordAsync("DM50", bitIndex: 4, value: true);
-    Console.WriteLine("[WriteBitInWordAsync] Set   bit 4 of DM50");
-    await client.WriteBitInWordAsync("DM50", bitIndex: 4, value: false);
-    Console.WriteLine("[WriteBitInWordAsync] Clear bit 4 of DM50");
+    if (allowWrites)
+    {
+        await client.WriteBitInWordAsync("DM50", bitIndex: 4, value: !originalDm50Bit4);
+        Console.WriteLine($"[WriteBitInWordAsync] Set DM50 bit 4 to {!originalDm50Bit4}");
+    }
 
     // -------------------------------------------------------------------------
     // 6. ReadNamedAsync
@@ -183,9 +196,12 @@ try
 }
 finally
 {
-    await client.WriteTypedAsync("DM100", "U", originalDm100);
-    await client.WriteTypedAsync("DM200", "L", originalDm200);
-    await client.WriteTypedAsync("DM300", "F", originalDm300);
-    await client.WriteBitInWordAsync("DM50", bitIndex: 4, value: originalDm50Bit4);
-    Console.WriteLine("[Restore] Restored DM100/DM200/DM300 and DM50 bit 4");
+    if (allowWrites)
+    {
+        await client.WriteTypedAsync("DM100", "U", originalDm100);
+        await client.WriteTypedAsync("DM200", "L", originalDm200);
+        await client.WriteTypedAsync("DM300", "F", originalDm300);
+        await client.WriteBitInWordAsync("DM50", bitIndex: 4, value: originalDm50Bit4);
+        Console.WriteLine("[Restore] Restored DM100/DM200/DM300 and DM50 bit 4");
+    }
 }

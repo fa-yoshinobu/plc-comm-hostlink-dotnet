@@ -293,6 +293,11 @@ public static class KvHostLinkDeviceRanges
             return ParseXymSegmentNumber(trimmed);
         }
 
+        if (defaultDevice is "R" or "MR" or "LR" or "CR")
+        {
+            return ParseBitBankSegmentNumber(trimmed);
+        }
+
         return uint.TryParse(
             trimmed,
             notation == KvDeviceRangeNotation.Hexadecimal ? NumberStyles.HexNumber : NumberStyles.Integer,
@@ -320,6 +325,31 @@ public static class KvHostLinkDeviceRanges
             ? 0
             : uint.Parse(bankText, NumberStyles.Integer, CultureInfo.InvariantCulture);
         return checked((bank * 16) + bit);
+    }
+
+    private static uint? ParseBitBankSegmentNumber(string text)
+    {
+        if (text.Length < 2 || text.Any(character => character is < '0' or > '9'))
+        {
+            return null;
+        }
+
+        if (!uint.TryParse(text[^2..], NumberStyles.None, CultureInfo.InvariantCulture, out var bit) || bit > 15)
+        {
+            return null;
+        }
+
+        var bankText = text[..^2];
+        uint bank = 0;
+        if (bankText.Length > 0 &&
+            !uint.TryParse(bankText, NumberStyles.None, CultureInfo.InvariantCulture, out bank))
+        {
+            return null;
+        }
+
+        return bank > (uint.MaxValue - bit) / 16
+            ? null
+            : (bank * 16) + bit;
     }
 
     private static (KvDeviceRangeCategory Category, bool IsBitDevice) DeviceMetadata(string deviceType)

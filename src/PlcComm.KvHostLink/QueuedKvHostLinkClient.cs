@@ -14,16 +14,56 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
 {
     private readonly KvHostLinkClient _client;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly object _lifecycleSync = new();
+    private CancellationTokenSource _lifetimeCancellation = new();
+    private Task? _closeTask;
+    private int _closing;
     private int _disposed;
 
     private async Task EnterAsync(CancellationToken cancellationToken)
     {
-        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
-        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        if (Volatile.Read(ref _disposed) != 0)
+        CancellationTokenSource lifetime = CaptureLifetime();
+        using var operationCancellation = new KvHostLinkOperationCancellation(
+            cancellationToken,
+            lifetime.Token);
+        try
+        {
+            await _gate.WaitAsync(operationCancellation.Token).ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            throw operationCancellation.Translate(error, "queued gate wait");
+        }
+
+        try
+        {
+            EnsureLifetimeCurrent(lifetime);
+        }
+        catch
         {
             _gate.Release();
-            ObjectDisposedException.ThrowIf(true, this);
+            throw;
+        }
+    }
+
+    private CancellationTokenSource CaptureLifetime()
+    {
+        lock (_lifecycleSync)
+        {
+            ObjectDisposedException.ThrowIf(_disposed != 0, this);
+            if (_closing != 0)
+                throw new HostLinkConnectionError("Queued Host Link client is closing.");
+            return _lifetimeCancellation;
+        }
+    }
+
+    private void EnsureLifetimeCurrent(CancellationTokenSource lifetime)
+    {
+        lock (_lifecycleSync)
+        {
+            ObjectDisposedException.ThrowIf(_disposed != 0, this);
+            if (_closing != 0 || !ReferenceEquals(lifetime, _lifetimeCancellation) || lifetime.IsCancellationRequested)
+                throw new HostLinkConnectionError("Queued Host Link connection lifetime changed before the operation could run.");
         }
     }
 
@@ -81,18 +121,16 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
         }
     }
 
-    /// <summary>Closes the connection asynchronously with exclusive access.</summary>
-    public async Task CloseAsync(CancellationToken cancellationToken = default)
+    /// <summary>Closes the connection, interrupts active I/O, and rejects queued work from that connection.</summary>
+    /// <remarks>
+    /// Cancellation stops only the caller's wait for close completion; the initiated close continues.
+    /// </remarks>
+    public Task CloseAsync(CancellationToken cancellationToken = default)
     {
-        await EnterAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            await _client.CloseAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            _gate.Release();
-        }
+        Task closeTask = BeginClose(disposing: false);
+        return cancellationToken.CanBeCanceled
+            ? closeTask.WaitAsync(cancellationToken)
+            : closeTask;
     }
 
     /// <summary>Executes a custom async operation with exclusive access to the wrapped client.</summary>
@@ -331,32 +369,82 @@ public sealed class QueuedKvHostLinkClient : IAsyncDisposable, IDisposable
             cancellationToken);
 
     /// <summary>Disposes the wrapper and the underlying client.</summary>
-    public void Dispose()
+    public void Dispose() => BeginClose(disposing: true).GetAwaiter().GetResult();
+
+    /// <summary>Disposes the wrapper and the underlying client asynchronously.</summary>
+    public ValueTask DisposeAsync() => new(BeginClose(disposing: true));
+
+    private Task BeginClose(bool disposing)
     {
-        if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
-        _gate.Wait();
-        try
+        lock (_lifecycleSync)
         {
-            _client.Dispose();
-        }
-        finally
-        {
-            _gate.Release();
+            if (disposing)
+            {
+                if (_disposed != 0)
+                    return _closeTask ?? Task.CompletedTask;
+                _disposed = 1;
+            }
+            else if (_disposed != 0)
+                return _closeTask ?? Task.CompletedTask;
+
+            if (_closeTask is not null)
+                return _closeTask;
+
+            _closing = 1;
+            _lifetimeCancellation.Cancel();
+            var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _closeTask = completion.Task;
+            _ = FinishCloseAsync(disposing, completion);
+            return completion.Task;
         }
     }
 
-    /// <summary>Disposes the wrapper and the underlying client asynchronously.</summary>
-    public async ValueTask DisposeAsync()
+    private async Task FinishCloseAsync(bool disposing, TaskCompletionSource completion)
     {
-        if (Interlocked.Exchange(ref _disposed, 1) != 0) return;
-        await _gate.WaitAsync().ConfigureAwait(false);
+        CancellationTokenSource? retiredLifetime = null;
         try
         {
-            await _client.DisposeAsync().ConfigureAwait(false);
+            if (disposing)
+                await _client.DisposeAsync().ConfigureAwait(false);
+            else
+                await _client.CloseAsync().ConfigureAwait(false);
+
+            await _gate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                bool disposeInner;
+                lock (_lifecycleSync)
+                {
+                    disposeInner = _disposed != 0 && !disposing;
+                    retiredLifetime = _lifetimeCancellation;
+                    if (_disposed == 0)
+                        _lifetimeCancellation = new CancellationTokenSource();
+                    _closing = 0;
+                    _closeTask = null;
+                }
+
+                if (disposeInner)
+                    await _client.DisposeAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                _gate.Release();
+            }
+
+            completion.SetResult();
+        }
+        catch (Exception error)
+        {
+            lock (_lifecycleSync)
+            {
+                _closing = 0;
+                _closeTask = null;
+            }
+            completion.SetException(error);
         }
         finally
         {
-            _gate.Release();
+            retiredLifetime?.Dispose();
         }
     }
 }

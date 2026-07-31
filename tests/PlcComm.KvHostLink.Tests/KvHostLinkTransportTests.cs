@@ -58,7 +58,7 @@ public sealed class KvHostLinkTransportTests
         };
         await client.OpenAsync();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.SendRawAsync("READ"));
+        await Assert.ThrowsAsync<HostLinkTimeoutError>(() => client.SendRawAsync("READ"));
         Assert.Equal(0UL, client.TrafficStats.RxBytes);
         Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
@@ -151,7 +151,7 @@ public sealed class KvHostLinkTransportTests
         };
 
         await client.OpenAsync();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.SendRawAsync("FIRST"));
+        await Assert.ThrowsAsync<HostLinkTimeoutError>(() => client.SendRawAsync("FIRST"));
         Assert.False(client.IsOpen);
         Assert.Equal(new HostLinkTrafficStats(1, 6, 0), client.TrafficStats);
 

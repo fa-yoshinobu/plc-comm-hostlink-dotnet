@@ -106,8 +106,9 @@ public static class KvHostLinkPlcProfiles
 
     public static KvHostLinkPlcProfile KvX500Xym { get; } = KvX500XymDefinition.ToPublicProfile();
 
-    private static readonly KvHostLinkPlcProfileDefinition[] Profiles =
-    [
+    private static readonly IReadOnlyList<KvHostLinkPlcProfileDefinition> Profiles = Array.AsReadOnly(
+    new KvHostLinkPlcProfileDefinition[]
+    {
         KvNanoDefinition,
         KvNanoXymDefinition,
         Kv3000Definition,
@@ -120,12 +121,14 @@ public static class KvHostLinkPlcProfiles
         Kv8000XymDefinition,
         KvX500Definition,
         KvX500XymDefinition,
-    ];
+    });
 
-    private static readonly string[] ProfileNames = Profiles.Select(profile => profile.Name).ToArray();
+    private static readonly IReadOnlyList<string> ProfileNames = Array.AsReadOnly(
+        Profiles.Select(profile => profile.Name).ToArray());
 
-    private static readonly IReadOnlyList<KvHostLinkPlcProfileDescriptor> ProfileDescriptors =
-    [
+    private static readonly IReadOnlyList<KvHostLinkPlcProfileDescriptor> ProfileDescriptors = Array.AsReadOnly(
+    new KvHostLinkPlcProfileDescriptor[]
+    {
         new("keyence:kv-nano", "KEYENCE KV-NANO", true, null),
         new("keyence:kv-nano-xym", "KEYENCE KV-NANO (XYM)", true, "keyence:kv-nano"),
         new("keyence:kv-3000", "KEYENCE KV-3000", true, null),
@@ -138,7 +141,7 @@ public static class KvHostLinkPlcProfiles
         new("keyence:kv-8000-xym", "KEYENCE KV-8000 (XYM)", true, "keyence:kv-8000"),
         new("keyence:kv-x500", "KEYENCE KV-X500", true, null),
         new("keyence:kv-x500-xym", "KEYENCE KV-X500 (XYM)", true, "keyence:kv-x500"),
-    ];
+    });
 
     public static IReadOnlyList<string> GetNames()
     {

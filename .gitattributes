@@ -11,12 +11,11 @@ internal_docs export-ignore
 internal_docs/** export-ignore
 release-artifacts export-ignore
 release-artifacts/** export-ignore
-scripts export-ignore
-scripts/** export-ignore
-test export-ignore
-test/** export-ignore
-tests export-ignore
-tests/** export-ignore
+scripts/check_no_auto_publish.ps1 export-ignore
+scripts/check_registry_duplicate.ps1 export-ignore
+scripts/check_release_workflow.py export-ignore
+scripts/check_source_archive.ps1 export-ignore
+scripts/update_hostlink_profile_jsons.ps1 export-ignore
 tools export-ignore
 tools/** export-ignore
 build export-ignore

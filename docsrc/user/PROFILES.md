@@ -5,6 +5,8 @@ Use `KvHostLinkPlcProfiles.GetProfileDescriptors()` when a UI or configuration
 schema needs the canonical name, display name, connection availability, and
 base-profile relationship in one list. This descriptor list is the stable
 source for selectors; store `CanonicalName`, not `DisplayName`.
+`GetNames()` and `GetProfileDescriptors()` return cached read-only collections;
+their shared library state cannot be mutated through array or collection casts.
 
 Verified hardware available for focused validation is maintained once in the
 shared [KEYENCE KV Host Link profile catalog](https://github.com/fa-yoshinobu/plc-comm-hostlink-profiles#verified-hardware-available-for-validation).

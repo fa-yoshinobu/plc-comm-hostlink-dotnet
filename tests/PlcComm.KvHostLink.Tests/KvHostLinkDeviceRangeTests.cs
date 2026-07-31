@@ -64,6 +64,28 @@ public sealed class KvHostLinkDeviceRangeTests
     }
 
     [Fact]
+    public void PlcProfileCollections_CannotExposeOrMutateSharedBackingStorage()
+    {
+        IReadOnlyList<string> names = KvHostLinkPlcProfiles.GetNames();
+        Assert.Same(names, KvHostLinkPlcProfiles.GetNames());
+        Assert.False(names is string[]);
+        IList<string> mutableNames = Assert.IsAssignableFrom<IList<string>>(names);
+        Assert.Throws<NotSupportedException>(() => mutableNames[0] = "changed");
+        Assert.Throws<NotSupportedException>(() => mutableNames.Add("changed"));
+
+        IReadOnlyList<KvHostLinkPlcProfileDescriptor> descriptors =
+            KvHostLinkPlcProfiles.GetProfileDescriptors();
+        Assert.Same(descriptors, KvHostLinkPlcProfiles.GetProfileDescriptors());
+        Assert.False(descriptors is KvHostLinkPlcProfileDescriptor[]);
+        IList<KvHostLinkPlcProfileDescriptor> mutableDescriptors =
+            Assert.IsAssignableFrom<IList<KvHostLinkPlcProfileDescriptor>>(descriptors);
+        Assert.Throws<NotSupportedException>(() => mutableDescriptors.Clear());
+
+        Assert.Equal("keyence:kv-nano", KvHostLinkPlcProfiles.GetNames()[0]);
+        Assert.Equal("keyence:kv-nano", KvHostLinkPlcProfiles.GetProfileDescriptors()[0].CanonicalName);
+    }
+
+    [Fact]
     public void DeviceRangeCatalogForPlcProfile_MatchesCanonicalFixture()
     {
         var fixturePath = Path.Combine(AppContext.BaseDirectory, "fixtures", "kv_device_ranges.json");
@@ -221,6 +243,50 @@ public sealed class KvHostLinkDeviceRangeTests
     }
 
     [Fact]
+    public void DeviceRangeCatalogForPlcProfile_NormalizesEveryBankedBitRow()
+    {
+        foreach (string profile in KvHostLinkPlcProfiles.GetNames())
+        {
+            uint expectedR = profile.Contains("nano", StringComparison.Ordinal) ? 9_600u :
+                profile.Contains("3000", StringComparison.Ordinal) || profile.Contains("5000", StringComparison.Ordinal)
+                    ? 16_000u
+                    : 32_000u;
+            uint expectedMr = profile.Contains("nano", StringComparison.Ordinal) ? 9_600u :
+                profile.Contains("3000", StringComparison.Ordinal) || profile.Contains("5000", StringComparison.Ordinal)
+                    ? 16_000u
+                    : 64_000u;
+            uint expectedLr = profile.Contains("nano", StringComparison.Ordinal) ? 3_200u : 16_000u;
+            uint expectedCr = profile.Contains("nano", StringComparison.Ordinal) ? 1_440u :
+                profile.Contains("3000", StringComparison.Ordinal) || profile.Contains("5000", StringComparison.Ordinal)
+                    ? 640u
+                    : 1_280u;
+
+            AssertLogicalBitRange(profile, "R", expectedR);
+            AssertLogicalBitRange(profile, "MR", expectedMr);
+            AssertLogicalBitRange(profile, "LR", expectedLr);
+            AssertLogicalBitRange(profile, "CR", expectedCr);
+        }
+    }
+
+    [Theory]
+    [InlineData("R00000-R199916", "R")]
+    [InlineData("MR00000-MR399999", "MR")]
+    [InlineData("LR00000-LR9991A", "LR")]
+    [InlineData("CR0000-CR7", "CR")]
+    public void DeviceRangeCatalogForPlcProfile_RejectsMalformedBankedBitFields(
+        string segment,
+        string device)
+    {
+        var method = typeof(KvHostLinkDeviceRanges).GetMethod(
+            "ParseSegmentBounds",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        var error = Assert.Throws<TargetInvocationException>(() =>
+            method!.Invoke(null, new object[] { segment, KvDeviceRangeNotation.Decimal, device }));
+        Assert.IsType<HostLinkProtocolError>(error.InnerException);
+    }
+
+    [Fact]
     public void DeviceRangeCatalogForPlcProfile_InvalidRangeSegmentNumbersAreRejected()
     {
         var method = typeof(KvHostLinkDeviceRanges).GetMethod(
@@ -231,6 +297,14 @@ public sealed class KvHostLinkDeviceRangeTests
             method!.Invoke(null, new object[] { "DMX-DM10", KvDeviceRangeNotation.Decimal, "DM" }));
         var inner = Assert.IsType<HostLinkProtocolError>(error.InnerException);
         Assert.Contains("Invalid device range start", inner.Message);
+    }
+
+    private static void AssertLogicalBitRange(string profile, string device, uint expectedPointCount)
+    {
+        KvDeviceRangeEntry entry = KvHostLinkDeviceRanges.DeviceRangeCatalogForPlcProfile(profile).Entry(device)!;
+        Assert.Equal(0u, entry.LowerBound);
+        Assert.Equal(expectedPointCount - 1, entry.UpperBound);
+        Assert.Equal(expectedPointCount, entry.PointCount);
     }
 
     [Fact]
