@@ -32,7 +32,7 @@ Console.CancelKeyPress += (_, eventArgs) =>
     shutdown.Cancel();
 };
 
-QueuedKvHostLinkClient? client = null;
+KvHostLinkClient? client = null;
 var backoff = initialBackoff;
 var connectedOnce = false;
 
@@ -93,7 +93,7 @@ Log("closed", "stopped");
 static bool IsRetryable(Exception ex)
     => ex is IOException or SocketException or TimeoutException or OperationCanceledException or HostLinkConnectionError;
 
-static async Task DisposeClientAsync(QueuedKvHostLinkClient? client)
+static async Task DisposeClientAsync(KvHostLinkClient? client)
 {
     if (client is not null)
     {

@@ -141,7 +141,7 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
-    public async Task DirectBitBitInWordReadAndWritePreserveEveryOtherBit()
+    public async Task DirectBitBitInWordReadPreservesEveryOtherBit()
     {
         string initialBits = string.Join(
             ' ',
@@ -149,8 +149,6 @@ public sealed class KvHostLinkClientExtensionsTests
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
             "RD R000.U" => initialBits,
-            "WR R000.U 32777" => "OK",
-            "WR R000.U 32769" => "OK",
             _ => "E1",
         });
 
@@ -163,14 +161,8 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.True(Assert.IsType<bool>(named["R0.3"]));
         Assert.True(Assert.IsType<bool>(named["R0.F"]));
 
-        await client.WriteBitInWordAsync("R0", 3, true);
-        await client.WriteBitInWordAsync("R0", 3, false);
-
         Assert.Equal(
-            [
-                "RD R000.U", "RD R000.U", "RD R000.U", "RD R000.U",
-                "WR R000.U 32777", "RD R000.U", "WR R000.U 32769",
-            ],
+            ["RD R000.U", "RD R000.U", "RD R000.U"],
             server.ReceivedCommands.ToArray());
     }
 
@@ -244,16 +236,15 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
-    public async Task QueuedWriteTypedAsync_RejectsDirectBitFloatBeforeSend()
+    public async Task NormalClientWriteTypedAsync_RejectsDirectBitFloatBeforeSend()
     {
         await using var server = new ScriptedHostLinkServer(_ => "OK");
-        using var inner = new KvHostLinkClient(
+        await using var client = new KvHostLinkClient(
             "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
-        await using var queued = new QueuedKvHostLinkClient(inner);
-        await queued.OpenAsync();
+        await client.OpenAsync();
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(
-            () => queued.WriteTypedAsync("R0", "F", 12.5f));
+            () => client.WriteTypedAsync("R0", "F", 12.5f));
 
         Assert.Empty(server.ReceivedCommands);
     }
@@ -440,7 +431,7 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
-    public async Task OpenAndConnectAsync_ReturnsQueuedClientThatUsesQueuedHelperOverloads()
+    public async Task OpenAndConnectAsync_ReturnsNormalClientWithIntegratedFifo()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
@@ -457,7 +448,7 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
-    public async Task QueuedClient_ReadCommentsAsync_UsesRdcCommand()
+    public async Task NormalClient_ReadCommentsAsync_UsesRdcCommand()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
         {

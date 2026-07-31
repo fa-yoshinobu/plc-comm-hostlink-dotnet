@@ -2,7 +2,7 @@
 // ===================================
 // Demonstrates all high-level KEYENCE KV Host Link APIs:
 //   KvHostLinkClientFactory.OpenAndConnectAsync, ReadTypedAsync,
-//   WriteTypedAsync, WriteBitInWordAsync, ReadWordsSingleRequestAsync,
+//   WriteTypedAsync, ReadWordsSingleRequestAsync,
 //   ReadWordsAsync, ReadDWordsAsync,
 //   ReadNamedAsync, PollAsync, and KvHostLinkAddress.Normalize.
 //
@@ -76,8 +76,6 @@ Console.WriteLine($"[ReadTypedAsync] DM100(U)={valU}  DM200(L)={valL}  DM300(F)=
 var originalDm100 = (ushort)valU;
 var originalDm200 = (int)valL;
 var originalDm300 = (float)valF;
-var originalBitSnapshot = await client.ReadNamedAsync(["DM50.4"]);
-var originalDm50Bit4 = (bool)originalBitSnapshot["DM50.4"];
 
 try
 {
@@ -127,23 +125,6 @@ try
     Console.WriteLine($"[ReadDWordsAsync] DM2000 block dwords = {largeDwords.Length}");
 
     // -------------------------------------------------------------------------
-    // 5. WriteBitInWordAsync
-    //
-    // Sets or clears a single bit inside a word device (read-modify-write).
-    // bitIndex 0 = LSB, 15 = MSB.
-    // Bits 10-15 can also be specified as hex (A-F) in address notation.
-    //
-    // Use case: toggling an individual machine enable flag in a shared status
-    //           word without disturbing the other 15 bits.
-    // -------------------------------------------------------------------------
-    // See docsrc/user/GOTCHAS.md before adapting bit addresses for X/Y or relay devices.
-    if (allowWrites)
-    {
-        await client.WriteBitInWordAsync("DM50", bitIndex: 4, value: !originalDm50Bit4);
-        Console.WriteLine($"[WriteBitInWordAsync] Set DM50 bit 4 to {!originalDm50Bit4}");
-    }
-
-    // -------------------------------------------------------------------------
     // 6. ReadNamedAsync
     //
     // Reads multiple devices by address string with explicit type suffix.
@@ -157,37 +138,37 @@ try
     //   "DM100.3"  bit 3 inside DM100 (bool); index is hexadecimal
     //   "DM100.A"  bit 10 inside DM100 (bool); A = 0x0A = decimal 10
     //
-    // Use case: reading a mixed-type process snapshot (int32 counter, signed
-    //           error code, bool alarm) in a single dictionary-valued call.
+    // Use case: reading a mixed-type, explicitly non-atomic aggregate (int32
+    //           counter, signed error code, bool alarm) in one public call.
     // -------------------------------------------------------------------------
-    string[] snapshotAddresses = ["DM100:U", "DM200:L", "DM300:F", "DM50.3", "DM50.A"];
-    // Read a named mixed-type snapshot.
-    var snapshot = await client.ReadNamedAsync(snapshotAddresses);
-    foreach (var (addr, value) in snapshot)
+    string[] aggregateAddresses = ["DM100:U", "DM200:L", "DM300:F", "DM50.3", "DM50.A"];
+    // Read a named mixed-type aggregate. Internal requests keep input order.
+    var aggregate = await client.ReadNamedAsync(aggregateAddresses);
+    foreach (var (addr, value) in aggregate)
         Console.WriteLine($"[ReadNamedAsync] {addr} = {value}");
 
     // -------------------------------------------------------------------------
     // 7. PollAsync
     //
-    // Async iterator that yields a snapshot dict every interval.
+    // Async iterator that yields a non-atomic aggregate dict every interval.
     // Use CancellationToken to stop polling.
     //
     // Use case: asyncio-style polling loop in a .NET application; feeds a
     //           live dashboard or a data historian at a fixed sample rate.
     // -------------------------------------------------------------------------
-    Console.WriteLine("\nPolling 3 snapshots (1 s interval):");
+    Console.WriteLine("\nPolling 3 named read results (1 s interval):");
     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     var pollCount = 0;
     string[] pollAddresses = ["DM100:U", "DM200:L", "DM300:F", "DM50.3"];
-    // Poll a repeated named snapshot until this sample has printed three rows.
-    await foreach (var snap in client.PollAsync(
+    // Poll a repeated named aggregate until this sample has printed three rows.
+    await foreach (var readResult in client.PollAsync(
         pollAddresses,
         TimeSpan.FromSeconds(1),
         cts.Token))
     {
         Console.WriteLine(
-            $"  [{++pollCount}] DM100:U={snap["DM100:U"]}  DM200:L={snap["DM200:L"]}  " +
-            $"DM300:F={snap["DM300:F"]}  DM50.3={snap["DM50.3"]}");
+            $"  [{++pollCount}] DM100:U={readResult["DM100:U"]}  DM200:L={readResult["DM200:L"]}  " +
+            $"DM300:F={readResult["DM300:F"]}  DM50.3={readResult["DM50.3"]}");
         if (pollCount >= 3)
             break;
     }
@@ -201,7 +182,6 @@ finally
         await client.WriteTypedAsync("DM100", "U", originalDm100);
         await client.WriteTypedAsync("DM200", "L", originalDm200);
         await client.WriteTypedAsync("DM300", "F", originalDm300);
-        await client.WriteBitInWordAsync("DM50", bitIndex: 4, value: originalDm50Bit4);
-        Console.WriteLine("[Restore] Restored DM100/DM200/DM300 and DM50 bit 4");
+        Console.WriteLine("[Restore] Restored DM100/DM200/DM300");
     }
 }

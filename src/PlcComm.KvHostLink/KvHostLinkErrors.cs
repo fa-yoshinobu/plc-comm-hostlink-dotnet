@@ -37,12 +37,65 @@ public class HostLinkConnectionError : HostLinkError
 }
 
 /// <summary>
-/// Thrown when the library's configured connect, send, or receive timeout expires.
+/// Thrown when the library's configured absolute transaction deadline expires while the operation
+/// still has a known read-only or pre-send outcome.
 /// </summary>
 public sealed class HostLinkTimeoutError : HostLinkConnectionError
 {
     public HostLinkTimeoutError(string message) : base(message) { }
     public HostLinkTimeoutError(string message, Exception inner) : base(message, inner) { }
+}
+
+/// <summary>
+/// Thrown when <see cref="KvHostLinkClient.Close"/> retires the connection generation that owns
+/// an active or queued operation.
+/// </summary>
+public sealed class HostLinkClosedError : HostLinkConnectionError
+{
+    public HostLinkClosedError()
+        : base("The Host Link connection was closed before the operation completed.") { }
+
+    public HostLinkClosedError(string message, Exception inner) : base(message, inner) { }
+}
+
+/// <summary>Machine-readable reason retained by <see cref="HostLinkOutcomeUnknownError"/>.</summary>
+public enum HostLinkOutcomeUnknownReason
+{
+    /// <summary>The transaction deadline expired after transmission may have begun.</summary>
+    Timeout,
+    /// <summary>The caller cancelled after transmission may have begun.</summary>
+    CallerCancellation,
+    /// <summary>The connection was closed after transmission may have begun.</summary>
+    ConnectionClosed,
+    /// <summary>A transport failure occurred after transmission may have begun.</summary>
+    TransportFailure,
+    /// <summary>A response could not prove whether the state-changing command completed.</summary>
+    InvalidResponse,
+}
+
+/// <summary>
+/// Thrown when a state-changing request may have reached the PLC but no definitive result was received.
+/// </summary>
+public sealed class HostLinkOutcomeUnknownError : HostLinkError
+{
+    public HostLinkOutcomeUnknownError(
+        string message,
+        HostLinkOutcomeUnknownReason reason,
+        Exception inner)
+        : base(message, inner)
+    {
+        Reason = reason;
+    }
+
+    /// <summary>Gets the structured cause category for the ambiguous result.</summary>
+    public HostLinkOutcomeUnknownReason Reason { get; }
+}
+
+/// <summary>Thrown when public client code attempts to enter the same client recursively.</summary>
+public sealed class HostLinkReentrancyError : HostLinkError
+{
+    public HostLinkReentrancyError()
+        : base("Host Link client operations cannot be entered recursively on the same client instance.") { }
 }
 
 /// <summary>

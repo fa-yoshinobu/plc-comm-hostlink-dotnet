@@ -2,9 +2,33 @@
 
 This page is generated from the `PlcComm.KvHostLink` assembly public API and XML documentation comments.
 
+Every public PLC communication method is a single-request operation unless it is explicitly named `ReadNamedAsync` or `PollAsync`. Those two read-only methods are non-atomic aggregate operations and may issue multiple sequential requests while retaining one client FIFO turn. Lifecycle, parsing, profile, and offline catalog members issue no PLC protocol request.
+
 Run `python scripts/generate_api_reference.py --help` from the repository root to regenerate it.
 
 ## PlcComm.KvHostLink
+
+### HostLinkClosedError
+
+```csharp
+public sealed class HostLinkClosedError
+```
+
+Thrown when `Close` retires the connection generation that owns an active or queued operation.
+
+#### Members
+
+##### HostLinkClosedError
+
+```csharp
+public HostLinkClosedError()
+```
+
+##### HostLinkClosedError
+
+```csharp
+public HostLinkClosedError(string message, Exception inner)
+```
 
 ### HostLinkConnectionError
 
@@ -84,6 +108,80 @@ Thrown when a command is attempted before an explicit open or after the transpor
 public HostLinkNotConnectedError()
 ```
 
+### HostLinkOutcomeUnknownError
+
+```csharp
+public sealed class HostLinkOutcomeUnknownError
+```
+
+Thrown when a state-changing request may have reached the PLC but no definitive result was received.
+
+#### Members
+
+##### HostLinkOutcomeUnknownError
+
+```csharp
+public HostLinkOutcomeUnknownError(string message, HostLinkOutcomeUnknownReason reason, Exception inner)
+```
+
+##### Reason
+
+```csharp
+public HostLinkOutcomeUnknownReason Reason { get; }
+```
+
+Gets the structured cause category for the ambiguous result.
+
+### HostLinkOutcomeUnknownReason
+
+```csharp
+public enum HostLinkOutcomeUnknownReason
+```
+
+Machine-readable reason retained by `HostLinkOutcomeUnknownError`.
+
+#### Members
+
+##### Timeout
+
+```csharp
+public const HostLinkOutcomeUnknownReason Timeout
+```
+
+The transaction deadline expired after transmission may have begun.
+
+##### CallerCancellation
+
+```csharp
+public const HostLinkOutcomeUnknownReason CallerCancellation
+```
+
+The caller cancelled after transmission may have begun.
+
+##### ConnectionClosed
+
+```csharp
+public const HostLinkOutcomeUnknownReason ConnectionClosed
+```
+
+The connection was closed after transmission may have begun.
+
+##### TransportFailure
+
+```csharp
+public const HostLinkOutcomeUnknownReason TransportFailure
+```
+
+A transport failure occurred after transmission may have begun.
+
+##### InvalidResponse
+
+```csharp
+public const HostLinkOutcomeUnknownReason InvalidResponse
+```
+
+A response could not prove whether the state-changing command completed.
+
 ### HostLinkProtocolError
 
 ```csharp
@@ -106,13 +204,29 @@ public HostLinkProtocolError(string message)
 public HostLinkProtocolError(string message, Exception inner)
 ```
 
+### HostLinkReentrancyError
+
+```csharp
+public sealed class HostLinkReentrancyError
+```
+
+Thrown when public client code attempts to enter the same client recursively.
+
+#### Members
+
+##### HostLinkReentrancyError
+
+```csharp
+public HostLinkReentrancyError()
+```
+
 ### HostLinkTimeoutError
 
 ```csharp
 public sealed class HostLinkTimeoutError
 ```
 
-Thrown when the library's configured connect, send, or receive timeout expires.
+Thrown when the library's configured absolute transaction deadline expires while the operation still has a known read-only or pre-send outcome.
 
 #### Members
 
@@ -605,7 +719,7 @@ public sealed class KvHostLinkClient
 
 A low-level Host Link (Upper Link) client for KEYENCE KV series PLCs.
 
-Remarks: This class serializes individual raw requests on one connection, but compound helper workflows such as typed polling and read-modify-write are better served by `QueuedKvHostLinkClient`. For application code, prefer `OpenAndConnectAsync`.
+Remarks: Public operations enter one arrival-order FIFO queue. One client therefore owns at most one active wire transaction, and an explicitly aggregate read retains the same turn for its complete plan. Queue waiting does not consume the transaction timeout. Waiting cancellation sends nothing. Recursive entry on the same client is rejected. For application code, prefer `OpenAndConnectAsync`.
 
 #### Members
 
@@ -748,6 +862,14 @@ public Task WriteAsync<T>(string device, T value, CancellationToken cancellation
 ##### WriteAsync
 
 ```csharp
+public Task WriteAsync(string device, bool value, CancellationToken cancellationToken = default)
+```
+
+Writes one direct bit in one request using the exact Boolean-only bit-value contract.
+
+##### WriteAsync
+
+```csharp
 public Task WriteAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
@@ -756,6 +878,14 @@ public Task WriteAsync<T>(string device, T value, string dataFormat, Cancellatio
 ```csharp
 public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, CancellationToken cancellationToken = default)
 ```
+
+##### WriteConsecutiveAsync
+
+```csharp
+public Task WriteConsecutiveAsync(string device, IEnumerable<bool> values, CancellationToken cancellationToken = default)
+```
+
+Writes consecutive direct bits in one request from an immutable Boolean-value snapshot.
 
 ##### WriteConsecutiveAsync
 
@@ -915,9 +1045,9 @@ Gets whether the selected TCP or UDP transport is currently open.
 public static class KvHostLinkClientExtensions
 ```
 
-High-level helper API for `KvHostLinkClient` and `QueuedKvHostLinkClient`.
+High-level helper API for `KvHostLinkClient`.
 
-Remarks: These extension methods are the recommended user-facing surface for normal application code. They wrap the token-oriented low-level client API with typed reads and writes, bit-in-word helpers, named snapshots, polling, and one-step connection setup. Overloads for `QueuedKvHostLinkClient` keep compound helper operations exclusive when a shared connection is used.
+Remarks: These extension methods are the recommended user-facing surface for normal application code. They wrap the token-oriented low-level client API with typed reads and writes, named aggregate reads, polling, and one-step connection setup. The ordinary client keeps every compound read plan exclusive through its built-in FIFO queue.
 
 #### Members
 
@@ -939,26 +1069,10 @@ Parameters:
 - `dtype`: High-level data type code: `"U"` = `UInt16`, `"S"` = `Int16`, `"D"` = `UInt32`, `"L"` = signed 32-bit `Int32`, `"F"` = IEEE 754 float32, `"H"` = hexadecimal 16-bit word text.
 - `ct`: Cancellation token.
 
-##### ReadTypedAsync
-
-```csharp
-public static Task<object> ReadTypedAsync(QueuedKvHostLinkClient client, string device, string dtype, CancellationToken ct = default)
-```
-
-Reads a single device value and converts it to a high-level CLR type.
-
 ##### ReadTimerCounterAsync
 
 ```csharp
 public static Task<KvTimerCounterValue> ReadTimerCounterAsync(KvHostLinkClient client, string device, CancellationToken ct = default)
-```
-
-Reads a timer/counter composite value as status, current, and preset.
-
-##### ReadTimerCounterAsync
-
-```csharp
-public static Task<KvTimerCounterValue> ReadTimerCounterAsync(QueuedKvHostLinkClient client, string device, CancellationToken ct = default)
 ```
 
 Reads a timer/counter composite value as status, current, and preset.
@@ -971,26 +1085,10 @@ public static Task<KvTimerCounterValue> ReadTimerAsync(KvHostLinkClient client, 
 
 Reads a timer composite value.
 
-##### ReadTimerAsync
-
-```csharp
-public static Task<KvTimerCounterValue> ReadTimerAsync(QueuedKvHostLinkClient client, string device, CancellationToken ct = default)
-```
-
-Reads a timer composite value.
-
 ##### ReadCounterAsync
 
 ```csharp
 public static Task<KvTimerCounterValue> ReadCounterAsync(KvHostLinkClient client, string device, CancellationToken ct = default)
-```
-
-Reads a counter composite value.
-
-##### ReadCounterAsync
-
-```csharp
-public static Task<KvTimerCounterValue> ReadCounterAsync(QueuedKvHostLinkClient client, string device, CancellationToken ct = default)
 ```
 
 Reads a counter composite value.
@@ -1018,57 +1116,16 @@ Parameters:
 public static Task WriteTypedAsync(KvHostLinkClient client, string device, string dtype, bool value, CancellationToken ct = default)
 ```
 
-Writes a direct bit device using an explicit BIT dtype and boolean value.
+Writes a direct bit device in one request using an explicit BIT dtype and Boolean value.
 
-##### WriteTypedAsync
-
-```csharp
-public static Task WriteTypedAsync<T>(QueuedKvHostLinkClient client, string device, string dtype, T value, CancellationToken ct = default)
-```
-
-Writes a single device value using a high-level data type code.
-
-Remarks: The float helper is implemented at the extension layer by converting the input value to IEEE 754 float32 and writing two consecutive `.U` words. Direct bit device families cannot represent that two-word value and are rejected before transport I/O.
+Remarks: Numeric, string, and truthy compatibility values are not accepted.
 
 Parameters:
 - `client`: The client to use.
-- `device`: Base device address string, for example `"DM100"`.
-- `dtype`: High-level data type code: `"U"`, `"S"`, `"D"`, `"L"`, `"F"`, or `"H"`.
-- `value`: Value to write.
+- `device`: Direct-bit device address.
+- `dtype`: The exact logical type `BIT`.
+- `value`: Boolean bit value.
 - `ct`: Cancellation token.
-
-##### WriteTypedAsync
-
-```csharp
-public static Task WriteTypedAsync(QueuedKvHostLinkClient client, string device, string dtype, bool value, CancellationToken ct = default)
-```
-
-Writes a direct bit device using an explicit BIT dtype and boolean value.
-
-##### WriteBitInWordAsync
-
-```csharp
-public static Task WriteBitInWordAsync(KvHostLinkClient client, string device, int bitIndex, bool value, CancellationToken ct = default)
-```
-
-Performs a read-modify-write to set or clear a single bit inside a word device.
-
-Remarks: This helper operates on word-oriented devices such as `DM`. It is distinct from PLC force-set / force-reset commands for bit device families.
-
-Parameters:
-- `client`: The client to use.
-- `device`: Base word device address string, for example `"DM100"`.
-- `bitIndex`: Bit position within the word (0–15).
-- `value`: New bit value.
-- `ct`: Cancellation token.
-
-##### WriteBitInWordAsync
-
-```csharp
-public static Task WriteBitInWordAsync(QueuedKvHostLinkClient client, string device, int bitIndex, bool value, CancellationToken ct = default)
-```
-
-Performs a read-modify-write to set or clear a single bit inside a word device.
 
 ##### ReadNamedAsync
 
@@ -1076,24 +1133,16 @@ Performs a read-modify-write to set or clear a single bit inside a word device.
 public static Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(KvHostLinkClient client, IEnumerable<string> addresses, CancellationToken ct = default)
 ```
 
-Reads multiple named values and returns a snapshot dictionary.
+Reads multiple independent named values as one read-only aggregate operation.
 
-Remarks: Address format examples: "DM100:U" -- unsigned 16-bit (ushort) "DM100:F" -- float "DM100:S" -- signed 16-bit (short) "DM100:D" -- unsigned 32-bit "DM100:L" -- signed 32-bit "DM100.3" -- bit 3 within word (bool) "DM100.A" -- bit 10 within word (bool); bits 10-15 use hex digits A-F "DM100:COMMENT" -- PLC device comment text (string) Bit-in-word indices use hexadecimal notation (0-F), matching the KEYENCE address format. Bits 0-9 can be written as decimal digits; bits 10-15 must be written as A-F. For example, bit 12 is addressed as `"DM100.C"`, not `"DM100.12"`. When all requested addresses are compatible with helper-layer batching, this method merges contiguous reads into one or more `RDS` operations. Mixed or non-optimizable address sets fall back to sequential helper reads with the same return shape.
+Remarks: Address format examples: "DM100:U" -- unsigned 16-bit (ushort) "DM100:F" -- float "DM100:S" -- signed 16-bit (short) "DM100:D" -- unsigned 32-bit "DM100:L" -- signed 32-bit "DM100.3" -- bit 3 within word (bool) "DM100.A" -- bit 10 within word (bool); bits 10-15 use hex digits A-F "DM100:COMMENT" -- PLC device comment text (string) Bit-in-word indices use hexadecimal notation (0-F), matching the KEYENCE address format. Bits 0-9 can be written as decimal digits; bits 10-15 must be written as A-F. For example, bit 12 is addressed as `"DM100.C"`, not `"DM100.12"`. When all requested addresses are compatible with helper-layer batching, this method merges contiguous reads into one or more `RDS` operations. Mixed or non-optimizable address sets fall back to sequential helper reads with the same return shape. A multi-request result is non-atomic: separate requests can observe different PLC scan times. Each declared scalar, float32 value, or bit-in-word value remains wholly inside one request, but callers requiring one coherent point in time must use a single-request read or a PLC-side snapshot/handshake. The complete plan is validated and copied before the first send, and the client turn is retained until every internal read succeeds or the aggregate fails. Internal wire requests follow the declared input sequence; the planner never sorts entries by device or address. Contiguous entries may share one wire read without changing result mapping.
 
-Returns: A dictionary keyed by the original input address strings.
+Returns: A dictionary keyed by the original input address strings. No partial result is returned on failure.
 
 Parameters:
 - `client`: The client to use.
 - `addresses`: Address strings that specify both the base device and the desired interpretation.
 - `ct`: Cancellation token.
-
-##### ReadNamedAsync
-
-```csharp
-public static Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(QueuedKvHostLinkClient client, IEnumerable<string> addresses, CancellationToken ct = default)
-```
-
-Reads multiple named values and returns a snapshot dictionary.
 
 ##### PollAsync
 
@@ -1101,23 +1150,15 @@ Reads multiple named values and returns a snapshot dictionary.
 public static IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollAsync(KvHostLinkClient client, IEnumerable<string> addresses, TimeSpan interval, CancellationToken ct = default)
 ```
 
-Continuously polls the specified addresses and yields a snapshot each cycle.
+Continuously polls the specified addresses and yields one non-atomic aggregate result each cycle.
 
-Remarks: If the address set is batchable, the compiled read plan is reused on every iteration for lower per-cycle overhead.
+Remarks: If the address set is batchable, the compiled read plan is reused on every iteration for lower per-cycle overhead. Every cycle has the same input-order, indivisible-value, no-interleaving, and no-partial-result contract as `ReadNamedAsync`.
 
 Parameters:
 - `client`: The client to use.
 - `addresses`: Address strings in the same format as `ReadNamedAsync`.
 - `interval`: Time between polls.
 - `ct`: Cancellation token to stop polling.
-
-##### PollAsync
-
-```csharp
-public static IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollAsync(QueuedKvHostLinkClient client, IEnumerable<string> addresses, TimeSpan interval, CancellationToken ct = default)
-```
-
-Continuously polls the specified addresses and yields a snapshot each cycle.
 
 ##### ReadWordsSingleRequestAsync
 
@@ -1137,14 +1178,6 @@ Parameters:
 - `count`: Number of words to read.
 - `ct`: Cancellation token.
 
-##### ReadWordsSingleRequestAsync
-
-```csharp
-public static Task<ushort[]> ReadWordsSingleRequestAsync(QueuedKvHostLinkClient client, string device, int count, CancellationToken ct = default)
-```
-
-Reads contiguous unsigned 16-bit words using one protocol request or returns an error.
-
 ##### ReadDWordsSingleRequestAsync
 
 ```csharp
@@ -1163,14 +1196,6 @@ Parameters:
 - `count`: Number of 32-bit values to read.
 - `ct`: Cancellation token.
 
-##### ReadDWordsSingleRequestAsync
-
-```csharp
-public static Task<uint[]> ReadDWordsSingleRequestAsync(QueuedKvHostLinkClient client, string device, int count, CancellationToken ct = default)
-```
-
-Reads contiguous unsigned 32-bit values using one protocol request or returns an error.
-
 ##### WriteWordsSingleRequestAsync
 
 ```csharp
@@ -1179,26 +1204,10 @@ public static Task WriteWordsSingleRequestAsync(KvHostLinkClient client, string 
 
 Writes contiguous unsigned 16-bit values using one protocol request or returns an error.
 
-##### WriteWordsSingleRequestAsync
-
-```csharp
-public static Task WriteWordsSingleRequestAsync(QueuedKvHostLinkClient client, string device, IReadOnlyList<ushort> values, CancellationToken ct = default)
-```
-
-Writes contiguous unsigned 16-bit values using one protocol request or returns an error.
-
 ##### WriteDWordsSingleRequestAsync
 
 ```csharp
 public static Task WriteDWordsSingleRequestAsync(KvHostLinkClient client, string device, IReadOnlyList<uint> values, CancellationToken ct = default)
-```
-
-Writes contiguous unsigned 32-bit values using one protocol request or returns an error.
-
-##### WriteDWordsSingleRequestAsync
-
-```csharp
-public static Task WriteDWordsSingleRequestAsync(QueuedKvHostLinkClient client, string device, IReadOnlyList<uint> values, CancellationToken ct = default)
 ```
 
 Writes contiguous unsigned 32-bit values using one protocol request or returns an error.
@@ -1221,14 +1230,6 @@ Parameters:
 - `count`: Number of words to read.
 - `ct`: Cancellation token.
 
-##### ReadWordsAsync
-
-```csharp
-public static Task<ushort[]> ReadWordsAsync(QueuedKvHostLinkClient client, string device, int count, CancellationToken ct = default)
-```
-
-Reads contiguous unsigned 16-bit words starting at `device`.
-
 ##### ReadDWordsAsync
 
 ```csharp
@@ -1247,28 +1248,20 @@ Parameters:
 - `count`: Number of 32-bit values to read.
 - `ct`: Cancellation token.
 
-##### ReadDWordsAsync
-
-```csharp
-public static Task<uint[]> ReadDWordsAsync(QueuedKvHostLinkClient client, string device, int count, CancellationToken ct = default)
-```
-
-Reads contiguous unsigned 32-bit values starting at `device`.
-
 ##### OpenAndConnectAsync
 
 ```csharp
-public static Task<QueuedKvHostLinkClient> OpenAndConnectAsync(string host, int port, HostLinkTransportMode transport, string plcProfile, CancellationToken ct = default)
+public static Task<KvHostLinkClient> OpenAndConnectAsync(string host, int port, HostLinkTransportMode transport, string plcProfile, CancellationToken ct = default)
 ```
 
-Creates a queued client and opens the connection.
+Creates a Host Link client with built-in FIFO admission and opens the connection.
 
 Remarks: This is the recommended convenience entry point for high-level application code that does not need to construct `KvHostLinkConnectionOptions` manually.
 
-Returns: A connected queued client that is safe to share across async callers.
+Returns: A connected ordinary client that is safe to share across async callers.
 
 Parameters:
-- `host`: PLC IP address or hostname.
+- `host`: PLC IPv4 address or hostname that resolves to IPv4.
 - `port`: Required KV Host Link TCP/UDP port.
 - `transport`: Required TCP or UDP transport.
 - `plcProfile`: Canonical KEYENCE KV PLC profile for the session.
@@ -1289,14 +1282,14 @@ Remarks: The factory centralizes validation of host, port, transport, and timeou
 ##### OpenAndConnectAsync
 
 ```csharp
-public static Task<QueuedKvHostLinkClient> OpenAndConnectAsync(KvHostLinkConnectionOptions options, CancellationToken cancellationToken = default)
+public static Task<KvHostLinkClient> OpenAndConnectAsync(KvHostLinkConnectionOptions options, CancellationToken cancellationToken = default)
 ```
 
-Creates, configures, and opens a queued Host Link client.
+Creates, configures, and opens a Host Link client with built-in FIFO admission.
 
-Remarks: The returned client uses queued access so higher-level read, write, and polling helpers can share one Host Link session predictably.
+Remarks: The ordinary client owns the one FIFO queue used by all low-level and high-level operations. Hostname resolution selects IPv4 only and never falls back to IPv6.
 
-Returns: A connected queued client.
+Returns: A connected Host Link client.
 
 Parameters:
 - `options`: Explicit connection options.
@@ -1325,7 +1318,7 @@ Explicit connection options for a Host Link session.
 Remarks: This type is intended for the unified high-level connection flow so generated documentation can describe transport, timeout, profile, and framing behavior in one place.
 
 Parameters:
-- `Host`: PLC IP address or hostname.
+- `Host`: PLC IPv4 address or hostname that resolves to IPv4. IPv6 is not supported.
 - `Transport`: Transport protocol.
 - `PlcProfile`: Canonical KEYENCE KV PLC profile for the session.
 - `Port`: Host Link port number.
@@ -1337,7 +1330,7 @@ Parameters:
 public string Host { get; set; }
 ```
 
-Gets the validated PLC IP address or hostname.
+Gets the validated PLC IPv4 address or hostname.
 
 ##### Port
 
@@ -1815,310 +1808,3 @@ public uint Current { get; set; }
 ```csharp
 public uint Preset { get; set; }
 ```
-
-### QueuedKvHostLinkClient
-
-```csharp
-public sealed class QueuedKvHostLinkClient
-```
-
-A wrapper for `KvHostLinkClient` that serializes multi-step operations with a semaphore.
-
-Remarks: Host Link requests often reuse one TCP session and one framing configuration. This wrapper provides a documentation-friendly queued surface for those shared-session scenarios.
-
-#### Members
-
-##### QueuedKvHostLinkClient
-
-```csharp
-public QueuedKvHostLinkClient(KvHostLinkClient client)
-```
-
-Initializes a new instance of the `QueuedKvHostLinkClient` class.
-
-Parameters:
-- `client`: The underlying client to wrap.
-
-##### OpenAsync
-
-```csharp
-public Task OpenAsync(CancellationToken cancellationToken = default)
-```
-
-Opens the connection asynchronously with exclusive access.
-
-Remarks: Call this once after construction or again after an intentional disconnect.
-
-##### CloseAsync
-
-```csharp
-public Task CloseAsync(CancellationToken cancellationToken = default)
-```
-
-Closes the connection, interrupts active I/O, and rejects queued work from that connection.
-
-Remarks: Cancellation stops only the caller's wait for close completion; the initiated close continues.
-
-##### ExecuteAsync
-
-```csharp
-public Task<T> ExecuteAsync<T>(Func<KvHostLinkClient, Task<T>> operation, CancellationToken cancellationToken = default)
-```
-
-Executes a custom async operation with exclusive access to the wrapped client.
-
-Returns: The value returned by `operation`.
-
-Parameters:
-- `operation`: Delegate that receives the wrapped `KvHostLinkClient`.
-- `cancellationToken`: Cancellation token used while waiting for exclusive access.
-
-##### ExecuteAsync
-
-```csharp
-public Task ExecuteAsync(Func<KvHostLinkClient, Task> operation, CancellationToken cancellationToken = default)
-```
-
-Executes a custom async operation with exclusive access to the wrapped client.
-
-Parameters:
-- `operation`: Delegate that receives the wrapped `KvHostLinkClient`.
-- `cancellationToken`: Cancellation token used while waiting for exclusive access.
-
-##### ChangeModeAsync
-
-```csharp
-public Task ChangeModeAsync(KvPlcMode mode, CancellationToken cancellationToken = default)
-```
-
-##### ClearErrorAsync
-
-```csharp
-public Task ClearErrorAsync(CancellationToken cancellationToken = default)
-```
-
-##### CheckErrorNoAsync
-
-```csharp
-public Task<string> CheckErrorNoAsync(CancellationToken cancellationToken = default)
-```
-
-##### QueryModelAsync
-
-```csharp
-public Task<KvModelInfo> QueryModelAsync(CancellationToken cancellationToken = default)
-```
-
-##### ConfirmOperatingModeAsync
-
-```csharp
-public Task<KvPlcMode> ConfirmOperatingModeAsync(CancellationToken cancellationToken = default)
-```
-
-##### SetTimeAsync
-
-```csharp
-public Task SetTimeAsync(DateTime value, CancellationToken cancellationToken = default)
-```
-
-##### ForcedSetAsync
-
-```csharp
-public Task ForcedSetAsync(string device, CancellationToken cancellationToken = default)
-```
-
-##### ForcedResetAsync
-
-```csharp
-public Task ForcedResetAsync(string device, CancellationToken cancellationToken = default)
-```
-
-##### ReadAsync
-
-```csharp
-public Task<string[]> ReadAsync(string device, CancellationToken cancellationToken = default)
-```
-
-##### ReadAsync
-
-```csharp
-public Task<string[]> ReadAsync(string device, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### ReadConsecutiveAsync
-
-```csharp
-public Task<string[]> ReadConsecutiveAsync(string device, int count, CancellationToken cancellationToken = default)
-```
-
-##### ReadConsecutiveAsync
-
-```csharp
-public Task<string[]> ReadConsecutiveAsync(string device, int count, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### ReadCommentsAsync
-
-```csharp
-public Task<string> ReadCommentsAsync(string device, CancellationToken cancellationToken = default)
-```
-
-##### RegisterMonitorBitsAsync
-
-```csharp
-public Task RegisterMonitorBitsAsync(IEnumerable<string> devices, CancellationToken cancellationToken = default)
-```
-
-##### RegisterMonitorWordsAsync
-
-```csharp
-public Task RegisterMonitorWordsAsync(IEnumerable<KvMonitorWordTarget> devices, CancellationToken cancellationToken = default)
-```
-
-##### ReadMonitorBitsAsync
-
-```csharp
-public Task<string[]> ReadMonitorBitsAsync(CancellationToken cancellationToken = default)
-```
-
-##### ReadMonitorWordsAsync
-
-```csharp
-public Task<string[]> ReadMonitorWordsAsync(CancellationToken cancellationToken = default)
-```
-
-##### ForcedSetConsecutiveAsync
-
-```csharp
-public Task ForcedSetConsecutiveAsync(string device, int count, CancellationToken cancellationToken = default)
-```
-
-##### ForcedResetConsecutiveAsync
-
-```csharp
-public Task ForcedResetConsecutiveAsync(string device, int count, CancellationToken cancellationToken = default)
-```
-
-##### ReadConsecutiveLegacyAsync
-
-```csharp
-public Task<string[]> ReadConsecutiveLegacyAsync(string device, int count, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### WriteAsync
-
-```csharp
-public Task WriteAsync<T>(string device, T value, CancellationToken cancellationToken = default)
-```
-
-##### WriteAsync
-
-```csharp
-public Task WriteAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### WriteConsecutiveAsync
-
-```csharp
-public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, CancellationToken cancellationToken = default)
-```
-
-##### WriteConsecutiveAsync
-
-```csharp
-public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### WriteConsecutiveLegacyAsync
-
-```csharp
-public Task WriteConsecutiveLegacyAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### WriteSetValueAsync
-
-```csharp
-public Task WriteSetValueAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### WriteSetValueConsecutiveAsync
-
-```csharp
-public Task WriteSetValueConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### SwitchBankAsync
-
-```csharp
-public Task SwitchBankAsync(int bankNo, CancellationToken cancellationToken = default)
-```
-
-##### ReadExpansionUnitBufferAsync
-
-```csharp
-public Task<string[]> ReadExpansionUnitBufferAsync(int unitNo, int address, int count, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### WriteExpansionUnitBufferAsync
-
-```csharp
-public Task WriteExpansionUnitBufferAsync<T>(int unitNo, int address, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### Dispose
-
-```csharp
-public void Dispose()
-```
-
-Disposes the wrapper and the underlying client.
-
-##### DisposeAsync
-
-```csharp
-public ValueTask DisposeAsync()
-```
-
-Disposes the wrapper and the underlying client asynchronously.
-
-##### InnerClient
-
-```csharp
-public KvHostLinkClient InnerClient { get; }
-```
-
-Gets the underlying low-level client.
-
-Remarks: Use `ExecuteAsync` when you need direct access while preserving serialized request ordering.
-
-##### PlcProfile
-
-```csharp
-public string PlcProfile { get; }
-```
-
-Gets the canonical KEYENCE KV PLC profile selected for this session.
-
-##### TrafficStats
-
-```csharp
-public HostLinkTrafficStats TrafficStats { get; }
-```
-
-Gets cumulative traffic for the underlying client lifetime.
-
-##### Timeout
-
-```csharp
-public TimeSpan Timeout { get; set; }
-```
-
-Gets or sets the communication timeout.
-
-##### IsOpen
-
-```csharp
-public bool IsOpen { get; }
-```
-
-Gets a value indicating whether the client is connected.

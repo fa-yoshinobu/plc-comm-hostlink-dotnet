@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -9,10 +10,11 @@ namespace PlcComm.KvHostLink;
 /// A low-level Host Link (Upper Link) client for KEYENCE KV series PLCs.
 /// </summary>
 /// <remarks>
-/// This class serializes individual raw requests on one connection, but
-/// compound helper workflows such as typed polling and read-modify-write are
-/// better served by <see cref="QueuedKvHostLinkClient"/>. For application code,
-/// prefer <see cref="KvHostLinkClientFactory.OpenAndConnectAsync(KvHostLinkConnectionOptions, CancellationToken)"/>.
+/// Public operations enter one arrival-order FIFO queue. One client therefore owns at most one
+/// active wire transaction, and an explicitly aggregate read retains the same turn for its complete
+/// plan. Queue waiting does not consume the transaction timeout. Waiting cancellation sends nothing.
+/// Recursive entry on the same client is rejected. For application code, prefer
+/// <see cref="KvHostLinkClientFactory.OpenAndConnectAsync(KvHostLinkConnectionOptions, CancellationToken)"/>.
 /// </remarks>
 public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 {
@@ -23,9 +25,14 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private TcpClient? _tcp;
     private NetworkStream? _tcpStream;
     private UdpClient? _udp;
-    private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly object _lifecycleSync = new();
-    private CancellationTokenSource _lifetimeCancellation = new();
+    private readonly object _operationSync = new();
+    private readonly LinkedList<OperationWaiter> _operationWaiters = new();
+    private readonly AsyncLocal<OperationContext?> _operationContext = new();
+    private OperationGeneration _operationGeneration = new();
+    private OperationGeneration? _activeOperationGeneration;
+    private TaskCompletionSource? _operationIdleCompletion;
+    private bool _operationActive;
     private Task? _closeTask;
     private int _closing;
     private int _disposed;
@@ -41,14 +48,52 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private long _txBytes;
     private long _rxBytes;
 
+    private sealed class OperationGeneration
+    {
+        private int _cancellationDisposed;
+
+        internal CancellationTokenSource Cancellation { get; } = new();
+        internal bool ClientDisposed { get; set; }
+        internal bool IsRetired => Cancellation.IsCancellationRequested;
+
+        internal Exception CreateFailure(object client)
+            => ClientDisposed
+                ? new ObjectDisposedException(client.GetType().FullName)
+                : new HostLinkClosedError();
+
+        internal void DisposeCancellation()
+        {
+            if (Interlocked.Exchange(ref _cancellationDisposed, 1) == 0)
+                Cancellation.Dispose();
+        }
+    }
+
+    private sealed class OperationWaiter(OperationGeneration generation, TimeSpan timeout)
+    {
+        internal OperationGeneration Generation { get; } = generation;
+        internal TimeSpan Timeout { get; } = timeout;
+        internal TaskCompletionSource<OperationLease> Completion { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal LinkedListNode<OperationWaiter>? Node { get; set; }
+        internal CancellationTokenRegistration CancellationRegistration { get; set; }
+    }
+
+    private readonly record struct OperationLease(
+        OperationGeneration Generation,
+        TimeSpan Timeout);
+
+    private sealed record OperationContext(
+        KvHostLinkClient Client,
+        OperationGeneration Generation,
+        TimeSpan Timeout);
+
     public KvHostLinkClient(
         string host,
         int port,
         HostLinkTransportMode transportMode,
         string plcProfile)
     {
-        if (string.IsNullOrWhiteSpace(host))
-            throw new ArgumentException("Host must not be empty.", nameof(host));
+        host = KvHostLinkNetwork.ValidateIpv4Host(host, nameof(host));
         if (port is < 1 or > 65535)
             throw new ArgumentOutOfRangeException(nameof(port), "Port must be in the range 1-65535.");
         if (!Enum.IsDefined(transportMode))
@@ -68,8 +113,17 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     /// <summary>Gets or sets the operation timeout from 1 through <see cref="int.MaxValue"/> milliseconds.</summary>
     public TimeSpan Timeout
     {
-        get => _timeout;
-        set => _timeout = KvHostLinkTimeout.Validate(value, nameof(value));
+        get
+        {
+            lock (_operationSync)
+                return _timeout;
+        }
+        set
+        {
+            TimeSpan validated = KvHostLinkTimeout.Validate(value, nameof(value));
+            lock (_operationSync)
+                _timeout = validated;
+        }
     }
 
     /// <summary>
@@ -101,23 +155,26 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     {
         if (IsOpen) return;
 
-        CancellationTokenSource lifetime = CaptureLifetime();
+        OperationContext context = RequireOperationContext();
+        using var operationCancellation = new KvHostLinkOperationCancellation(
+            cancellationToken,
+            context.Generation.Cancellation.Token,
+            context.Timeout);
         if (_transportMode == HostLinkTransportMode.Tcp)
         {
-            var tcp = new TcpClient();
-            using var operationCancellation = new KvHostLinkOperationCancellation(
-                cancellationToken,
-                lifetime.Token,
-                Timeout);
+            var tcp = new TcpClient(AddressFamily.InterNetwork);
             try
             {
-                await tcp.ConnectAsync(_host, _port, operationCancellation.Token).ConfigureAwait(false);
+                IPAddress remoteAddress = await KvHostLinkNetwork.ResolveIpv4AddressAsync(
+                    _host,
+                    operationCancellation.Token).ConfigureAwait(false);
+                await tcp.ConnectAsync(remoteAddress, _port, operationCancellation.Token).ConfigureAwait(false);
                 tcp.NoDelay = true;
                 NetworkStream stream = tcp.GetStream();
                 lock (_lifecycleSync)
                 {
                     if (_disposed != 0 || _closing != 0 ||
-                        !ReferenceEquals(lifetime, _lifetimeCancellation) || lifetime.IsCancellationRequested ||
+                        context.Generation.IsRetired ||
                         operationCancellation.Token.IsCancellationRequested)
                     {
                         throw operationCancellation.Translate(
@@ -137,34 +194,32 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             return;
         }
 
-        var udp = new UdpClient();
-        using (var operationCancellation = new KvHostLinkOperationCancellation(
-            cancellationToken,
-            lifetime.Token,
-            Timeout))
+        var udp = new UdpClient(AddressFamily.InterNetwork);
+        try
         {
-            try
+            IPAddress remoteAddress = await KvHostLinkNetwork.ResolveIpv4AddressAsync(
+                _host,
+                operationCancellation.Token).ConfigureAwait(false);
+            operationCancellation.Token.ThrowIfCancellationRequested();
+            udp.Connect(new IPEndPoint(remoteAddress, _port));
+            lock (_lifecycleSync)
             {
-                await udp.Client.ConnectAsync(_host, _port, operationCancellation.Token).ConfigureAwait(false);
-                lock (_lifecycleSync)
+                if (_disposed != 0 || _closing != 0 ||
+                    context.Generation.IsRetired ||
+                    operationCancellation.Token.IsCancellationRequested)
                 {
-                    if (_disposed != 0 || _closing != 0 ||
-                        !ReferenceEquals(lifetime, _lifetimeCancellation) || lifetime.IsCancellationRequested ||
-                        operationCancellation.Token.IsCancellationRequested)
-                    {
-                        throw operationCancellation.Translate(
-                            new OperationCanceledException(operationCancellation.Token),
-                            "UDP connect");
-                    }
-                    _udp = udp;
-                    ResetProtocolStateNoLock();
+                    throw operationCancellation.Translate(
+                        new OperationCanceledException(operationCancellation.Token),
+                        "UDP connect");
                 }
+                _udp = udp;
+                ResetProtocolStateNoLock();
             }
-            catch (Exception error)
-            {
-                udp.Dispose();
-                throw operationCancellation.Translate(error, "UDP connect");
-            }
+        }
+        catch (Exception error)
+        {
+            udp.Dispose();
+            throw operationCancellation.Translate(error, "UDP connect");
         }
     }
 
@@ -212,6 +267,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
     private Task BeginClose(bool disposing)
     {
+        OperationContext? nested = _operationContext.Value;
+        if (nested is not null && ReferenceEquals(nested.Client, this))
+            throw new HostLinkReentrancyError();
+
+        TaskCompletionSource? completion = null;
         lock (_lifecycleSync)
         {
             if (disposing)
@@ -227,36 +287,31 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                 return _closeTask;
 
             _closing = 1;
-            _lifetimeCancellation.Cancel();
-            CloseTransportNoLock();
-            var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _closeTask = completion.Task;
-            _ = FinishCloseAsync(completion);
-            return completion.Task;
         }
+
+        RetireOperationGeneration(disposing);
+        CloseTransport();
+        _ = FinishCloseAsync(completion, disposing);
+        return completion.Task;
     }
 
-    private async Task FinishCloseAsync(TaskCompletionSource completion)
+    private async Task FinishCloseAsync(TaskCompletionSource completion, bool disposing)
     {
-        CancellationTokenSource? retiredLifetime = null;
         try
         {
-            await _lock.WaitAsync().ConfigureAwait(false);
-            try
+            await WaitForOperationIdleAsync().ConfigureAwait(false);
+            CloseTransport();
+            lock (_lifecycleSync)
             {
-                lock (_lifecycleSync)
-                {
-                    CloseTransportNoLock();
-                    retiredLifetime = _lifetimeCancellation;
-                    if (_disposed == 0)
-                        _lifetimeCancellation = new CancellationTokenSource();
-                    _closing = 0;
-                    _closeTask = null;
-                }
+                _closing = 0;
+                _closeTask = null;
             }
-            finally
+            if (disposing || Volatile.Read(ref _disposed) != 0)
             {
-                _lock.Release();
+                lock (_operationSync)
+                    _operationGeneration.DisposeCancellation();
             }
             completion.SetResult();
         }
@@ -269,10 +324,151 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             }
             completion.SetException(error);
         }
+    }
+
+    private ValueTask<OperationLease> EnterOperationAsync(CancellationToken cancellationToken)
+    {
+        ThrowIfOperationUnavailable();
+        OperationContext? nested = _operationContext.Value;
+        if (nested is not null && ReferenceEquals(nested.Client, this))
+            throw new HostLinkReentrancyError();
+
+        lock (_operationSync)
+        {
+            ThrowIfOperationUnavailable();
+            cancellationToken.ThrowIfCancellationRequested();
+            OperationGeneration generation = _operationGeneration;
+            TimeSpan timeout = _timeout;
+            if (!_operationActive)
+            {
+                _operationActive = true;
+                _activeOperationGeneration = generation;
+                _operationIdleCompletion = new TaskCompletionSource(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+                return ValueTask.FromResult(new OperationLease(generation, timeout));
+            }
+
+            var waiter = new OperationWaiter(generation, timeout);
+            waiter.Node = _operationWaiters.AddLast(waiter);
+            if (cancellationToken.CanBeCanceled)
+            {
+                CancellationTokenRegistration registration = cancellationToken.UnsafeRegister(
+                    static state =>
+                    {
+                        var (client, queued, token) =
+                            ((KvHostLinkClient, OperationWaiter, CancellationToken))state!;
+                        lock (client._operationSync)
+                        {
+                            if (queued.Node is null)
+                                return;
+                            client._operationWaiters.Remove(queued.Node);
+                            queued.Node = null;
+                            queued.Completion.TrySetCanceled(token);
+                        }
+                    },
+                    (this, waiter, cancellationToken));
+                waiter.CancellationRegistration = registration;
+                if (waiter.Node is null)
+                    registration.Dispose();
+            }
+            return new ValueTask<OperationLease>(AwaitOperationWaiterAsync(waiter));
+        }
+    }
+
+    private static async Task<OperationLease> AwaitOperationWaiterAsync(OperationWaiter waiter)
+    {
+        try
+        {
+            return await waiter.Completion.Task.ConfigureAwait(false);
+        }
         finally
         {
-            retiredLifetime?.Dispose();
+            waiter.CancellationRegistration.Dispose();
         }
+    }
+
+    private void ExitOperation(OperationLease lease)
+    {
+        OperationWaiter? next = null;
+        TaskCompletionSource? idle = null;
+        lock (_operationSync)
+        {
+            if (_operationWaiters.First is { } first)
+            {
+                next = first.Value;
+                _operationWaiters.RemoveFirst();
+                next.Node = null;
+                _activeOperationGeneration = next.Generation;
+            }
+            else
+            {
+                _operationActive = false;
+                _activeOperationGeneration = null;
+                idle = _operationIdleCompletion;
+                _operationIdleCompletion = null;
+            }
+        }
+
+        if (next is not null)
+        {
+            next.CancellationRegistration.Dispose();
+            next.Completion.TrySetResult(new OperationLease(next.Generation, next.Timeout));
+        }
+        else
+        {
+            idle?.TrySetResult();
+        }
+        if (lease.Generation.IsRetired)
+            lease.Generation.DisposeCancellation();
+    }
+
+    private void RetireOperationGeneration(bool disposed)
+    {
+        OperationGeneration retired;
+        OperationWaiter[] rejected;
+        bool activeUsesRetiredGeneration;
+        lock (_operationSync)
+        {
+            retired = _operationGeneration;
+            retired.ClientDisposed |= disposed;
+            _operationGeneration = new OperationGeneration();
+            activeUsesRetiredGeneration = ReferenceEquals(_activeOperationGeneration, retired);
+            rejected = _operationWaiters
+                .Where(waiter => ReferenceEquals(waiter.Generation, retired))
+                .ToArray();
+            foreach (OperationWaiter waiter in rejected)
+            {
+                if (waiter.Node is not null)
+                {
+                    _operationWaiters.Remove(waiter.Node);
+                    waiter.Node = null;
+                }
+            }
+        }
+
+        retired.Cancellation.Cancel();
+        foreach (OperationWaiter waiter in rejected)
+        {
+            waiter.CancellationRegistration.Dispose();
+            waiter.Completion.TrySetException(retired.CreateFailure(this));
+        }
+        if (!activeUsesRetiredGeneration)
+            retired.DisposeCancellation();
+    }
+
+    private Task WaitForOperationIdleAsync()
+    {
+        lock (_operationSync)
+            return _operationActive
+                ? _operationIdleCompletion!.Task
+                : Task.CompletedTask;
+    }
+
+    private void ThrowIfOperationUnavailable()
+    {
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+        if (Volatile.Read(ref _closing) != 0)
+            throw new HostLinkClosedError();
     }
 
     private void FireTrace(HostLinkTraceDirection direction, byte[] data)
@@ -288,99 +484,93 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     }
 
     /// <summary>Sends one maintainer raw command and returns response body bytes without terminators.</summary>
+    /// <remarks>
+    /// This is a single-request operation. Because arbitrary raw commands cannot be classified as
+    /// read-only, any post-send failure is conservatively reported as
+    /// <see cref="HostLinkOutcomeUnknownError"/>.
+    /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Task<byte[]> SendRawAsync(string body, CancellationToken cancellationToken = default)
-        => ExecuteExclusiveAsync(() => SendRawCoreAsync(body, cancellationToken), cancellationToken);
+    {
+        byte[] frame = KvHostLinkProtocol.BuildFrame(body);
+        return ExecuteExclusiveAsync(
+            () => SendRawCoreAsync(frame, stateChanging: true, cancellationToken),
+            cancellationToken);
+    }
 
     internal async Task<T> ExecuteExclusiveAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
     {
-        CancellationTokenSource lifetime = CaptureLifetime();
-        using var operationCancellation = new KvHostLinkOperationCancellation(
-            cancellationToken,
-            lifetime.Token);
+        ArgumentNullException.ThrowIfNull(operation);
+        OperationLease lease = await EnterOperationAsync(cancellationToken).ConfigureAwait(false);
+        OperationContext? priorContext = _operationContext.Value;
+        _operationContext.Value = new OperationContext(this, lease.Generation, lease.Timeout);
         try
         {
-            await _lock.WaitAsync(operationCancellation.Token).ConfigureAwait(false);
-        }
-        catch (Exception error)
-        {
-            throw operationCancellation.Translate(error, "gate wait");
-        }
-        try
-        {
-            EnsureLifetimeCurrent(lifetime);
-            return await operation().ConfigureAwait(false);
+            T result = await operation().ConfigureAwait(false);
+            if (lease.Generation.IsRetired)
+                throw lease.Generation.CreateFailure(this);
+            return result;
         }
         finally
         {
-            _lock.Release();
+            _operationContext.Value = priorContext;
+            ExitOperation(lease);
         }
     }
 
     internal async Task ExecuteExclusiveAsync(Func<Task> operation, CancellationToken cancellationToken)
     {
-        CancellationTokenSource lifetime = CaptureLifetime();
-        using var operationCancellation = new KvHostLinkOperationCancellation(
-            cancellationToken,
-            lifetime.Token);
-        try
-        {
-            await _lock.WaitAsync(operationCancellation.Token).ConfigureAwait(false);
-        }
-        catch (Exception error)
-        {
-            throw operationCancellation.Translate(error, "gate wait");
-        }
-        try
-        {
-            EnsureLifetimeCurrent(lifetime);
-            await operation().ConfigureAwait(false);
-        }
-        finally
-        {
-            _lock.Release();
-        }
+        await ExecuteExclusiveAsync(
+            async () =>
+            {
+                await operation().ConfigureAwait(false);
+                return true;
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 
-    private CancellationTokenSource CaptureLifetime()
+    private OperationContext RequireOperationContext()
     {
-        lock (_lifecycleSync)
-        {
-            ObjectDisposedException.ThrowIf(_disposed != 0, this);
-            if (_closing != 0)
-                throw new HostLinkConnectionError("Host Link client is closing.");
-            return _lifetimeCancellation;
-        }
+        OperationContext? context = _operationContext.Value;
+        return context is not null && ReferenceEquals(context.Client, this)
+            ? context
+            : throw new InvalidOperationException("Host Link core operation requires an admitted client turn.");
     }
 
-    private void EnsureLifetimeCurrent(CancellationTokenSource lifetime)
+    private async Task<byte[]> SendRawCoreAsync(
+        byte[] frame,
+        bool stateChanging,
+        CancellationToken cancellationToken)
     {
-        lock (_lifecycleSync)
-        {
-            ObjectDisposedException.ThrowIf(_disposed != 0, this);
-            if (_closing != 0 || !ReferenceEquals(lifetime, _lifetimeCancellation) || lifetime.IsCancellationRequested)
-                throw new HostLinkConnectionError("Host Link connection lifetime changed before the operation could run.");
-        }
-    }
-
-    private async Task<byte[]> SendRawCoreAsync(string body, CancellationToken cancellationToken)
-    {
+        OperationContext context = RequireOperationContext();
         if (!IsOpen)
             throw new HostLinkNotConnectedError();
 
-        CancellationTokenSource lifetime = CaptureLifetime();
-        var frame = KvHostLinkProtocol.BuildFrame(body);
-        FireTrace(HostLinkTraceDirection.Send, frame);
+        using var operationCancellation = new KvHostLinkOperationCancellation(
+            cancellationToken,
+            context.Generation.Cancellation.Token,
+            context.Timeout);
+        return await SendRawTransportCoreAsync(
+            frame,
+            stateChanging,
+            operationCancellation).ConfigureAwait(false);
+    }
+
+    private async Task<byte[]> SendRawTransportCoreAsync(
+        byte[] frame,
+        bool stateChanging,
+        KvHostLinkOperationCancellation operationCancellation)
+    {
+        bool sendMayHaveStarted = false;
         if (_transportMode == HostLinkTransportMode.Tcp)
         {
-            using var operationCancellation = new KvHostLinkOperationCancellation(
-                cancellationToken,
-                lifetime.Token,
-                Timeout);
             try
             {
+                operationCancellation.Token.ThrowIfCancellationRequested();
+                sendMayHaveStarted = true;
                 await _tcpStream!.WriteAsync(frame, operationCancellation.Token).ConfigureAwait(false);
                 RecordSend(frame.Length);
+                FireTrace(HostLinkTraceDirection.Send, frame);
                 var response = await RecvTcpFrameAsync(operationCancellation.Token).ConfigureAwait(false);
                 RecordReceive(response.CountedLength);
                 FireTrace(HostLinkTraceDirection.Receive, response.Frame);
@@ -389,35 +579,54 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             catch (Exception error)
             {
                 CloseTransport();
-                throw operationCancellation.Translate(error, "TCP exchange");
+                Exception translated = operationCancellation.Translate(error, "TCP exchange");
+                throw stateChanging && sendMayHaveStarted
+                    ? CreateOutcomeUnknown(translated)
+                    : translated;
             }
         }
 
-        using (var operationCancellation = new KvHostLinkOperationCancellation(
-            cancellationToken,
-            lifetime.Token,
-            Timeout))
+        try
         {
-            try
-            {
-                await _udp!.SendAsync(frame, operationCancellation.Token).ConfigureAwait(false);
-                RecordSend(frame.Length);
-                var result = await _udp.ReceiveAsync(operationCancellation.Token).ConfigureAwait(false);
-                FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
-                byte[] responseBody = KvHostLinkProtocol.ExtractBody(result.Buffer);
-                RecordReceive(result.Buffer.Length);
-                if (responseBody.Length > MaxResponseBodyLength)
-                    throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
-                return responseBody;
-            }
-            catch (Exception error)
-            {
-                // Host Link has no transaction ID. A failed datagram exchange
-                // must never leave a delayed response for the next request.
-                CloseTransport();
-                throw operationCancellation.Translate(error, "UDP exchange");
-            }
+            operationCancellation.Token.ThrowIfCancellationRequested();
+            sendMayHaveStarted = true;
+            await _udp!.SendAsync(frame, operationCancellation.Token).ConfigureAwait(false);
+            RecordSend(frame.Length);
+            FireTrace(HostLinkTraceDirection.Send, frame);
+            var result = await _udp.ReceiveAsync(operationCancellation.Token).ConfigureAwait(false);
+            RecordReceive(result.Buffer.Length);
+            FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
+            byte[] responseBody = KvHostLinkProtocol.ExtractBody(result.Buffer);
+            if (responseBody.Length > MaxResponseBodyLength)
+                throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
+            return responseBody;
         }
+        catch (Exception error)
+        {
+            // Host Link has no transaction ID. A failed datagram exchange
+            // must never leave a delayed response for the next request.
+            CloseTransport();
+            Exception translated = operationCancellation.Translate(error, "UDP exchange");
+            throw stateChanging && sendMayHaveStarted
+                ? CreateOutcomeUnknown(translated)
+                : translated;
+        }
+    }
+
+    private static HostLinkOutcomeUnknownError CreateOutcomeUnknown(Exception cause)
+    {
+        HostLinkOutcomeUnknownReason reason = cause switch
+        {
+            HostLinkTimeoutError => HostLinkOutcomeUnknownReason.Timeout,
+            OperationCanceledException => HostLinkOutcomeUnknownReason.CallerCancellation,
+            HostLinkClosedError => HostLinkOutcomeUnknownReason.ConnectionClosed,
+            HostLinkProtocolError => HostLinkOutcomeUnknownReason.InvalidResponse,
+            _ => HostLinkOutcomeUnknownReason.TransportFailure,
+        };
+        return new HostLinkOutcomeUnknownError(
+            "The state-changing Host Link request may have reached the PLC, but its outcome is unknown. Do not retry automatically.",
+            reason,
+            cause);
     }
 
     private void RecordSend(int length)
@@ -504,19 +713,44 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     }
 
     private Task<string> SendSemanticAsync(string body, CancellationToken cancellationToken)
-        => ExecuteExclusiveAsync(() => SendSemanticCoreAsync(body, cancellationToken), cancellationToken);
+        => ExecuteExclusiveAsync(
+            () => SendSemanticCoreAsync(body, cancellationToken, stateChanging: false),
+            cancellationToken);
 
-    internal async Task<string> SendSemanticCoreAsync(string body, CancellationToken cancellationToken)
+    internal async Task<string> SendSemanticCoreAsync(
+        string body,
+        CancellationToken cancellationToken,
+        bool stateChanging = false)
     {
-        byte[] response = await SendRawCoreAsync(body, cancellationToken).ConfigureAwait(false);
+        byte[] frame = KvHostLinkProtocol.BuildFrame(body);
+        OperationContext context = RequireOperationContext();
+        if (!IsOpen)
+            throw new HostLinkNotConnectedError();
+
+        using var operationCancellation = new KvHostLinkOperationCancellation(
+            cancellationToken,
+            context.Generation.Cancellation.Token,
+            context.Timeout);
+        byte[] response = await SendRawTransportCoreAsync(
+            frame,
+            stateChanging,
+            operationCancellation).ConfigureAwait(false);
         try
         {
-            return KvHostLinkProtocol.DecodeSemanticResponse(response);
+            string decoded = KvHostLinkProtocol.DecodeSemanticResponse(response);
+            operationCancellation.Token.ThrowIfCancellationRequested();
+            return decoded;
         }
-        catch (HostLinkProtocolError)
+        catch (HostLinkProtocolError error)
         {
             CloseTransport();
-            throw;
+            throw stateChanging ? CreateOutcomeUnknown(error) : error;
+        }
+        catch (OperationCanceledException error)
+        {
+            CloseTransport();
+            Exception translated = operationCancellation.Translate(error, "response decode");
+            throw stateChanging ? CreateOutcomeUnknown(translated) : translated;
         }
     }
 
@@ -525,11 +759,16 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
     internal async Task ExpectOkCoreAsync(string body, CancellationToken cancellationToken)
     {
-        var response = await SendSemanticCoreAsync(body, cancellationToken).ConfigureAwait(false);
+        var response = await SendSemanticCoreAsync(
+            body,
+            cancellationToken,
+            stateChanging: true).ConfigureAwait(false);
         if (response != "OK")
         {
             CloseTransport();
-            throw new HostLinkProtocolError($"Expected 'OK' but received '{response}' for command '{body}'");
+            var error = new HostLinkProtocolError(
+                $"Expected 'OK' but received '{response}' for command '{body}'");
+            throw CreateOutcomeUnknown(error);
         }
     }
 
@@ -652,7 +891,24 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
     public Task WriteAsync<T>(string device, T value, CancellationToken cancellationToken = default)
         where T : IFormattable
-        => ExecuteExclusiveAsync(() => WriteCoreAsync(device, value, null, cancellationToken), cancellationToken);
+    {
+        string command = BuildWriteCommand(device, value, null);
+        return ExecuteExclusiveAsync(
+            () => ExpectOkCoreAsync(command, cancellationToken),
+            cancellationToken);
+    }
+
+    /// <summary>Writes one direct bit in one request using the exact Boolean-only bit-value contract.</summary>
+    public Task WriteAsync(
+        string device,
+        bool value,
+        CancellationToken cancellationToken = default)
+    {
+        string command = BuildBitWriteCommand(device, value);
+        return ExecuteExclusiveAsync(
+            () => ExpectOkCoreAsync(command, cancellationToken),
+            cancellationToken);
+    }
 
     public Task WriteAsync<T>(
         string device,
@@ -660,42 +916,93 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         string dataFormat,
         CancellationToken cancellationToken = default)
         where T : IFormattable
-        => ExecuteExclusiveAsync(() => WriteCoreAsync(device, value, dataFormat, cancellationToken), cancellationToken);
+    {
+        string command = BuildWriteCommand(device, value, dataFormat);
+        return ExecuteExclusiveAsync(
+            () => ExpectOkCoreAsync(command, cancellationToken),
+            cancellationToken);
+    }
 
-    internal async Task WriteCoreAsync<T>(
+    private static string BuildWriteCommand<T>(
         string device,
         T value,
-        string? dataFormat,
-        CancellationToken cancellationToken) where T : IFormattable
+        string? dataFormat) where T : IFormattable
     {
         var address = KvHostLinkDevice.RequireBaseDevice(device);
         string suffix = KvHostLinkDevice.RequireExplicitFormat(address, dataFormat);
         KvHostLinkDevice.ValidateDeviceType("WR", address.DeviceType, KvHostLinkModels.WrDeviceTypes);
         KvHostLinkDevice.ValidateDeviceSpan(address.DeviceType, address.Number, suffix);
         string valueText = FormatValue(value, suffix);
-        await ExpectOkCoreAsync(
-            $"WR {(address with { Suffix = suffix }).ToText()} {valueText}",
-            cancellationToken).ConfigureAwait(false);
+        return $"WR {(address with { Suffix = suffix }).ToText()} {valueText}";
+    }
+
+    private static string BuildBitWriteCommand(string device, bool value)
+    {
+        var address = KvHostLinkDevice.RequireBaseDevice(device);
+        string suffix = KvHostLinkDevice.RequireExplicitFormat(address, null);
+        if (suffix.Length != 0)
+            throw new HostLinkProtocolError("Boolean writes require a direct bit device.");
+        KvHostLinkDevice.ValidateDeviceType("WR", address.DeviceType, KvHostLinkModels.WrDeviceTypes);
+        KvHostLinkDevice.ValidateDeviceSpan(address.DeviceType, address.Number, suffix);
+        return $"WR {address.ToText()} {(value ? 1 : 0)}";
     }
 
     public Task WriteConsecutiveAsync<T>(
         string device,
         IEnumerable<T> values,
         CancellationToken cancellationToken = default) where T : IFormattable
-        => ExecuteExclusiveAsync(() => WriteConsecutiveCoreAsync(device, values, null, cancellationToken), cancellationToken);
+    {
+        T[] valueSnapshot = values.ToArray();
+        string command = BuildWriteConsecutiveCommand(device, valueSnapshot, null);
+        return ExecuteExclusiveAsync(
+            () => ExpectOkCoreAsync(command, cancellationToken),
+            cancellationToken);
+    }
+
+    /// <summary>Writes consecutive direct bits in one request from an immutable Boolean-value snapshot.</summary>
+    public Task WriteConsecutiveAsync(
+        string device,
+        IEnumerable<bool> values,
+        CancellationToken cancellationToken = default)
+    {
+        bool[] valueSnapshot = values.ToArray();
+        if (valueSnapshot.Length == 0)
+            throw new HostLinkProtocolError("values must not be empty");
+        var address = KvHostLinkDevice.RequireBaseDevice(device);
+        string suffix = KvHostLinkDevice.RequireExplicitFormat(address, null);
+        if (suffix.Length != 0)
+            throw new HostLinkProtocolError("Boolean writes require a direct bit device.");
+        KvHostLinkDevice.ValidateDeviceType("WRS", address.DeviceType, KvHostLinkModels.WrDeviceTypes);
+        KvHostLinkDevice.ValidateDeviceCount(address.DeviceType, suffix, valueSnapshot.Length);
+        KvHostLinkDevice.ValidateDeviceSpan(
+            address.DeviceType,
+            address.Number,
+            suffix,
+            valueSnapshot.Length);
+        string payload = string.Join(' ', valueSnapshot.Select(static value => value ? "1" : "0"));
+        string command = $"WRS {address.ToText()} {valueSnapshot.Length} {payload}";
+        return ExecuteExclusiveAsync(
+            () => ExpectOkCoreAsync(command, cancellationToken),
+            cancellationToken);
+    }
 
     public Task WriteConsecutiveAsync<T>(
         string device,
         IEnumerable<T> values,
         string dataFormat,
         CancellationToken cancellationToken = default) where T : IFormattable
-        => ExecuteExclusiveAsync(() => WriteConsecutiveCoreAsync(device, values, dataFormat, cancellationToken), cancellationToken);
+    {
+        T[] valueSnapshot = values.ToArray();
+        string command = BuildWriteConsecutiveCommand(device, valueSnapshot, dataFormat);
+        return ExecuteExclusiveAsync(
+            () => ExpectOkCoreAsync(command, cancellationToken),
+            cancellationToken);
+    }
 
-    internal async Task WriteConsecutiveCoreAsync<T>(
+    private static string BuildWriteConsecutiveCommand<T>(
         string device,
         IEnumerable<T> values,
-        string? dataFormat,
-        CancellationToken cancellationToken) where T : IFormattable
+        string? dataFormat) where T : IFormattable
     {
         var valueList = values.ToList();
         if (valueList.Count == 0)
@@ -707,57 +1014,62 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         KvHostLinkDevice.ValidateDeviceCount(address.DeviceType, suffix, valueList.Count);
         KvHostLinkDevice.ValidateDeviceSpan(address.DeviceType, address.Number, suffix, valueList.Count);
         string payload = BuildValuePayload(valueList, suffix);
-        await ExpectOkCoreAsync(
-            $"WRS {(address with { Suffix = suffix }).ToText()} {valueList.Count} {payload}",
-            cancellationToken).ConfigureAwait(false);
+        return $"WRS {(address with { Suffix = suffix }).ToText()} {valueList.Count} {payload}";
     }
 
     public Task RegisterMonitorBitsAsync(
         IEnumerable<string> devices,
         CancellationToken cancellationToken = default)
-        => ExecuteExclusiveAsync(async () =>
-        {
-            var targets = devices.ToList();
-            if (targets.Count == 0) throw new HostLinkProtocolError("At least one device is required");
-            if (targets.Count > 120) throw new HostLinkProtocolError("Maximum 120 devices can be registered");
+    {
+        string[] targets = devices.ToArray();
+        if (targets.Length == 0) throw new HostLinkProtocolError("At least one device is required");
+        if (targets.Length > 120) throw new HostLinkProtocolError("Maximum 120 devices can be registered");
 
-            var command = new StringBuilder("MBS");
-            foreach (var device in targets)
-            {
-                var address = KvHostLinkDevice.RequireBaseDevice(device);
-                KvHostLinkDevice.ValidateDeviceType("MBS", address.DeviceType, KvHostLinkModels.MbsDeviceTypes);
-                command.Append(' ');
-                command.Append(address.ToText());
-            }
-            await ExpectOkCoreAsync(command.ToString(), cancellationToken).ConfigureAwait(false);
-            _monitorBitCount = targets.Count;
+        var command = new StringBuilder("MBS");
+        foreach (var device in targets)
+        {
+            var address = KvHostLinkDevice.RequireBaseDevice(device);
+            KvHostLinkDevice.ValidateDeviceType("MBS", address.DeviceType, KvHostLinkModels.MbsDeviceTypes);
+            command.Append(' ');
+            command.Append(address.ToText());
+        }
+        string commandSnapshot = command.ToString();
+        return ExecuteExclusiveAsync(async () =>
+        {
+            await ExpectOkCoreAsync(commandSnapshot, cancellationToken).ConfigureAwait(false);
+            _monitorBitCount = targets.Length;
         }, cancellationToken);
+    }
 
     public Task RegisterMonitorWordsAsync(
         IEnumerable<KvMonitorWordTarget> devices,
         CancellationToken cancellationToken = default)
-        => ExecuteExclusiveAsync(async () =>
-        {
-            var targets = devices.ToList();
-            if (targets.Count == 0) throw new HostLinkProtocolError("At least one device is required");
-            if (targets.Count > 120) throw new HostLinkProtocolError("Maximum 120 devices can be registered");
+    {
+        KvMonitorWordTarget[] targets = devices.ToArray();
+        if (targets.Length == 0) throw new HostLinkProtocolError("At least one device is required");
+        if (targets.Length > 120) throw new HostLinkProtocolError("Maximum 120 devices can be registered");
 
-            var command = new StringBuilder("MWS");
-            var formats = new List<string>(targets.Count);
-            foreach (var target in targets)
-            {
-                ArgumentNullException.ThrowIfNull(target);
-                var address = KvHostLinkDevice.RequireBaseDevice(target.Device);
-                KvHostLinkDevice.ValidateDeviceType("MWS", address.DeviceType, KvHostLinkModels.MwsDeviceTypes);
-                string suffix = KvHostLinkDevice.RequireExplicitFormat(address, target.DataFormat);
-                KvHostLinkDevice.ValidateDeviceSpan(address.DeviceType, address.Number, suffix);
-                command.Append(' ');
-                command.Append((address with { Suffix = suffix }).ToText());
-                formats.Add(suffix);
-            }
-            await ExpectOkCoreAsync(command.ToString(), cancellationToken).ConfigureAwait(false);
-            _monitorWordFormats = formats.ToArray();
+        var command = new StringBuilder("MWS");
+        var formats = new List<string>(targets.Length);
+        foreach (var target in targets)
+        {
+            ArgumentNullException.ThrowIfNull(target);
+            var address = KvHostLinkDevice.RequireBaseDevice(target.Device);
+            KvHostLinkDevice.ValidateDeviceType("MWS", address.DeviceType, KvHostLinkModels.MwsDeviceTypes);
+            string suffix = KvHostLinkDevice.RequireExplicitFormat(address, target.DataFormat);
+            KvHostLinkDevice.ValidateDeviceSpan(address.DeviceType, address.Number, suffix);
+            command.Append(' ');
+            command.Append((address with { Suffix = suffix }).ToText());
+            formats.Add(suffix);
+        }
+        string commandSnapshot = command.ToString();
+        string[] formatSnapshot = formats.ToArray();
+        return ExecuteExclusiveAsync(async () =>
+        {
+            await ExpectOkCoreAsync(commandSnapshot, cancellationToken).ConfigureAwait(false);
+            _monitorWordFormats = formatSnapshot;
         }, cancellationToken);
+    }
 
     public Task<string[]> ReadMonitorBitsAsync(CancellationToken cancellationToken = default)
         => ExecuteExclusiveAsync(async () =>
@@ -991,21 +1303,31 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     }
 
     public Task<string> ReadCommentsAsync(string device, CancellationToken cancellationToken = default)
-        => ExecuteExclusiveAsync(async () =>
+        => ExecuteExclusiveAsync(
+            () => ReadCommentsCoreAsync(device, cancellationToken),
+            cancellationToken);
+
+    internal async Task<string> ReadCommentsCoreAsync(
+        string device,
+        CancellationToken cancellationToken)
+    {
+        var address = KvHostLinkDevice.RequireBaseDevice(device);
+        KvHostLinkDevice.ValidateDeviceType("RDC", address.DeviceType, KvHostLinkModels.RdcDeviceTypes);
+        byte[] frame = KvHostLinkProtocol.BuildFrame($"RDC {address.ToText()}");
+        byte[] response = await SendRawCoreAsync(
+            frame,
+            stateChanging: false,
+            cancellationToken).ConfigureAwait(false);
+        try
         {
-            var address = KvHostLinkDevice.RequireBaseDevice(device);
-            KvHostLinkDevice.ValidateDeviceType("RDC", address.DeviceType, KvHostLinkModels.RdcDeviceTypes);
-            byte[] response = await SendRawCoreAsync($"RDC {address.ToText()}", cancellationToken).ConfigureAwait(false);
-            try
-            {
-                return KvHostLinkProtocol.DecodeCommentResponse(response);
-            }
-            catch (HostLinkProtocolError)
-            {
-                CloseTransport();
-                throw;
-            }
-        }, cancellationToken);
+            return KvHostLinkProtocol.DecodeCommentResponse(response);
+        }
+        catch (HostLinkProtocolError)
+        {
+            CloseTransport();
+            throw;
+        }
+    }
 
     private static string BuildValuePayload<T>(List<T> values, string dataFormat) where T : IFormattable
     {
@@ -1021,6 +1343,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private static string FormatValue<T>(T value, string dataFormat) where T : IFormattable
     {
         object boxed = value;
+        if (dataFormat.Length == 0)
+        {
+            throw new HostLinkProtocolError(
+                "Direct bit writes require a Boolean value; numeric 0/1 compatibility inputs are not accepted.");
+        }
         if (boxed is not byte and not sbyte and not short and not ushort and not int and not uint and not long and not ulong)
             throw new HostLinkProtocolError("Host Link numeric writes require an integral CLR value.");
 
@@ -1045,7 +1372,6 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private static string FormatUnsigned(ulong value, string dataFormat)
         => dataFormat switch
         {
-            "" when value <= 1 => value.ToString(CultureInfo.InvariantCulture),
             ".U" when value <= ushort.MaxValue => value.ToString(CultureInfo.InvariantCulture),
             ".D" when value <= uint.MaxValue => value.ToString(CultureInfo.InvariantCulture),
             ".H" when value <= ushort.MaxValue => value.ToString("X", CultureInfo.InvariantCulture),
@@ -1057,7 +1383,6 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private static string FormatSigned(long value, string dataFormat)
         => dataFormat switch
         {
-            "" when value is 0 or 1 => value.ToString(CultureInfo.InvariantCulture),
             ".U" when value is >= ushort.MinValue and <= ushort.MaxValue => value.ToString(CultureInfo.InvariantCulture),
             ".S" when value is >= short.MinValue and <= short.MaxValue => value.ToString(CultureInfo.InvariantCulture),
             ".D" when value is >= uint.MinValue and <= uint.MaxValue => value.ToString(CultureInfo.InvariantCulture),

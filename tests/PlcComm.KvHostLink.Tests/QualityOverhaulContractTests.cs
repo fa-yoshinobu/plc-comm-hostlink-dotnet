@@ -36,7 +36,7 @@ public sealed class QualityOverhaulContractTests
     public void PublicSurfaceRemovesLfChunkAndCompatibilityOptions()
     {
         Assert.Null(typeof(KvHostLinkClient).GetProperty("AppendLfOnSend"));
-        Assert.Null(typeof(QueuedKvHostLinkClient).GetProperty("AppendLfOnSend"));
+        Assert.Null(typeof(KvHostLinkClient).Assembly.GetType("PlcComm.KvHostLink.QueuedKvHostLinkClient"));
         Assert.DoesNotContain(
             typeof(KvHostLinkClientExtensions).GetMethods(BindingFlags.Public | BindingFlags.Static),
             method => method.Name.Contains("Chunked", StringComparison.Ordinal));
@@ -242,7 +242,9 @@ public sealed class QualityOverhaulContractTests
         await using var server = new RawContractServer(_ => oversized);
         await using var client = await OpenClientAsync(server.Port);
 
-        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.SendRawAsync("OVERSIZED"));
+        var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => client.SendRawAsync("OVERSIZED"));
+        Assert.Equal(HostLinkOutcomeUnknownReason.InvalidResponse, error.Reason);
+        Assert.IsType<HostLinkProtocolError>(error.InnerException);
         Assert.False(client.IsOpen);
     }
 
@@ -332,28 +334,11 @@ public sealed class QualityOverhaulContractTests
     }
 
     [Fact]
-    public async Task ConcurrentBitInWordUpdatesHoldOneClientLockAcrossReadModifyWrite()
+    public void PublicSurfaceRejectsMultiRequestStateChangingHelper()
     {
-        ushort word = 0;
-        await using var server = new RawContractServer(command =>
-        {
-            if (command == "RD DM100.U")
-                return Encoding.ASCII.GetBytes($"{word}\r");
-            if (command.StartsWith("WR DM100.U ", StringComparison.Ordinal))
-            {
-                word = ushort.Parse(command[11..], System.Globalization.CultureInfo.InvariantCulture);
-                return "OK\r"u8.ToArray();
-            }
-            return "E1\r"u8.ToArray();
-        });
-        await using var client = await OpenClientAsync(server.Port);
-
-        await Task.WhenAll(
-            client.WriteBitInWordAsync("DM100", 0, true),
-            client.WriteBitInWordAsync("DM100", 1, true));
-
-        Assert.Equal((ushort)3, word);
-        Assert.Equal(4, server.Commands.Count);
+        Assert.DoesNotContain(
+            typeof(KvHostLinkClientExtensions).GetMethods(BindingFlags.Public | BindingFlags.Static),
+            method => method.Name == "WriteBitInWordAsync");
     }
 
     [Fact]
@@ -377,25 +362,25 @@ public sealed class QualityOverhaulContractTests
     }
 
     [Fact]
-    public async Task QueuedGateHonorsCallerCancellationWhileWaiting()
+    public async Task NormalClientGateHonorsCallerCancellationWhileWaitingWithoutSending()
     {
-        using var inner = new KvHostLinkClient("127.0.0.1", 8501, HostLinkTransportMode.Tcp, TestProfile);
-        await using var queued = new QueuedKvHostLinkClient(inner);
-        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        Task holder = queued.ExecuteAsync(async _ =>
+        await using var server = new RawContractServer(command =>
         {
-            entered.SetResult();
-            await release.Task;
+            release.Task.GetAwaiter().GetResult();
+            return command == "RD DM0.U" ? "1\r"u8.ToArray() : "E1\r"u8.ToArray();
         });
-        await entered.Task;
+        await using var client = await OpenClientAsync(server.Port);
+        Task<string[]> holder = client.ReadAsync("DM0", ".U");
+        await Task.Delay(30);
         using var cancellation = new CancellationTokenSource();
+        Task<string[]> waiting = client.ReadAsync("DM1", ".U", cancellation.Token);
         cancellation.Cancel();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            queued.ExecuteAsync(_ => Task.CompletedTask, cancellation.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waiting);
         release.SetResult();
         await holder;
+        Assert.Equal(["RD DM0.U"], server.Commands.ToArray());
     }
 
     private static async Task<KvHostLinkClient> OpenClientAsync(int port)

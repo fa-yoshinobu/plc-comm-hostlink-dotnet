@@ -25,7 +25,7 @@ The test suite covers:
 - Error response parsing (`E1`, `E2`, `E3`)
 - Multi-device read/write round-trips (mock transport)
 - 32-bit value packing (DWord, Float32)
-- Extension methods: `ReadTypedAsync`, `WriteTypedAsync`, `WriteBitInWordAsync`, `PollAsync`
+- Extension methods: `ReadTypedAsync`, `WriteTypedAsync`, `ReadNamedAsync`, `PollAsync`
 
 ## Hardware Checks
 

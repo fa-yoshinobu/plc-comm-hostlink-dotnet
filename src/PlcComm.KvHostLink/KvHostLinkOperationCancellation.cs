@@ -78,7 +78,7 @@ internal sealed class KvHostLinkOperationCancellation : IDisposable
             KvHostLinkCancellationOrigin.Timeout => new HostLinkTimeoutError(
                 $"Host Link {operation} timed out after {_timeout!.Value.TotalMilliseconds:0} ms.",
                 error),
-            KvHostLinkCancellationOrigin.Lifetime => new HostLinkConnectionError(
+            KvHostLinkCancellationOrigin.Lifetime => new HostLinkClosedError(
                 $"Host Link {operation} was interrupted because the connection was closed.",
                 error),
             _ => error,

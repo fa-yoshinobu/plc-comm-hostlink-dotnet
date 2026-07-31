@@ -10,19 +10,19 @@ namespace PlcComm.KvHostLink;
 public static class KvHostLinkClientFactory
 {
     /// <summary>
-    /// Creates, configures, and opens a queued Host Link client.
+    /// Creates, configures, and opens a Host Link client with built-in FIFO admission.
     /// </summary>
     /// <param name="options">Explicit connection options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A connected queued client.</returns>
+    /// <returns>A connected Host Link client.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="options"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException">The host name is empty or whitespace.</exception>
+    /// <exception cref="ArgumentException">The host is empty or is an unsupported IPv6 literal.</exception>
     /// <exception cref="ArgumentOutOfRangeException">The configured port is outside the valid TCP/UDP range.</exception>
     /// <remarks>
-    /// The returned client uses queued access so higher-level read, write, and polling helpers can
-    /// share one Host Link session predictably.
+    /// The ordinary client owns the one FIFO queue used by all low-level and high-level operations.
+    /// Hostname resolution selects IPv4 only and never falls back to IPv6.
     /// </remarks>
-    public static async Task<QueuedKvHostLinkClient> OpenAndConnectAsync(
+    public static async Task<KvHostLinkClient> OpenAndConnectAsync(
         KvHostLinkConnectionOptions options,
         CancellationToken cancellationToken = default)
     {
@@ -37,8 +37,7 @@ public static class KvHostLinkClientFactory
             Timeout = options.EffectiveTimeout,
         };
 
-        var queued = new QueuedKvHostLinkClient(inner);
-        await queued.OpenAsync(cancellationToken).ConfigureAwait(false);
-        return queued;
+        await inner.OpenAsync(cancellationToken).ConfigureAwait(false);
+        return inner;
     }
 }

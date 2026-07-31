@@ -11,10 +11,10 @@ is approved.
 
 ### Verification evidence — 2026-08-01
 
-- Current-worktree CI passed 185 tests on each of .NET 8, .NET 9, and .NET 10,
+- Current-worktree CI passed 201 tests on each of .NET 8, .NET 9, and .NET 10,
   formatting, generated API reference, all six sample builds, and release-tool checks.
 - A synthetic current-worktree Git tree produced a self-contained source
-  archive; its clean extracted gate passed 555 test executions plus restore,
+  archive; its clean extracted gate passed 603 test executions plus restore,
   build, format, documentation, all-sample, and package-content checks.
 - The independent NuGet guard passed with the approved 12-file minimal package.
 - Codex reviewed the actual diff, public API, validation and exception order,
@@ -26,7 +26,7 @@ is approved.
 
 ### Implementation scope
 
-- .NET extension/high-level Float32 write planning in direct and queued clients
+- .NET extension/high-level Float32 write planning in the ordinary FIFO client
 - Every direct bit device family accepted by the address parser, including `Y`, `R`, `B`, `MR`, `LR`, `CR`, `VB`, `X`, `M`, and `L`
 
 ### Target contract
@@ -89,9 +89,13 @@ Incorrect numeric bounds and point counts change to their logical values. Displa
 
 ## HL-EVAL-TODO-006 — Determine the Host Link device-comment encoding contract
 
+### User disposition
+
+Deferred by the user on 2026-08-01 for evidence investigation followed by implementation in the next Host Link implementation cycle. The current UTF-8-first/Shift_JIS-fallback behavior is not approved as the final contract. Do not change the decoder in the current implementation batch; investigate the exact profile-specific byte contract first, present the resulting target contract one item at a time, and implement only after explicit approval.
+
 ### Implementation scope
 
-- .NET `RDC` device-comment decoding and direct/queued client and extension APIs
+- .NET `RDC` device-comment decoding and ordinary client/extension APIs
 - Cross-language comparison with the Python, Rust, and Node-RED Host Link implementations
 - Shared Host Link user documentation where the resulting behavior is common
 
@@ -138,7 +142,7 @@ The current implementations try UTF-8 first and fall back to Shift_JIS. KEYENCE 
 ### Implementation scope
 
 - TCP and UDP connect, send, and receive operations
-- Direct and queued client exception propagation and connection invalidation
+- Ordinary FIFO client exception propagation and connection invalidation
 
 ### Target contract
 
@@ -153,7 +157,7 @@ Internal timeouts no longer appear as caller cancellation. Consumers may catch t
 1. Internal TCP and UDP connect/send/receive timeouts throw `HostLinkTimeoutError` and leave the client disconnected.
 2. A caller-cancelled token throws `OperationCanceledException`, not `HostLinkTimeoutError`, even when linked with the internal timeout mechanism.
 3. Deterministic race tests cover caller cancellation before timeout, timeout before caller cancellation, and disposal/close interruption.
-4. Direct and queued clients preserve the same leaf exception contract and do not automatically reconnect or retry.
+4. The ordinary FIFO client preserves the leaf exception contract and does not automatically reconnect or retry.
 
 ### Completion checklist
 
@@ -169,7 +173,7 @@ Internal timeouts no longer appear as caller cancellation. Consumers may catch t
 
 ### Implementation scope
 
-- `Close`, `CloseAsync`, `Dispose`, and `DisposeAsync` in direct and queued clients
+- `Close`, `CloseAsync`, `Dispose`, and `DisposeAsync` in the ordinary FIFO client
 - Active I/O, queued work, socket lifetime, gate acquisition, and error classification
 
 ### Target contract
@@ -182,10 +186,10 @@ Close/dispose no longer waits for the full configured response timeout before in
 
 ### Acceptance criteria
 
-1. Once close begins, new direct and queued operations fail without socket send.
+1. Once close begins, new ordinary-client operations fail without socket send.
 2. Active TCP and UDP reads are unblocked promptly by lifetime cancellation/socket close, after which `CloseAsync`/`DisposeAsync` await cleanup without synchronous gate blocking.
 3. Concurrent and repeated close/dispose calls complete idempotently without double-dispose faults or orphaned work.
-4. Deterministic tests distinguish close interruption, caller cancellation, and internal timeout in direct and queued clients.
+4. Deterministic tests distinguish close interruption, caller cancellation, and internal timeout in the ordinary FIFO client.
 5. No queued request survives close into a later connection and no request is retried automatically.
 
 ### Completion checklist

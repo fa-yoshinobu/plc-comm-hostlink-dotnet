@@ -398,6 +398,8 @@ def render_markdown(title: str, package: str, docs: dict[str, DocEntry], api: li
         "",
         f"This page is generated from the `{package}` assembly public API and XML documentation comments.",
         "",
+        "Every public PLC communication method is a single-request operation unless it is explicitly named `ReadNamedAsync` or `PollAsync`. Those two read-only methods are non-atomic aggregate operations and may issue multiple sequential requests while retaining one client FIFO turn. Lifecycle, parsing, profile, and offline catalog members issue no PLC protocol request.",
+        "",
         "Run `python scripts/generate_api_reference.py --help` from the repository root to regenerate it.",
         "",
     ]

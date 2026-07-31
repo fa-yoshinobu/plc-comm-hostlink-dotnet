@@ -53,9 +53,9 @@ $expected = @(
         Params = @("client", "device", "dtype", "value", "ct")
     },
     @{
-        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)'
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Boolean,System.Threading.CancellationToken)'
         Tags = @("summary", "remarks")
-        Params = @("client", "device", "bitIndex", "value", "ct")
+        Params = @("client", "device", "dtype", "value", "ct")
     },
     @{
         Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)'

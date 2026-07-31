@@ -17,14 +17,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Library: Added `HostLinkTimeoutError` to distinguish internal TCP/UDP connect, send, and receive timeouts from caller-requested `OperationCanceledException`.
-- Library: `Close`, `CloseAsync`, `Dispose`, and `DisposeAsync` now invalidate the connection lifetime and promptly interrupt active direct or queued I/O; queued work from the old connection is rejected and never replayed.
+- Docs: Corrected the final current-worktree verification evidence to 201 tests per target framework (603 extracted-archive test executions).
+- Library: **Breaking:** Removed `QueuedKvHostLinkClient`; the ordinary `KvHostLinkClient` now owns exact FIFO admission for all low- and high-level operations, rejects same-client reentrancy, snapshots admitted inputs and timeout configuration, starts the absolute transaction deadline only on activation, and retires active/queued generations on close.
+- Library: **Breaking:** Removed the multi-request `WriteBitInWordAsync` read-modify-write helper. Single-request writes remain available, and individual direct-bit writes accept only Boolean scalar/collection values; numeric `0`/`1` compatibility inputs are rejected before transport.
+- Library: **Breaking:** TCP and UDP endpoints are IPv4-only. IPv6 literals are rejected before socket creation, and hostname resolution selects IPv4 without IPv6 fallback.
+- Library: Added dedicated `HostLinkClosedError`, `HostLinkNotConnectedError`, `HostLinkReentrancyError`, and structured `HostLinkOutcomeUnknownError`. State-changing post-send timeout, cancellation, close, transport, or invalid-response failures are outcome-unknown and are never retried automatically.
+- Library: `ReadNamedAsync` and each `PollAsync` cycle now prevalidate and snapshot the complete read-only aggregate, preserve declared input and wire-request order, keep multiword values inside one request, retain one FIFO turn, and return no partial result after failure. All other communication APIs remain single-request operations and reject non-representable input before transport.
+- Release: Aligned artifact roles so the registry package contains consumer runtime, native API metadata, license, README, and ecosystem-native examples where applicable while excluding repository tests and maintainer tooling; the GitHub source archive retains tracked non-hardware validation and maintainer inputs.
+- Library: Added `HostLinkTimeoutError` to distinguish a known-outcome absolute transaction timeout from caller-requested `OperationCanceledException`.
+- Library: `Close`, `CloseAsync`, `Dispose`, and `DisposeAsync` now invalidate the connection lifetime and promptly interrupt active I/O; queued work from the old generation is rejected and never replayed.
 - Library: Float32 writes to every direct bit device family are rejected before transport instead of being emitted as consecutive bit writes.
 - Library: Corrected `R`, `MR`, `LR`, and `CR` catalog bounds and point counts by decoding the final decimal `00..15` bit field as `bank * 16 + bit` while preserving PLC display notation.
 - Library: Protected the cached profile-name and profile-descriptor collections from mutation through backing-array or mutable-interface casts.
 - Samples: Made every runnable sample read-only by default; write demonstrations now require `--allow-writes`, use changing test values, and restore captured values.
-- Tests: Added deterministic timeout/caller-cancellation/close race coverage, direct-bit Float rejection vectors, full banked-range checks, immutable-collection mutation attempts, and sample safety checks.
+- Tests: Added deterministic FIFO, timeout activation, caller-cancellation, close-generation, reentrancy, cross-client parallelism, Boolean-only bit, IPv4-only, outcome-unknown, aggregate preflight/order/boundary/failure, direct-bit Float, banked-range, immutable-collection, and sample-safety coverage.
 - CI: GitHub source archives now include tests, fixtures, and the scripts needed for restore/build/test/format/documentation/package verification; a separate guard keeps NuGet packages minimal.
+- CI: The NuGet package guard now restores and runs an isolated net8.0 consumer using only the generated local package, in addition to inspecting package contents.
+- CI: The NuGet guard now rejects CI, cache/build, source, maintainer, release-output, tools, and credential-like material in addition to its consumer-file allowlist.
+- CI: Source-archive validation can now synthesize the complete current worktree so pre-commit review includes new files, modifications, and deletions instead of stale `HEAD` contents.
 - Docs: README documentation links now include the shared Performance and Choosing a Language pages, and package registry metadata was expanded for discoverability. No functional change.
 
 ## [3.2.1] - 2026-07-29

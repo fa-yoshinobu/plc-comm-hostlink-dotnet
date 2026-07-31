@@ -1,28 +1,9 @@
 *.cs text eol=lf
 .gitattributes text eol=lf export-ignore
-.github export-ignore
-.github/** export-ignore
 .gitignore export-ignore
-.pre-commit-config.yaml export-ignore
-AGENTS.md export-ignore
-docsrc/maintainer export-ignore
-docsrc/maintainer/** export-ignore
-internal_docs export-ignore
-internal_docs/** export-ignore
 release-artifacts export-ignore
 release-artifacts/** export-ignore
-scripts/check_no_auto_publish.ps1 export-ignore
-scripts/check_registry_duplicate.ps1 export-ignore
-scripts/check_release_workflow.py export-ignore
-scripts/check_source_archive.ps1 export-ignore
-scripts/update_hostlink_profile_jsons.ps1 export-ignore
-tools export-ignore
-tools/** export-ignore
 build export-ignore
 build/** export-ignore
 build_win export-ignore
 build_win/** export-ignore
-release_check.bat export-ignore
-run_ci.bat export-ignore
-run-local-node-red.bat export-ignore
-TODO.md export-ignore

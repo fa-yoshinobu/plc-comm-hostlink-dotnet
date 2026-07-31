@@ -4,16 +4,15 @@
 
 | Method | Use it for |
 |---|---|
-| `OpenAndConnectAsync` | Create and open the recommended queued client. |
+| `OpenAndConnectAsync` | Create and open the ordinary FIFO client. |
 | `ReadTypedAsync` | Read one typed value. |
 | `WriteTypedAsync` | Write one typed value. |
-| `ReadNamedAsync` | Read a mixed snapshot by address strings. |
-| `PollAsync` | Read repeated snapshots on a fixed interval. |
+| `ReadNamedAsync` | Read a non-atomic mixed aggregate by address strings. |
+| `PollAsync` | Read repeated non-atomic aggregates on a fixed interval. |
 | `ReadWordsSingleRequestAsync` | Read contiguous 16-bit words in one PLC request. |
 | `ReadDWordsSingleRequestAsync` | Read contiguous 32-bit values in one PLC request. |
 | `WriteWordsSingleRequestAsync` | Write contiguous 16-bit words in one PLC request. |
 | `WriteDWordsSingleRequestAsync` | Write contiguous 32-bit values in one PLC request. |
-| `WriteBitInWordAsync` | Set or clear one bit inside a word device. |
 | `ReadTimerCounterAsync` | Read timer or counter status, current value, and preset. |
 | `ReadTimerAsync` | Read a timer as status, current value, and preset. |
 | `ReadCounterAsync` | Read a counter as status, current value, and preset. |
@@ -42,6 +41,8 @@ Console.WriteLine($"Connected: {client.IsOpen}");
 `Timeout` may be omitted; its default is 3 seconds. Explicit values must be
 from 1 through `Int32.MaxValue` milliseconds. Sub-millisecond, zero, negative,
 or larger timeouts are rejected. Normal Host Link command frames always end in CR.
+Connections are IPv4-only. IPv6 literals are rejected before socket creation;
+hostnames are resolved only to IPv4 and never fall back to IPv6.
 
 `SetTimeAsync` requires an explicit `DateTime` whose year is 2000 through
 2099. Years outside that PLC clock range are rejected before communication;
@@ -52,12 +53,15 @@ accept only `0`, `1`, `OFF`, or `ON`; numeric reads of direct-bit devices requir
 corresponding 16- or 32-point response. A malformed response shape invalidates
 the session before another request.
 
-The configured timeout applies to TCP and UDP connect/send/receive work. When
-that library timer expires, the operation throws `HostLinkTimeoutError`, which
-derives from `HostLinkConnectionError`, and the connection is invalidated.
-`OperationCanceledException` is reserved for a cancellation token supplied by
-the caller. `CloseAsync` and `DisposeAsync` promptly interrupt active I/O with
-`HostLinkConnectionError`, reject queued work from the old connection, and do
+The configured timeout is one absolute transaction deadline from the first
+send attempt through the complete response. FIFO queue waiting does not consume
+that deadline. A timed-out read throws `HostLinkTimeoutError`. If a write may
+already have reached the PLC, timeout, caller cancellation, close, transport
+failure, or an invalid response throws `HostLinkOutcomeUnknownError`; inspect
+its `Reason` and do not retry automatically. `HostLinkClosedError`,
+`HostLinkNotConnectedError`, and caller `OperationCanceledException` remain
+distinct when the outcome is known. `CloseAsync` and `DisposeAsync` promptly
+interrupt active I/O, reject queued work from the retired generation, and do
 not reconnect or retry it.
 
 ## Performance notes
@@ -68,20 +72,20 @@ disables Nagle buffering for small Host Link command frames.
 
 Reuse one connected client for repeated reads and writes. Prefer
 `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, or
-`ReadNamedAsync` over many individual `ReadTypedAsync` calls when one
-application snapshot can be read as one request.
+`ReadNamedAsync` over many individual `ReadTypedAsync` calls when its explicitly
+non-atomic aggregate semantics are acceptable.
 
 ## Connection reuse and concurrent requests
 
-Keep one `QueuedKvHostLinkClient` open for repeated reads, writes, and polling.
-The factory returns a queued client, so multiple async callers can share that
-client without interleaving Host Link frames on the same PLC connection.
-
-Do not call `InnerClient` concurrently. When custom access is needed, use
-`ExecuteAsync` so the operation stays inside the same queue. Commands never
-open or reconnect implicitly. After `CloseAsync`, timeout, cancellation, EOF,
-or transport failure, call `OpenAsync` explicitly before the next command. A
-failed command is never retried automatically.
+Keep one `KvHostLinkClient` open for repeated reads, writes, and polling. Its
+built-in FIFO admits public operations in arrival order and permits only one
+active wire transaction. Cancelling a waiting operation sends nothing; its
+transaction timeout starts only when it becomes active. Recursive use of the
+same client from a callback is rejected with `HostLinkReentrancyError`. Separate
+client instances remain independent. Commands never open or reconnect
+implicitly. After `CloseAsync`, timeout, cancellation, EOF, or transport
+failure, call `OpenAsync` explicitly before a new command when it is safe to do
+so. A failed command is never retried automatically.
 
 ## Read a single value
 
@@ -139,7 +143,7 @@ This is a matched read/write/readback pattern. Keep it on a test address until y
 Float32 (`F`) writes require a word device. Direct bit targets such as `R0`,
 `MR0`, `X0`, or `Y0` are rejected before any frame is sent.
 
-## Named snapshot read
+## Named aggregate read
 
 ```csharp
 using System;
@@ -149,15 +153,24 @@ var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkT
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 string[] addresses = ["DM0:U", "DM1:S", "DM2:D", "DM4:F", "DM10.A", "DM0:COMMENT"];
-var snapshot = await client.ReadNamedAsync(addresses);
+var readResult = await client.ReadNamedAsync(addresses);
 
-foreach (var (address, value) in snapshot)
+foreach (var (address, value) in readResult)
 {
     Console.WriteLine($"{address} = {value}");
 }
 ```
 
-Use `ReadNamedAsync` when one application snapshot mixes unsigned words, signed words, double words, floats, PLC comment strings, and bit-in-word values.
+Use `ReadNamedAsync` when one application aggregate mixes unsigned words, signed words, double words, floats, PLC comment strings, and bit-in-word values.
+
+`ReadNamedAsync` is an explicitly aggregate read. It validates and snapshots
+the complete plan before sending, preserves the declared input order and result
+mapping, keeps one FIFO turn for all internal requests, and stops at the first
+failure without returning a partial dictionary. It may combine or split only
+between independent named entries; a DWord or Float value is never split across
+wire requests. The result is not a simultaneous PLC snapshot because internal
+requests may observe different scan times. For coherent data, use a
+single-request read or a PLC-side snapshot/handshake design.
 
 ## Contiguous block reads
 
@@ -179,7 +192,7 @@ values and native `.D` Dword requests accept at most 500 values. The library
 does not split larger operations: application code must make each request,
 timing boundary, retry decision, and partial-write consequence explicit.
 
-## Bit in word
+## Bit values and bit-in-word reads
 
 ```csharp
 using System;
@@ -188,13 +201,20 @@ using PlcComm.KvHostLink;
 var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkTransportMode.Tcp, "keyence:kv-8000");
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
-await client.WriteBitInWordAsync("DM50", bitIndex: 10, value: true);
 var snapshot = await client.ReadNamedAsync(["DM50.A"]);
 
 Console.WriteLine($"DM50.A = {snapshot["DM50.A"]}");
 ```
 
-The `.n` notation uses hexadecimal bit indexes from `0` through `F`; `.A` means bit 10.
+The `.n` notation uses hexadecimal bit indexes from `0` through `F`; `.A` means
+bit 10. Individual direct-bit writes accept only `bool`, including consecutive
+bit collections. Numeric `0`/`1` compatibility inputs are rejected before
+transport. Explicit low-level `.U`/`.D` operations on a direct-bit bank remain
+packed multi-bit representations; they are not individual bit-value inputs.
+The former read-modify-write bit-in-word helper was removed because
+one state-changing public call required two wire requests and could not provide
+a safe all-or-error result. Write the complete word explicitly only when your
+application owns that word and has chosen the concurrency semantics.
 
 ## Polling
 
@@ -210,9 +230,9 @@ string[] addresses = ["DM0:U", "DM1:S", "DM4:F"];
 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 var count = 0;
 
-await foreach (var snapshot in client.PollAsync(addresses, TimeSpan.FromSeconds(1), cts.Token))
+await foreach (var readResult in client.PollAsync(addresses, TimeSpan.FromSeconds(1), cts.Token))
 {
-    Console.WriteLine($"DM0:U={snapshot["DM0:U"]}, DM1:S={snapshot["DM1:S"]}, DM4:F={snapshot["DM4:F"]}");
+    Console.WriteLine($"DM0:U={readResult["DM0:U"]}, DM1:S={readResult["DM1:S"]}, DM4:F={readResult["DM4:F"]}");
     if (++count >= 3)
     {
         break;
@@ -220,7 +240,9 @@ await foreach (var snapshot in client.PollAsync(addresses, TimeSpan.FromSeconds(
 }
 ```
 
-`PollAsync` yields a dictionary snapshot on each interval until cancellation or until your loop exits.
+`PollAsync` yields a non-atomic aggregate dictionary on each interval until
+cancellation or until your loop exits. Each cycle uses the same validation,
+input-order, no-interleaving, and no-partial-result contract as `ReadNamedAsync`.
 
 ## Operational recipes
 
@@ -344,6 +366,6 @@ test addresses; see `samples/README.md` for the exact commands.
 
 ## Traffic statistics
 
-Read `client.TrafficStats` (also available on the queued client) for cumulative `RequestCount`, `TxBytes`, and `RxBytes`.
+Read `client.TrafficStats` for cumulative `RequestCount`, `TxBytes`, and `RxBytes`.
 For TCP, a received line counts its body plus the first CR/LF terminator; extra CR/LF separators
 are consumed but not counted. For UDP, the complete response datagram is counted.

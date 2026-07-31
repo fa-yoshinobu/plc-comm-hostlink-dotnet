@@ -11,4 +11,6 @@ error-code symptoms.
 
 | Area | Symptom | Guidance |
 | --- | --- | --- |
-| None | No library-specific caveats are currently listed. | Use the shared KV Host Link setup and error-code pages for common issues. |
+| IPv6 endpoint | Construction rejects an IPv6 literal, or a hostname has no usable address. | Host Link connections are IPv4-only. Use an IPv4 literal or a hostname with an IPv4 result. |
+| Ambiguous write result | `HostLinkOutcomeUnknownError` is thrown after transmission may have begun. | Do not retry automatically. Inspect `Reason`, determine PLC state safely, and explicitly reopen only when appropriate. |
+| Named aggregate timing | `ReadNamedAsync` or one `PollAsync` cycle uses multiple wire reads. | Results are non-atomic. Use a single-request read or a PLC-side snapshot/handshake when values must share one coherence point. |

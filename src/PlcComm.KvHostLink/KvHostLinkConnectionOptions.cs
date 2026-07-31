@@ -7,7 +7,7 @@ namespace PlcComm.KvHostLink;
 /// This type is intended for the unified high-level connection flow so generated documentation
 /// can describe transport, timeout, profile, and framing behavior in one place.
 /// </remarks>
-/// <param name="Host">PLC IP address or hostname.</param>
+/// <param name="Host">PLC IPv4 address or hostname that resolves to IPv4. IPv6 is not supported.</param>
 /// <param name="Transport">Transport protocol.</param>
 /// <param name="PlcProfile">Canonical KEYENCE KV PLC profile for the session.</param>
 /// <param name="Port">Host Link port number.</param>
@@ -25,7 +25,7 @@ public sealed record KvHostLinkConnectionOptions(
     private string _plcProfile = NormalizePlcProfile(PlcProfile);
     private TimeSpan? _timeout = ValidateTimeout(Timeout);
 
-    /// <summary>Gets the validated PLC IP address or hostname.</summary>
+    /// <summary>Gets the validated PLC IPv4 address or hostname.</summary>
     public string Host
     {
         get => _host;
@@ -74,9 +74,7 @@ public sealed record KvHostLinkConnectionOptions(
     }
 
     private static string ValidateHost(string host)
-        => !string.IsNullOrWhiteSpace(host)
-            ? host
-            : throw new ArgumentException("Host must not be empty.", nameof(host));
+        => KvHostLinkNetwork.ValidateIpv4Host(host, nameof(host));
 
     private static int ValidatePort(int port)
         => port is >= 1 and <= 65535

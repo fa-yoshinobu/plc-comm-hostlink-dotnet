@@ -39,6 +39,10 @@ jobs:
       - name: Test
         run: dotnet test PlcComm.KvHostLink.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
 
+      - name: Validate NuGet package contents
+        shell: pwsh
+        run: ./scripts/check_package_contents.ps1
+
       - name: Format check
         run: dotnet format PlcComm.KvHostLink.sln --verify-no-changes --no-restore
 

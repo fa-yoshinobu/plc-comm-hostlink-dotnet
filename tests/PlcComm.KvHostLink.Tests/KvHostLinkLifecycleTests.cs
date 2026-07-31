@@ -36,9 +36,9 @@ public sealed class KvHostLinkLifecycleTests
         await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
         cancellation.Cancel();
 
-        var error = await Assert.ThrowsAsync<OperationCanceledException>(() => request);
-        Assert.Equal(cancellation.Token, error.CancellationToken);
-        Assert.IsNotType<HostLinkTimeoutError>(error);
+        var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => request);
+        Assert.Equal(HostLinkOutcomeUnknownReason.CallerCancellation, error.Reason);
+        Assert.Equal(cancellation.Token, Assert.IsType<OperationCanceledException>(error.InnerException).CancellationToken);
         Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
         listener.Stop();
@@ -81,10 +81,10 @@ public sealed class KvHostLinkLifecycleTests
         var stopwatch = Stopwatch.StartNew();
         await client.CloseAsync().WaitAsync(TimeSpan.FromSeconds(2));
         stopwatch.Stop();
-        var activeError = await Assert.ThrowsAsync<HostLinkConnectionError>(() => request);
-        var waitingError = await Assert.ThrowsAsync<HostLinkConnectionError>(() => waiting);
-        Assert.IsNotType<HostLinkTimeoutError>(activeError);
-        Assert.IsNotType<HostLinkTimeoutError>(waitingError);
+        var activeError = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => request);
+        var waitingError = await Assert.ThrowsAsync<HostLinkClosedError>(() => waiting);
+        Assert.Equal(HostLinkOutcomeUnknownReason.ConnectionClosed, activeError.Reason);
+        Assert.IsType<HostLinkClosedError>(activeError.InnerException);
         Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(2));
         Assert.False(client.IsOpen);
 
@@ -117,14 +117,14 @@ public sealed class KvHostLinkLifecycleTests
         await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         await client.CloseAsync().WaitAsync(TimeSpan.FromSeconds(2));
-        var error = await Assert.ThrowsAsync<HostLinkConnectionError>(() => request);
-        Assert.IsNotType<HostLinkTimeoutError>(error);
+        var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => request);
+        Assert.Equal(HostLinkOutcomeUnknownReason.ConnectionClosed, error.Reason);
         Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     [Fact]
-    public async Task QueuedCloseInterruptsActiveIoAndRejectsQueuedWork()
+    public async Task NormalClientCloseInterruptsActiveIoAndRejectsQueuedWork()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
@@ -140,24 +140,22 @@ public sealed class KvHostLinkLifecycleTests
             Assert.Equal(0, trailingBytes);
         });
 
-        using var inner = new KvHostLinkClient(
+        await using var client = new KvHostLinkClient(
             "127.0.0.1", port, HostLinkTransportMode.Tcp, TestProfile)
         {
             Timeout = TimeSpan.FromSeconds(30),
         };
-        await using var queued = new QueuedKvHostLinkClient(inner);
-        await queued.OpenAsync();
-        Task<byte[]> active = queued.SendRawAsync("BLOCK");
+        await client.OpenAsync();
+        Task<byte[]> active = client.SendRawAsync("BLOCK");
         await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        Task<int> waiting = queued.ExecuteAsync(_ => Task.FromResult(1));
+        Task<string[]> waiting = client.ReadAsync("DM0", ".U");
 
-        await queued.CloseAsync().WaitAsync(TimeSpan.FromSeconds(2));
+        await client.CloseAsync().WaitAsync(TimeSpan.FromSeconds(2));
 
-        var activeError = await Assert.ThrowsAsync<HostLinkConnectionError>(() => active);
-        var waitingError = await Assert.ThrowsAsync<HostLinkConnectionError>(() => waiting);
-        Assert.IsNotType<HostLinkTimeoutError>(activeError);
-        Assert.IsNotType<HostLinkTimeoutError>(waitingError);
-        Assert.False(queued.IsOpen);
+        var activeError = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => active);
+        await Assert.ThrowsAsync<HostLinkClosedError>(() => waiting);
+        Assert.Equal(HostLinkOutcomeUnknownReason.ConnectionClosed, activeError.Reason);
+        Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
         listener.Stop();
     }
@@ -167,17 +165,16 @@ public sealed class KvHostLinkLifecycleTests
     {
         var client = new KvHostLinkClient(
             "127.0.0.1", 8501, HostLinkTransportMode.Tcp, TestProfile);
-        var queued = new QueuedKvHostLinkClient(client);
 
-        await Task.WhenAll(queued.CloseAsync(), queued.CloseAsync());
-        await Task.WhenAll(queued.DisposeAsync().AsTask(), queued.DisposeAsync().AsTask());
+        await Task.WhenAll(client.CloseAsync(), client.CloseAsync());
+        await Task.WhenAll(client.DisposeAsync().AsTask(), client.DisposeAsync().AsTask());
 
-        await Assert.ThrowsAsync<ObjectDisposedException>(() => queued.OpenAsync());
-        await queued.CloseAsync();
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => client.OpenAsync());
+        await client.CloseAsync();
     }
 
     [Fact]
-    public async Task QueuedTimeoutWinsBeforeLaterCallerCancellation()
+    public async Task StateChangingTimeoutWinsBeforeLaterCallerCancellation()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
@@ -191,22 +188,23 @@ public sealed class KvHostLinkLifecycleTests
             Assert.Equal(0, trailingBytes);
         });
 
-        using var inner = new KvHostLinkClient(
+        await using var client = new KvHostLinkClient(
             "127.0.0.1", port, HostLinkTransportMode.Tcp, TestProfile)
         {
             Timeout = TimeSpan.FromMilliseconds(50),
         };
-        await using var queued = new QueuedKvHostLinkClient(inner);
         using var callerCancellation = new CancellationTokenSource();
-        await queued.OpenAsync();
+        await client.OpenAsync();
 
-        await Assert.ThrowsAsync<HostLinkTimeoutError>(
-            () => queued.SendRawAsync("TIMEOUT", callerCancellation.Token));
+        var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(
+            () => client.SendRawAsync("TIMEOUT", callerCancellation.Token));
+        Assert.Equal(HostLinkOutcomeUnknownReason.Timeout, error.Reason);
+        Assert.IsType<HostLinkTimeoutError>(error.InnerException);
 
         Assert.False(callerCancellation.IsCancellationRequested);
         callerCancellation.Cancel();
         Assert.True(callerCancellation.IsCancellationRequested);
-        Assert.False(queued.IsOpen);
+        Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
         listener.Stop();
     }

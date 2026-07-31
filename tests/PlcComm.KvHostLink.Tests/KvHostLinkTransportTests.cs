@@ -28,9 +28,10 @@ public sealed class KvHostLinkTransportTests
             Timeout = TimeSpan.FromSeconds(2)
         };
         await client.OpenAsync();
-        var error = await Assert.ThrowsAsync<HostLinkConnectionError>(() => client.SendRawAsync("READ"));
+        var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => client.SendRawAsync("READ"));
 
-        Assert.Contains("before the response terminator", error.Message, StringComparison.Ordinal);
+        Assert.Equal(HostLinkOutcomeUnknownReason.TransportFailure, error.Reason);
+        Assert.Contains("before the response terminator", error.InnerException!.Message, StringComparison.Ordinal);
         Assert.False(client.IsOpen);
         Assert.Equal(0UL, client.TrafficStats.RxBytes);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
@@ -58,7 +59,9 @@ public sealed class KvHostLinkTransportTests
         };
         await client.OpenAsync();
 
-        await Assert.ThrowsAsync<HostLinkTimeoutError>(() => client.SendRawAsync("READ"));
+        var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => client.SendRawAsync("READ"));
+        Assert.Equal(HostLinkOutcomeUnknownReason.Timeout, error.Reason);
+        Assert.IsType<HostLinkTimeoutError>(error.InnerException);
         Assert.Equal(0UL, client.TrafficStats.RxBytes);
         Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
@@ -116,7 +119,9 @@ public sealed class KvHostLinkTransportTests
             "127.0.0.1", port, HostLinkTransportMode.Tcp, "keyence:kv-8000");
         await client.OpenAsync();
 
-        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.SendRawAsync("READ"));
+        var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => client.SendRawAsync("READ"));
+        Assert.Equal(HostLinkOutcomeUnknownReason.InvalidResponse, error.Reason);
+        Assert.IsType<HostLinkProtocolError>(error.InnerException);
         Assert.Equal(0UL, client.TrafficStats.RxBytes);
         Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
@@ -151,7 +156,9 @@ public sealed class KvHostLinkTransportTests
         };
 
         await client.OpenAsync();
-        await Assert.ThrowsAsync<HostLinkTimeoutError>(() => client.SendRawAsync("FIRST"));
+        var timeout = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => client.SendRawAsync("FIRST"));
+        Assert.Equal(HostLinkOutcomeUnknownReason.Timeout, timeout.Reason);
+        Assert.IsType<HostLinkTimeoutError>(timeout.InnerException);
         Assert.False(client.IsOpen);
         Assert.Equal(new HostLinkTrafficStats(1, 6, 0), client.TrafficStats);
 
@@ -190,7 +197,9 @@ public sealed class KvHostLinkTransportTests
         await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
         cancellation.Cancel();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => request);
+        var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => request);
+        Assert.Equal(HostLinkOutcomeUnknownReason.CallerCancellation, error.Reason);
+        Assert.IsType<OperationCanceledException>(error.InnerException);
         Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
     }

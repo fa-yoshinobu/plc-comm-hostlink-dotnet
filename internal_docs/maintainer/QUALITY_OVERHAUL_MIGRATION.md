@@ -539,3 +539,284 @@ metadata, README, and license.
 Compatibility impact and migration: source archives are larger because tests
 and their required validation scripts are included. NuGet consumers receive no
 additional repository-only content.
+
+## GOAL-HL-SERIAL-DEFER-001: Single-request capacity contract
+
+Implementation scope: every public Host Link read/write command and high-level
+single-request helper in this repository.
+
+Target contract: an API classified as one protocol request emits at most one
+request and rejects a count or logical value that cannot fit before transport.
+No single-request write or read silently splits.
+
+Compatibility impact: callers must issue explicitly separate operations when
+they accept separate timing or partial-completion boundaries.
+
+Acceptance criteria:
+
+1. Generated API documentation classifies all communication methods.
+2. Exact-limit and over-limit tests prove one request or zero requests.
+3. No write helper silently compiles to multiple requests.
+
+- [x] Implementation completed in this repository.
+- [x] Tests cover the applicable capacity and pre-transport boundaries.
+- [x] Static, unit, build, sample, package, and source-archive checks passed.
+- [x] Codex self-review completed against the approved contract.
+- [x] Live PLC verification is not required; request counts and rejection are deterministic locally.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## GOAL-HL-SERIAL-DEFER-002: One absolute active-transaction deadline
+
+Implementation scope: TCP/UDP connect and each admitted Host Link exchange.
+Serial-port configuration is not applicable because this implementation has no
+serial transport.
+
+Target contract: one timeout snapshot is taken at FIFO admission and one
+monotonic .NET cancellation deadline is armed immediately before the first
+transport attempt after activation. It spans resolution/connect or the complete send-through-response exchange,
+does not restart on partial progress, invalidates failed transport state, and
+never causes an automatic retry. FIFO waiting consumes none of the deadline.
+
+Compatibility impact: trickled progress cannot extend an operation indefinitely;
+queued work receives its complete active timeout budget.
+
+Acceptance criteria:
+
+1. A queued operation can wait longer than its timeout and still succeed when its active exchange fits.
+2. TCP and UDP timeout tests close the failed transport without retry.
+3. Read and state-changing timeout identities follow GOAL-HL-ERROR-DEFER-001.
+
+- [x] Implementation completed in this repository.
+- [x] Deterministic deadline and queue-wait tests added.
+- [x] Static, unit, build, sample, package, and source-archive checks passed.
+- [x] Codex self-review completed against the approved contract.
+- [x] Live PLC verification is not required; deadline behavior is locally deterministic.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## GOAL-HL-SERIAL-DEFER-006: FIFO and close-generation isolation
+
+Implementation scope: `KvHostLinkClient`, factory entry points, high-level
+extensions, examples, and removal of `QueuedKvHostLinkClient`.
+
+Target contract: the ordinary client admits operations in exact arrival order,
+runs one active transaction, snapshots request inputs and timeout configuration
+at admission, cancels a waiting caller without sending, rejects same-client
+recursive entry, and allows separate clients to progress independently. Close
+retires active and queued work from the old generation; reopening accepts only
+fresh work and cannot associate an old response with a new operation.
+
+Compatibility impact: `QueuedKvHostLinkClient`, its overloads, and its custom
+execution escape hatch are removed. Callers use `KvHostLinkClient` directly.
+
+Acceptance criteria:
+
+1. FIFO wire order is deterministic under concurrent admission.
+2. Waiting cancellation sends nothing and later work can continue.
+3. Close rejects active/queued old-generation work and fresh post-reopen work succeeds.
+4. Recursive callbacks fail with `HostLinkReentrancyError`; other clients remain independent.
+
+- [x] Implementation completed in this repository.
+- [x] Lifecycle, FIFO, cancellation, reentrancy, snapshot, and parallel-instance tests added.
+- [x] Static, unit, build, sample, package, and source-archive checks passed.
+- [x] Codex self-review completed against the approved contract.
+- [x] Live PLC verification is not required; queue and lifecycle behavior is locally deterministic.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## GOAL-HL-ERROR-DEFER-001: Stable known and unknown outcome errors
+
+Implementation scope: every Host Link communication operation and raw
+maintainer command.
+
+Target contract: timeout, caller cancellation, explicit close, not-connected,
+transport failure, malformed protocol response, and known PLC rejection remain
+distinguishable. When state-changing transmission may have begun without a
+definitive result, `HostLinkOutcomeUnknownError` carries a structured `Reason`
+and original cause. Such operations are never retried automatically. Raw
+commands are conservatively treated as potentially state-changing.
+
+Compatibility impact: post-send failures from writes/raw commands now use the
+outcome-unknown wrapper. Consumers must inspect the structured reason and must
+not treat timeout/cancellation as proof that the PLC did not execute the command.
+
+Acceptance criteria:
+
+1. Dedicated timeout, close, not-connected, reentrancy, and outcome-unknown types are public.
+2. Read timeout remains `HostLinkTimeoutError`; write timeout is outcome-unknown with a timeout cause.
+3. Caller cancellation, close, transport, and invalid-response outcome reasons are tested.
+4. Known PLC error responses are not mislabeled as outcome-unknown.
+
+- [x] Implementation completed in this repository.
+- [x] Deterministic error-identity and cause tests added.
+- [x] Static, unit, build, sample, package, and source-archive checks passed.
+- [x] Codex self-review completed against the approved contract.
+- [x] Live PLC verification is not required; error classification is deterministic locally.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## GOAL-HL-AGGREGATE-DEFER-001: Safe read-only aggregate splitting
+
+Implementation scope: `ReadNamedAsync`, each `PollAsync` cycle, and removal of
+the multi-request state-changing `WriteBitInWordAsync` helper.
+
+Target contract: a read-only aggregate copies and validates its complete plan
+before transport, preserves declared input order in internal wire requests and
+result mapping, splits only between independent entries, keeps each multiword
+value wholly inside one request, retains one FIFO turn, stops at the first
+failure, and exposes no partial result. It is explicitly non-atomic. A public
+state-changing operation that would need multiple requests is rejected or
+removed; one-request writes remain available.
+
+Compatibility impact: named aggregates no longer sort wire reads by address.
+`WriteBitInWordAsync` is removed; callers may write an owned complete word in
+one request after choosing their application-level concurrency contract.
+
+Acceptance criteria:
+
+1. Invalid or duplicate later entries produce zero wire requests.
+2. Discontiguous/reordered input produces wire reads in declared order.
+3. A DWord at the 1,000-word boundary remains a two-word request and is never torn.
+4. A later same-client operation cannot interleave and intermediate failure returns no dictionary.
+5. Documentation directs coherent readers to a single request or PLC-side snapshot/handshake.
+
+- [x] Implementation completed in this repository.
+- [x] Preflight, order, boundary, no-interleaving, failure, and existing capacity tests cover the contract.
+- [x] Static, unit, build, sample, package, and source-archive checks passed.
+- [x] Codex self-review completed against the approved contract.
+- [x] Live PLC verification is not required; planner/request ordering is deterministic locally.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## GOAL-HL-BIT-BOOL-AUDIT-001: Boolean-only individual bit writes
+
+Implementation scope: low-level scalar/consecutive direct-bit writes and
+`WriteTypedAsync(..., "BIT", ...)`. The originating SLMP record did not list
+Host Link, but this repository was explicitly audited for cross-library
+consistency.
+
+Target contract: individual bit values enter public Host Link APIs only as
+`bool`/`IEnumerable<bool>`. Numeric `0` and `1` are not compatibility inputs.
+Packed numeric reads remain a distinct bit-bank read representation and are not
+individual bit-write inputs.
+
+Compatibility impact: callers passing numeric direct-bit write values must
+convert application data explicitly to `bool`.
+
+Acceptance criteria:
+
+1. Boolean scalar and collection writes emit the exact `1`/`0` wire tokens.
+2. Numeric scalar, collection, and typed BIT inputs fail before transport.
+3. No truthy or numeric compatibility overload is public.
+
+- [x] Implementation and tests completed in this repository.
+- [x] Static, unit, build, sample, package, and source-archive checks passed.
+- [x] Codex self-review completed against the approved contract.
+- [x] Live PLC verification is not required; input type and pre-transport behavior are deterministic.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## GOAL-HL-IPV4-AUDIT-001: IPv4-only endpoints
+
+Implementation scope: constructor, connection options, factory, TCP connect,
+UDP connect, hostname resolution, samples, and documentation.
+
+Target contract: IPv4 literals and hostnames with an IPv4 result are supported.
+IPv6 literals are rejected before socket creation, hostname resolution selects
+only IPv4, and no fallback or IPv6 UDP bind is permitted.
+
+Compatibility impact: IPv6 endpoints must migrate to the PLC's IPv4 endpoint.
+
+Acceptance criteria:
+
+1. Plain, bracketed, and mapped IPv6 literals fail before transport.
+2. TCP and UDP sockets use `AddressFamily.InterNetwork`.
+3. Hostname resolution returns only an IPv4 result or a connection error.
+
+- [x] Implementation and deterministic tests completed in this repository.
+- [x] Static, unit, build, sample, package, and source-archive checks passed.
+- [x] Codex self-review completed against the approved contract.
+- [x] Live PLC verification is not required; address-family selection is deterministic locally.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## GOAL-SLMP-DEFER-005 Host Link .NET applicability record
+
+Implementation scope: audit of all public live Host Link .NET methods and
+profile-accepting offline device-range catalog methods.
+
+Target contract: a live method with an explicit/profile-bound selector must
+match the connection's exact canonical profile before transport; redundant
+profile overrides are not added. Offline catalog lookup remains transport-free
+and is named/documented as offline behavior.
+
+Compatibility impact: not applicable. Every live method already derives its
+only profile from immutable `KvHostLinkClient.PlcProfile`; no live method accepts
+a second profile-bearing value. `DeviceRangeCatalogForPlcProfile` is offline.
+
+Acceptance criteria:
+
+1. Reflection/source audit finds no live per-call profile parameter or profile-bound address type.
+2. Client profile is immutable and canonicalized at construction.
+3. Offline catalog APIs perform no communication and remain clearly separate.
+
+- [x] Applicability audit completed with a machine-checkable not-applicable rationale.
+- [x] No runtime implementation change was required or added.
+- [x] Existing canonical-profile and offline catalog tests cover the applicable behavior.
+- [x] Static, unit, build, sample, package, and source-archive checks passed.
+- [x] Codex self-review completed against the approved contract.
+- [x] Live PLC verification is not required; this is an API/profile-flow audit.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## 2026-08-01 overhaul verification evidence
+
+- `run_ci.bat`: passed after the final implementation state, including build,
+  API-generator helper tests and freshness, 201 tests on each of net8.0,
+  net9.0, and net10.0, formatting, all six solution samples plus the two
+  separately restored sample projects, high-level XML docs, sample inventory,
+  release-workflow guards, and NuGet package inspection.
+- NuGet inspection: `PlcComm.KvHostLink.3.2.1.nupkg` contained 12 allowed
+  consumer files and no repository tests, samples, scripts, maintainer docs, or
+  source inputs. No registry publication was performed.
+- Synthetic working-tree source archive: 73 files, all tracked tests and 15
+  sample files present; extracted restore/build/format/API/docs/sample/package
+  gates passed and 603 test results passed across the three target frameworks.
+- Generated API reference: regenerated from 32 public types; the removed queued
+  wrapper and multi-request write helper are absent, and the global
+  single-request/aggregate classification is present.
+- Codex self-review inspected the actual public surface, diff, validation order,
+  FIFO state transitions, cancellation and close races, timeout start and decode
+  coverage, transport retirement, error causes, aggregate request ordering,
+  multiword boundaries, examples, docs, packaging, and profile flow. Accepted
+  findings fixed before final verification were pre-send cancellation
+  translation, response-decode deadline coverage, cancelled-waiter registration
+  cleanup, remaining queued terminology, and user/sample wording that still
+  called potentially multi-request aggregate results snapshots. No finding was rejected or
+  left deferred.
+- Live PLC disposition: not required for these items. They change deterministic
+  client admission, validation, socket address-family policy, local error
+  classification, and planner behavior without making a new PLC capability
+  claim. The separately deferred device-comment encoding investigation remains
+  unchanged and outside this implementation set.
+
+## Accepted self-review finding — packed NuGet consumer boundary
+
+The package guard previously inspected the generated NuGet entries but did not
+prove that a consumer could restore and compile from that artifact alone. It now
+creates an isolated net8.0 consumer, restores from only the local package output,
+and runs code that references `KvHostLinkClient`. This packed-consumer gate
+passed on 2026-08-01; no registry publication was performed.
+
+The first final archive rerun revealed that the old worktree-attribute option
+still archived the `HEAD` tree and therefore could miss uncommitted files. The
+finding was accepted. The option now creates the review archive from all
+non-ignored current-worktree files while honoring deletions and source-artifact
+exclusions. The corrected extracted archive passed 603 test results, docs,
+samples, formatting, and the packed NuGet consumer gate.
+
+The cross-ecosystem artifact review additionally found incomplete negative
+coverage for repository-only NuGet material. The accepted correction now
+rejects CI, cache/build, source, maintainer, release-output, tools, and
+credential-like paths/files. The hardened 12-file NuGet consumer gate passed.

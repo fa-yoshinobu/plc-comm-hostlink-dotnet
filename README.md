@@ -6,6 +6,10 @@
 
 .NET library for KEYENCE KV Host Link PLC communication.
 
+Connections are IPv4-only. Use an IPv4 literal or a hostname with an IPv4
+result. The ordinary `KvHostLinkClient` includes arrival-order FIFO admission,
+so one instance can be shared by asynchronous callers without a wrapper.
+
 ## PLC Comm Family
 
 This library is part of the plc-comm family. See the [package matrix](https://fa-yoshinobu.github.io/plc-comm-docs-site/package-matrix/) for protocol, language, registry, and install-command mapping.
