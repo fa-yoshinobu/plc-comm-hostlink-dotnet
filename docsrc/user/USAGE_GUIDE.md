@@ -141,8 +141,14 @@ finally
 ```
 
 This is a matched read/write/readback pattern. Keep it on a test address until you know the register is safe for your machine.
-Float32 (`F`) writes require a word device. Direct bit targets such as `R0`,
-`MR0`, `X0`, or `Y0` are rejected before any frame is sent.
+Float32 (`F`) reads and writes are available only for the canonical ordinary
+one-word families `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `Z`, `CM`, `VM`, `D`,
+`E`, and `F`, where the value uses two consecutive `.U` words. Direct-bit
+families and special-response families such as `R`, `T`, `C`, and `AT` are
+rejected before FIFO admission and transport in parsed, normalized, formatted,
+typed, named, and polling addresses. Float32 write input must also be finite and
+within the binary32 range; NaN, infinities, and finite values that would
+overflow to infinity are rejected before transport.
 
 ## Named aggregate read
 
@@ -172,6 +178,12 @@ between independent named entries; a DWord or Float value is never split across
 wire requests. The result is not a simultaneous PLC snapshot because internal
 requests may observe different scan times. For coherent data, use a
 single-request read or a PLC-side snapshot/handshake design.
+
+Named keys must be semantically unique by device family, numeric address,
+dtype, bit index, and scalar count. Case, leading zeros, or an explicit default
+dtype do not make a second key distinct. Different dtype views of the same word,
+different bit indices, and overlapping multiword spans are valid. Result keys
+preserve the original input strings.
 
 An aggregate containing `:COMMENT` must use the overload that supplies a
 `HostLinkCommentEncoding`. The overload without that parameter rejects the
@@ -250,6 +262,8 @@ await foreach (var readResult in client.PollAsync(addresses, TimeSpan.FromSecond
 `PollAsync` yields a non-atomic aggregate dictionary on each interval until
 cancellation or until your loop exits. Each cycle uses the same validation,
 input-order, no-interleaving, and no-partial-result contract as `ReadNamedAsync`.
+The interval must be greater than zero and no more than `Int32.MaxValue`
+milliseconds; invalid intervals are rejected before communication.
 If the address list contains `:COMMENT`, use the overload that adds an explicit
 `HostLinkCommentEncoding` after the interval. If it contains no comment, use the
 ordinary overload; an unused comment encoding is rejected before the first send.
@@ -296,7 +310,10 @@ Console.WriteLine($"C0 status={counter.Status}, current={counter.Current}, prese
 Console.WriteLine($"Generic T0 preset={generic.Preset}");
 ```
 
-`ReadTimerCounterAsync` returns `Status`, `Current`, and `Preset`. `ReadTimerAsync` accepts timer devices, and `ReadCounterAsync` accepts counter devices.
+`ReadTimerCounterAsync` returns `Status`, `Current`, and `Preset`. The response
+status must be exactly `0` or `1`; any other numeric value is treated as an
+invalid response and retires the connection. `ReadTimerAsync` accepts timer
+devices, and `ReadCounterAsync` accepts counter devices.
 
 > **Caution:** Timer/Counter preset writes (`WS`/`WSS`) are only supported on KV-8000/7000-series PLCs. Other models return error `E1`.
 

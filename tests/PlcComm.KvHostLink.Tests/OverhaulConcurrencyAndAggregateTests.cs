@@ -222,14 +222,27 @@ public sealed class OverhaulConcurrencyAndAggregateTests
     [Fact]
     public async Task AggregatePreflightRejectsAnyInvalidOrDuplicateEntryWithoutSending()
     {
-        await using var server = new AsyncHostLinkServer((_, _) => Task.FromResult("1"));
+        await using var server = new AsyncHostLinkServer((command, _) => Task.FromResult(
+            command == "RDS DM0.U 3" ? "1 2 3" : "1"));
         await using var client = await OpenClientAsync(server.Port);
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
             client.ReadNamedAsync(["DM0:U", "DM1:NOT_A_TYPE"]));
         await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
             client.ReadNamedAsync(["DM0:U", "DM0:U"]));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.ReadNamedAsync(["dm0:u", "DM0000:U"]));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.ReadNamedAsync(["R0", "R000:BIT"]));
         Assert.Empty(server.Commands);
+
+        IReadOnlyDictionary<string, object> distinctViews = await client.ReadNamedAsync(
+            ["dm0:u", "DM0:S", "DM0.0", "DM0.1"]);
+        IReadOnlyDictionary<string, object> overlappingSpans = await client.ReadNamedAsync(
+            ["DM0:D", "DM1:D"]);
+
+        Assert.Equal(["dm0:u", "DM0:S", "DM0.0", "DM0.1"], distinctViews.Keys);
+        Assert.Equal(["DM0:D", "DM1:D"], overlappingSpans.Keys);
     }
 
     [Fact]

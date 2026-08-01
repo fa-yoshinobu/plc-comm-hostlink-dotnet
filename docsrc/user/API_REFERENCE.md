@@ -1110,7 +1110,7 @@ public static Task<object> ReadTypedAsync(KvHostLinkClient client, string device
 
 Reads a single device value and converts it to a high-level CLR type.
 
-Remarks: The float helper is implemented at the extension layer by reading two consecutive `.U` words and combining them as low-word, high-word.
+Remarks: The float helper is implemented at the extension layer by reading two consecutive `.U` words and combining them as low-word, high-word. Float32 is valid only for ordinary device families whose canonical default format is one `.U` word.
 
 Returns: A boxed CLR value. Integer formats return boxed integral types and `"F"` returns a boxed `Single`, `"H"` returns a `String`, and `"BIT"` returns a `Boolean`.
 
@@ -1126,7 +1126,7 @@ Parameters:
 public static Task<KvTimerCounterValue> ReadTimerCounterAsync(KvHostLinkClient client, string device, CancellationToken ct = default)
 ```
 
-Reads a timer/counter composite value as status, current, and preset.
+Reads a timer/counter composite value as status, current, and preset. Status must be exactly zero or one.
 
 ##### ReadTimerAsync
 
@@ -1152,7 +1152,7 @@ public static Task WriteTypedAsync<T>(KvHostLinkClient client, string device, st
 
 Writes a single device value using a high-level data type code.
 
-Remarks: The float helper is implemented at the extension layer by converting the input value to IEEE 754 float32 and writing two consecutive `.U` words. Direct bit device families cannot represent that two-word value and are rejected before transport I/O.
+Remarks: The float helper is implemented at the extension layer by converting a finite input value within the IEEE 754 float32 range and writing two consecutive `.U` words. Float32 is valid only for ordinary device families whose canonical default format is one `.U` word. Direct bit device families cannot represent that two-word value; direct-bit and special-response families are rejected before FIFO admission and transport I/O.
 
 Parameters:
 - `client`: The client to use.
@@ -1186,7 +1186,7 @@ public static Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(KvHostLin
 
 Reads multiple independent named values as one read-only aggregate operation.
 
-Remarks: Address format examples: "DM100:U" -- unsigned 16-bit (ushort) "DM100:F" -- float "DM100:S" -- signed 16-bit (short) "DM100:D" -- unsigned 32-bit "DM100:L" -- signed 32-bit "DM100.3" -- bit 3 within word (bool) "DM100.A" -- bit 10 within word (bool); bits 10-15 use hex digits A-F "DM100:COMMENT" -- PLC device comment text (string) Bit-in-word indices use hexadecimal notation (0-F), matching the KEYENCE address format. Bits 0-9 can be written as decimal digits; bits 10-15 must be written as A-F. For example, bit 12 is addressed as `"DM100.C"`, not `"DM100.12"`. When all requested addresses are compatible with helper-layer batching, this method merges contiguous reads into one or more `RDS` operations. Mixed or non-optimizable address sets fall back to sequential helper reads with the same return shape. A multi-request result is non-atomic: separate requests can observe different PLC scan times. Each declared scalar, float32 value, or bit-in-word value remains wholly inside one request, but callers requiring one coherent point in time must use a single-request read or a PLC-side snapshot/handshake. The complete plan is validated and copied before the first send, and the client turn is retained until every internal read succeeds or the aggregate fails. Internal wire requests follow the declared input sequence; the planner never sorts entries by device or address. Contiguous entries may share one wire read without changing result mapping. This overload accepts no implicit comment codec. If an address uses `:COMMENT`, the complete aggregate is rejected before transport; use the overload that requires `HostLinkCommentEncoding`.
+Remarks: Address format examples: "DM100:U" -- unsigned 16-bit (ushort) "DM100:F" -- float "DM100:S" -- signed 16-bit (short) "DM100:D" -- unsigned 32-bit "DM100:L" -- signed 32-bit "DM100.3" -- bit 3 within word (bool) "DM100.A" -- bit 10 within word (bool); bits 10-15 use hex digits A-F "DM100:COMMENT" -- PLC device comment text (string) Bit-in-word indices use hexadecimal notation (0-F), matching the KEYENCE address format. Bits 0-9 can be written as decimal digits; bits 10-15 must be written as A-F. For example, bit 12 is addressed as `"DM100.C"`, not `"DM100.12"`. When all requested addresses are compatible with helper-layer batching, this method merges contiguous reads into one or more `RDS` operations. Mixed or non-optimizable address sets fall back to sequential helper reads with the same return shape. A multi-request result is non-atomic: separate requests can observe different PLC scan times. Each declared scalar, float32 value, or bit-in-word value remains wholly inside one request, but callers requiring one coherent point in time must use a single-request read or a PLC-side snapshot/handshake. The complete plan is validated and copied before the first send, and the client turn is retained until every internal read succeeds or the aggregate fails. Internal wire requests follow the declared input sequence; the planner never sorts entries by device or address. Contiguous entries may share one wire read without changing result mapping. Named keys must be semantically unique after device, number, data type, bit index, and scalar count normalization. Spelling-only variants are rejected before transport, while distinct data-type views, bit indices, and overlapping multiword spans remain valid. Returned dictionary keys preserve the original input strings. This overload accepts no implicit comment codec. If an address uses `:COMMENT`, the complete aggregate is rejected before transport; use the overload that requires `HostLinkCommentEncoding`.
 
 Returns: A dictionary keyed by the original input address strings. No partial result is returned on failure.
 
@@ -1226,7 +1226,7 @@ Remarks: If the address set is batchable, the compiled read plan is reused on ev
 Parameters:
 - `client`: The client to use.
 - `addresses`: Address strings in the same format as `ReadNamedAsync`.
-- `interval`: Time between polls.
+- `interval`: Strictly positive time between polls.
 - `ct`: Cancellation token to stop polling.
 
 ##### PollAsync
@@ -1244,7 +1244,7 @@ Returns: One non-atomic, all-or-error aggregate result per cycle.
 Parameters:
 - `client`: The client to use.
 - `addresses`: Named addresses containing at least one `:COMMENT` entry.
-- `interval`: Time between polls.
+- `interval`: Strictly positive time between polls.
 - `commentEncoding`: Explicit strict codec for every RDC comment.
 - `ct`: Cancellation token to stop polling.
 

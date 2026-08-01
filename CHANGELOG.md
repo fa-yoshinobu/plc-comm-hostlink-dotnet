@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Library: **Breaking:** Float32 parsing, normalization, formatting, typed reads and writes, named reads, and polling now accept only the canonical ordinary one-word families `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `Z`, `CM`, `VM`, `D`, `E`, and `F`; direct-bit and special-response families such as `R`, `T`, `C`, and `AT` are rejected before FIFO admission and transport.
+- Library: **Breaking:** Typed Float32 writes now reject NaN, infinities, and values that overflow binary32 before transport while accepting the finite binary32 boundary values.
+- Library: **Breaking:** Timer/counter composite response status must be exactly `0` or `1`; any other numeric status is an invalid response and retires the connection.
+- Library: **Breaking:** `PollAsync` now requires a strictly positive interval and continues to reject intervals above `Int32.MaxValue` milliseconds before communication.
+- Library: **Breaking:** Named aggregate reads now reject semantically duplicate keys after device, address, dtype, bit-index, and scalar-count normalization; spelling variants no longer create two keys, while distinct dtype views, bit indices, and overlapping spans remain valid.
 - Samples: Retargeted all six repository samples from `net9.0` to the current LTS `net10.0`; building or running these samples now requires the .NET 10 SDK, while library and test projects retain `net8.0;net9.0;net10.0` multi-targeting.
 - Library: **Breaking:** Device-comment text reads now require an explicit `HostLinkCommentEncoding.Utf8` or `.Cp932`; removed UTF-8-first/Shift_JIS-fallback decoding, added exact `ReadCommentBytesAsync` payload access, and reject comment aggregates without a codec before transport.
 - Library: Comment aggregate overloads are disjoint: the ordinary overload rejects `:COMMENT`, while the explicit-codec overload requires at least one `:COMMENT` and rejects an unused codec with an argument error before transport.

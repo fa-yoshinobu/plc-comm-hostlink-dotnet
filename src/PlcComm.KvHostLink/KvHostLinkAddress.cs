@@ -19,6 +19,8 @@ public readonly record struct KvLogicalAddress(KvDeviceAddress BaseAddress, stri
     public string ToText()
     {
         string baseText = KvHostLinkAddress.Format(BaseAddress with { Suffix = string.Empty });
+        if (string.Equals(DataType?.Trim().TrimStart('.'), "F", StringComparison.OrdinalIgnoreCase))
+            KvHostLinkDevice.ValidateFloat32DeviceType(BaseAddress.DeviceType, baseText);
         if (IsBitInWord)
             return $"{baseText}.{BitIndex.GetValueOrDefault().ToString("X", CultureInfo.InvariantCulture)}";
 
@@ -97,7 +99,10 @@ public static class KvHostLinkAddress
         {
             string baseText = raw[..colonIndex];
             string dtype = NormalizeDType(raw[(colonIndex + 1)..]);
-            return new KvLogicalAddress(Parse(baseText) with { Suffix = string.Empty }, dtype, null);
+            KvDeviceAddress baseAddress = Parse(baseText) with { Suffix = string.Empty };
+            if (dtype == "F")
+                KvHostLinkDevice.ValidateFloat32DeviceType(baseAddress.DeviceType, raw);
+            return new KvLogicalAddress(baseAddress, dtype, null);
         }
 
         int dotIndex = raw.LastIndexOf('.');

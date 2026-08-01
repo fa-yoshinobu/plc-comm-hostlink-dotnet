@@ -37,10 +37,7 @@ public static class KvHostLinkClientExtensions
     }
 
     private static readonly HashSet<string> OptimizableReadNamedDeviceTypes =
-        KvHostLinkModels.DefaultFormatByDeviceType
-            .Where(static pair => pair.Value == ".U")
-            .Select(static pair => pair.Key)
-            .ToHashSet(StringComparer.Ordinal);
+        KvHostLinkModels.Float32DeviceTypes.ToHashSet(StringComparer.Ordinal);
 
     private static readonly HashSet<string> DirectBitDeviceTypes =
         KvHostLinkModels.DefaultFormatByDeviceType
@@ -90,6 +87,8 @@ public static class KvHostLinkClientExtensions
     /// <remarks>
     /// The float helper is implemented at the extension layer by reading two
     /// consecutive <c>.U</c> words and combining them as low-word, high-word.
+    /// Float32 is valid only for ordinary device families whose canonical
+    /// default format is one <c>.U</c> word.
     /// </remarks>
     public static async Task<object> ReadTypedAsync(
         this KvHostLinkClient client,
@@ -115,8 +114,7 @@ public static class KvHostLinkClientExtensions
 
         if (normalized == "F")
         {
-            if (directBitDevice)
-                throw new HostLinkProtocolError("Float reads are not defined for direct bit devices.");
+            KvHostLinkDevice.ValidateFloat32DeviceType(parsedDevice.DeviceType, device);
             string[] wordTokens = operationAlreadyAdmitted
                 ? await client.ReadCoreAsync(device, ".U", 2, true, ct).ConfigureAwait(false)
                 : await client.ReadConsecutiveAsync(device, 2, ".U", ct).ConfigureAwait(false);
@@ -173,7 +171,7 @@ public static class KvHostLinkClientExtensions
     }
 
     /// <summary>
-    /// Reads a timer/counter composite value as status, current, and preset.
+    /// Reads a timer/counter composite value as status, current, and preset. Status must be exactly zero or one.
     /// </summary>
     public static async Task<KvTimerCounterValue> ReadTimerCounterAsync(
         this KvHostLinkClient client,
@@ -235,9 +233,11 @@ public static class KvHostLinkClientExtensions
     /// <param name="ct">Cancellation token.</param>
     /// <remarks>
     /// The float helper is implemented at the extension layer by converting
-    /// the input value to IEEE 754 float32 and writing two consecutive
-    /// <c>.U</c> words. Direct bit device families cannot represent that
-    /// two-word value and are rejected before transport I/O.
+    /// a finite input value within the IEEE 754 float32 range and writing two consecutive
+    /// <c>.U</c> words. Float32 is valid only for ordinary device families whose
+    /// canonical default format is one <c>.U</c> word. Direct bit device families cannot
+    /// represent that two-word value; direct-bit and special-response families are rejected
+    /// before FIFO admission and transport I/O.
     /// </remarks>
     public static async Task WriteTypedAsync<T>(
         this KvHostLinkClient client,
@@ -253,13 +253,11 @@ public static class KvHostLinkClientExtensions
         if (normalized == "F")
         {
             var address = KvHostLinkDevice.RequireBaseDevice(device);
-            if (KvHostLinkModels.DirectBitDeviceTypes.Contains(address.DeviceType))
-            {
-                throw new HostLinkProtocolError(
-                    $"Float32 writes are not valid for direct bit device '{address.DeviceType}'.");
-            }
+            KvHostLinkDevice.ValidateFloat32DeviceType(address.DeviceType, device);
 
             float single = Convert.ToSingle(value, CultureInfo.InvariantCulture);
+            if (!float.IsFinite(single))
+                throw new HostLinkProtocolError("Float32 input must be finite and within the binary32 range.");
             int bits = BitConverter.SingleToInt32Bits(single);
             ushort loWord = unchecked((ushort)(bits & 0xFFFF));
             ushort hiWord = unchecked((ushort)((bits >> 16) & 0xFFFF));
@@ -343,6 +341,12 @@ public static class KvHostLinkClientExtensions
     /// device or address. Contiguous entries may share one wire read without changing result mapping.
     /// </para>
     /// <para>
+    /// Named keys must be semantically unique after device, number, data type, bit index, and
+    /// scalar count normalization. Spelling-only variants are rejected before transport, while
+    /// distinct data-type views, bit indices, and overlapping multiword spans remain valid.
+    /// Returned dictionary keys preserve the original input strings.
+    /// </para>
+    /// <para>
     /// This overload accepts no implicit comment codec. If an address uses
     /// <c>:COMMENT</c>, the complete aggregate is rejected before transport; use
     /// the overload that requires <see cref="HostLinkCommentEncoding"/>.
@@ -408,7 +412,7 @@ public static class KvHostLinkClientExtensions
     /// </summary>
     /// <param name="client">The client to use.</param>
     /// <param name="addresses">Address strings in the same format as <see cref="ReadNamedAsync(KvHostLinkClient, IEnumerable{string}, CancellationToken)"/>.</param>
-    /// <param name="interval">Time between polls.</param>
+    /// <param name="interval">Strictly positive time between polls.</param>
     /// <param name="ct">Cancellation token to stop polling.</param>
     /// <remarks>
     /// If the address set is batchable, the compiled read plan is reused on every iteration for
@@ -430,7 +434,7 @@ public static class KvHostLinkClientExtensions
     /// </summary>
     /// <param name="client">The client to use.</param>
     /// <param name="addresses">Named addresses containing at least one <c>:COMMENT</c> entry.</param>
-    /// <param name="interval">Time between polls.</param>
+    /// <param name="interval">Strictly positive time between polls.</param>
     /// <param name="commentEncoding">Explicit strict codec for every RDC comment.</param>
     /// <param name="ct">Cancellation token to stop polling.</param>
     /// <returns>One non-atomic, all-or-error aggregate result per cycle.</returns>
@@ -459,7 +463,7 @@ public static class KvHostLinkClientExtensions
         [EnumeratorCancellation] CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(addresses);
-        if (interval < TimeSpan.Zero || interval > TimeSpan.FromMilliseconds(int.MaxValue))
+        if (interval <= TimeSpan.Zero || interval > TimeSpan.FromMilliseconds(int.MaxValue))
             throw new ArgumentOutOfRangeException(nameof(interval));
         string[] addressSnapshot = addresses.ToArray();
         ValidateReadNamedAggregate(addressSnapshot, commentEncoding);
@@ -679,18 +683,21 @@ public static class KvHostLinkClientExtensions
         IReadOnlyList<string> addresses,
         HostLinkCommentEncoding? commentEncoding)
     {
-        var uniqueAddresses = new HashSet<string>(StringComparer.Ordinal);
+        var uniqueAddresses = new HashSet<(string DeviceType, int Number, string DataType, int? BitIndex, int Count)>();
         bool hasComment = false;
         foreach (string address in addresses)
         {
             if (address is null)
                 throw new HostLinkProtocolError("Named read addresses must not contain null.");
-            if (!uniqueAddresses.Add(address))
-                throw new HostLinkProtocolError($"Named read address '{address}' is duplicated.");
 
             var (baseAddress, dtype, bitIndex) = ParseAddress(address);
             KvDeviceAddress parsed = KvHostLinkDevice.RequireBaseDevice(baseAddress);
             string normalized = dtype.Trim().TrimStart('.').ToUpperInvariant();
+            string semanticDataType = normalized.Length == 0 && DirectBitDeviceTypes.Contains(parsed.DeviceType)
+                ? "BIT"
+                : normalized;
+            if (!uniqueAddresses.Add((parsed.DeviceType, parsed.Number, semanticDataType, bitIndex, 1)))
+                throw new HostLinkProtocolError($"Named read address '{address}' is semantically duplicated.");
             if (normalized == "COMMENT")
             {
                 hasComment = true;
@@ -726,8 +733,7 @@ public static class KvHostLinkClientExtensions
 
             if (normalized == "F")
             {
-                if (DirectBitDeviceTypes.Contains(parsed.DeviceType))
-                    throw new HostLinkProtocolError("Float reads are not defined for direct bit devices.");
+                KvHostLinkDevice.ValidateFloat32DeviceType(parsed.DeviceType, address);
                 ValidateReadShape(parsed, ".U", 2, consecutive: true);
                 continue;
             }

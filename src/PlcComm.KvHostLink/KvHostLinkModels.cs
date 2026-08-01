@@ -68,4 +68,10 @@ internal static class KvHostLinkModels
         { "TS", ".D" }, { "C", ".D" }, { "CC", ".D" }, { "CS", ".D" }, { "CTH", ".D" }, { "CTC", ".D" },
         { "X", "" }, { "Y", "" }, { "M", "" }, { "L", "" }, { "D", ".U" }, { "E", ".U" }, { "F", ".U" }
     };
+
+    public static readonly IReadOnlySet<string> Float32DeviceTypes =
+        DefaultFormatByDeviceType
+            .Where(static pair => pair.Value == ".U")
+            .Select(static pair => pair.Key)
+            .ToHashSet(StringComparer.Ordinal);
 }
