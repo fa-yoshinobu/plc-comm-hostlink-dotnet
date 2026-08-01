@@ -1302,12 +1302,45 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         await ExpectOkAsync(cmd, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task<string> ReadCommentsAsync(string device, CancellationToken cancellationToken = default)
+    /// <summary>Reads one RDC device comment as exact response-body bytes.</summary>
+    /// <param name="device">Base device whose comment is read.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>
+    /// The exact RDC payload after the Host Link CR/LF frame terminator is removed.
+    /// Trailing ASCII padding spaces are retained.
+    /// </returns>
+    public Task<byte[]> ReadCommentBytesAsync(
+        string device,
+        CancellationToken cancellationToken = default)
         => ExecuteExclusiveAsync(
-            () => ReadCommentsCoreAsync(device, cancellationToken),
+            () => ReadCommentBytesCoreAsync(device, cancellationToken),
             cancellationToken);
 
-    internal async Task<string> ReadCommentsCoreAsync(
+    /// <summary>Reads and strictly decodes one RDC device comment.</summary>
+    /// <param name="device">Base device whose comment is read.</param>
+    /// <param name="encoding">
+    /// Explicit text encoding. <see cref="HostLinkCommentEncoding.Cp932"/> is
+    /// CP932/Windows-31J and is the compatibility selection for KEYENCE material
+    /// that describes text as Shift_JIS.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Decoded comment text with trailing ASCII padding spaces removed.</returns>
+    /// <remarks>
+    /// Decoding is strict. Malformed input raises <see cref="HostLinkProtocolError"/>
+    /// and retires the connection; the library never guesses or falls back to another encoding.
+    /// </remarks>
+    public Task<string> ReadCommentsAsync(
+        string device,
+        HostLinkCommentEncoding encoding,
+        CancellationToken cancellationToken = default)
+    {
+        KvHostLinkProtocol.ValidateCommentEncoding(encoding);
+        return ExecuteExclusiveAsync(
+            () => ReadCommentsCoreAsync(device, encoding, cancellationToken),
+            cancellationToken);
+    }
+
+    internal async Task<byte[]> ReadCommentBytesCoreAsync(
         string device,
         CancellationToken cancellationToken)
     {
@@ -1318,9 +1351,20 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             frame,
             stateChanging: false,
             cancellationToken).ConfigureAwait(false);
+        KvHostLinkProtocol.EnsureCommentSuccess(response);
+        return response;
+    }
+
+    internal async Task<string> ReadCommentsCoreAsync(
+        string device,
+        HostLinkCommentEncoding encoding,
+        CancellationToken cancellationToken)
+    {
+        KvHostLinkProtocol.ValidateCommentEncoding(encoding);
+        byte[] response = await ReadCommentBytesCoreAsync(device, cancellationToken).ConfigureAwait(false);
         try
         {
-            return KvHostLinkProtocol.DecodeCommentResponse(response);
+            return KvHostLinkProtocol.DecodeCommentResponse(response, encoding);
         }
         catch (HostLinkProtocolError)
         {

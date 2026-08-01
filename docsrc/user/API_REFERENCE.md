@@ -30,6 +30,32 @@ public HostLinkClosedError()
 public HostLinkClosedError(string message, Exception inner)
 ```
 
+### HostLinkCommentEncoding
+
+```csharp
+public enum HostLinkCommentEncoding
+```
+
+Explicit text encoding used to decode an RDC device-comment payload.
+
+#### Members
+
+##### Utf8
+
+```csharp
+public const HostLinkCommentEncoding Utf8
+```
+
+Strict UTF-8 without malformed-byte replacement.
+
+##### Cp932
+
+```csharp
+public const HostLinkCommentEncoding Cp932
+```
+
+Strict Windows code page 932 (CP932/Windows-31J), used as the compatibility selection for KEYENCE material that describes text as Shift_JIS. Strict decoding accepts mapped Windows extension pairs but rejects forbidden singleton bytes, incomplete sequences, and unassigned pairs.
+
 ### HostLinkConnectionError
 
 ```csharp
@@ -1003,11 +1029,36 @@ Parameters:
 - `dataFormat`: Required data format suffix, e.g. ".U" or ".S".
 - `cancellationToken`: Cancellation token.
 
+##### ReadCommentBytesAsync
+
+```csharp
+public Task<byte[]> ReadCommentBytesAsync(string device, CancellationToken cancellationToken = default)
+```
+
+Reads one RDC device comment as exact response-body bytes.
+
+Returns: The exact RDC payload after the Host Link CR/LF frame terminator is removed. Trailing ASCII padding spaces are retained.
+
+Parameters:
+- `device`: Base device whose comment is read.
+- `cancellationToken`: Cancellation token.
+
 ##### ReadCommentsAsync
 
 ```csharp
-public Task<string> ReadCommentsAsync(string device, CancellationToken cancellationToken = default)
+public Task<string> ReadCommentsAsync(string device, HostLinkCommentEncoding encoding, CancellationToken cancellationToken = default)
 ```
+
+Reads and strictly decodes one RDC device comment.
+
+Remarks: Decoding is strict. Malformed input raises `HostLinkProtocolError` and retires the connection; the library never guesses or falls back to another encoding.
+
+Returns: Decoded comment text with trailing ASCII padding spaces removed.
+
+Parameters:
+- `device`: Base device whose comment is read.
+- `encoding`: Explicit text encoding. `Cp932` is CP932/Windows-31J and is the compatibility selection for KEYENCE material that describes text as Shift_JIS.
+- `cancellationToken`: Cancellation token.
 
 ##### PlcProfile
 
@@ -1135,13 +1186,31 @@ public static Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(KvHostLin
 
 Reads multiple independent named values as one read-only aggregate operation.
 
-Remarks: Address format examples: "DM100:U" -- unsigned 16-bit (ushort) "DM100:F" -- float "DM100:S" -- signed 16-bit (short) "DM100:D" -- unsigned 32-bit "DM100:L" -- signed 32-bit "DM100.3" -- bit 3 within word (bool) "DM100.A" -- bit 10 within word (bool); bits 10-15 use hex digits A-F "DM100:COMMENT" -- PLC device comment text (string) Bit-in-word indices use hexadecimal notation (0-F), matching the KEYENCE address format. Bits 0-9 can be written as decimal digits; bits 10-15 must be written as A-F. For example, bit 12 is addressed as `"DM100.C"`, not `"DM100.12"`. When all requested addresses are compatible with helper-layer batching, this method merges contiguous reads into one or more `RDS` operations. Mixed or non-optimizable address sets fall back to sequential helper reads with the same return shape. A multi-request result is non-atomic: separate requests can observe different PLC scan times. Each declared scalar, float32 value, or bit-in-word value remains wholly inside one request, but callers requiring one coherent point in time must use a single-request read or a PLC-side snapshot/handshake. The complete plan is validated and copied before the first send, and the client turn is retained until every internal read succeeds or the aggregate fails. Internal wire requests follow the declared input sequence; the planner never sorts entries by device or address. Contiguous entries may share one wire read without changing result mapping.
+Remarks: Address format examples: "DM100:U" -- unsigned 16-bit (ushort) "DM100:F" -- float "DM100:S" -- signed 16-bit (short) "DM100:D" -- unsigned 32-bit "DM100:L" -- signed 32-bit "DM100.3" -- bit 3 within word (bool) "DM100.A" -- bit 10 within word (bool); bits 10-15 use hex digits A-F "DM100:COMMENT" -- PLC device comment text (string) Bit-in-word indices use hexadecimal notation (0-F), matching the KEYENCE address format. Bits 0-9 can be written as decimal digits; bits 10-15 must be written as A-F. For example, bit 12 is addressed as `"DM100.C"`, not `"DM100.12"`. When all requested addresses are compatible with helper-layer batching, this method merges contiguous reads into one or more `RDS` operations. Mixed or non-optimizable address sets fall back to sequential helper reads with the same return shape. A multi-request result is non-atomic: separate requests can observe different PLC scan times. Each declared scalar, float32 value, or bit-in-word value remains wholly inside one request, but callers requiring one coherent point in time must use a single-request read or a PLC-side snapshot/handshake. The complete plan is validated and copied before the first send, and the client turn is retained until every internal read succeeds or the aggregate fails. Internal wire requests follow the declared input sequence; the planner never sorts entries by device or address. Contiguous entries may share one wire read without changing result mapping. This overload accepts no implicit comment codec. If an address uses `:COMMENT`, the complete aggregate is rejected before transport; use the overload that requires `HostLinkCommentEncoding`.
 
 Returns: A dictionary keyed by the original input address strings. No partial result is returned on failure.
 
 Parameters:
 - `client`: The client to use.
 - `addresses`: Address strings that specify both the base device and the desired interpretation.
+- `ct`: Cancellation token.
+
+##### ReadNamedAsync
+
+```csharp
+public static Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(KvHostLinkClient client, IEnumerable<string> addresses, HostLinkCommentEncoding commentEncoding, CancellationToken ct = default)
+```
+
+Reads multiple independent named values with an explicit RDC comment encoding.
+
+Remarks: This overload has the same complete-plan, input-order, one-FIFO-turn, non-atomic, and no-partial-result contract as the non-comment overload. At least one address must use `:COMMENT`; an otherwise unused comment encoding is rejected during complete preflight before transport.
+
+Returns: A dictionary keyed by original input address; no partial result is returned.
+
+Parameters:
+- `client`: The client to use.
+- `addresses`: Named addresses containing at least one `:COMMENT` entry.
+- `commentEncoding`: Explicit strict codec for every RDC comment in the aggregate.
 - `ct`: Cancellation token.
 
 ##### PollAsync
@@ -1152,12 +1221,31 @@ public static IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollAsync(Kv
 
 Continuously polls the specified addresses and yields one non-atomic aggregate result each cycle.
 
-Remarks: If the address set is batchable, the compiled read plan is reused on every iteration for lower per-cycle overhead. Every cycle has the same input-order, indivisible-value, no-interleaving, and no-partial-result contract as `ReadNamedAsync`.
+Remarks: If the address set is batchable, the compiled read plan is reused on every iteration for lower per-cycle overhead. Every cycle has the same input-order, indivisible-value, no-interleaving, and no-partial-result contract as `ReadNamedAsync`. This overload accepts no implicit comment codec. A plan containing `:COMMENT` is rejected during complete preflight before its first send; use the overload that requires `HostLinkCommentEncoding`.
 
 Parameters:
 - `client`: The client to use.
 - `addresses`: Address strings in the same format as `ReadNamedAsync`.
 - `interval`: Time between polls.
+- `ct`: Cancellation token to stop polling.
+
+##### PollAsync
+
+```csharp
+public static IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollAsync(KvHostLinkClient client, IEnumerable<string> addresses, TimeSpan interval, HostLinkCommentEncoding commentEncoding, CancellationToken ct = default)
+```
+
+Polls named values with an explicit strict codec for every RDC comment entry.
+
+Remarks: The complete plan is validated and copied before its first send. Every cycle retains one FIFO turn and returns either the full non-atomic result or an error. At least one address must use `:COMMENT`; an otherwise unused comment encoding is rejected during complete preflight before transport.
+
+Returns: One non-atomic, all-or-error aggregate result per cycle.
+
+Parameters:
+- `client`: The client to use.
+- `addresses`: Named addresses containing at least one `:COMMENT` entry.
+- `interval`: Time between polls.
+- `commentEncoding`: Explicit strict codec for every RDC comment.
 - `ct`: Cancellation token to stop polling.
 
 ##### ReadWordsSingleRequestAsync

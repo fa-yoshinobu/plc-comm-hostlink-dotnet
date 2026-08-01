@@ -63,7 +63,9 @@ public sealed class KvHostLinkClientExtensionsTests
         await using var client = new KvHostLinkClient("127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
         await client.OpenAsync();
 
-        var result = await client.ReadNamedAsync(["DM100:U", "DM101:COMMENT"]);
+        var result = await client.ReadNamedAsync(
+            ["DM100:U", "DM101:COMMENT"],
+            HostLinkCommentEncoding.Utf8);
 
         Assert.Equal((ushort)1025, Assert.IsType<ushort>(result["DM100:U"]));
         Assert.Equal("MAIN COMMENT", Assert.IsType<string>(result["DM101:COMMENT"]));
@@ -457,7 +459,7 @@ public sealed class KvHostLinkClientExtensionsTests
         });
 
         await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync("127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
-        var comment = await client.ReadCommentsAsync("DM10");
+        var comment = await client.ReadCommentsAsync("DM10", HostLinkCommentEncoding.Utf8);
 
         Assert.Equal("ALARM TEXT", comment);
         Assert.Equal(["RDC DM10"], server.ReceivedCommands.ToArray());
@@ -475,8 +477,8 @@ public sealed class KvHostLinkClientExtensionsTests
 
         await using var client = new KvHostLinkClient("127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
         await client.OpenAsync();
-        var dataMemoryComment = await client.ReadCommentsAsync("D10");
-        var auxiliaryRelayComment = await client.ReadCommentsAsync("M20");
+        var dataMemoryComment = await client.ReadCommentsAsync("D10", HostLinkCommentEncoding.Utf8);
+        var auxiliaryRelayComment = await client.ReadCommentsAsync("M20", HostLinkCommentEncoding.Utf8);
 
         Assert.Equal("DM COMMENT", dataMemoryComment);
         Assert.Equal("MR COMMENT", auxiliaryRelayComment);
@@ -604,6 +606,40 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.Equal(
             ["RDS DM100.U 3", "RDS DM100.U 3"],
             server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task PollAsync_CommentsRequireExplicitEncodingBeforeFirstSend()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RDC DM100" => "COMMENT                       ",
+            _ => "E1",
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1",
+            server.Port,
+            HostLinkTransportMode.Tcp,
+            TestPlcProfile);
+        await client.OpenAsync();
+
+        await using (var implicitCodec = client.PollAsync(
+            ["DM100:COMMENT"],
+            TimeSpan.FromMilliseconds(1)).GetAsyncEnumerator())
+        {
+            await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+                implicitCodec.MoveNextAsync().AsTask());
+        }
+        Assert.Empty(server.ReceivedCommands);
+
+        await using var explicitCodec = client.PollAsync(
+            ["DM100:COMMENT"],
+            TimeSpan.FromMilliseconds(1),
+            HostLinkCommentEncoding.Utf8).GetAsyncEnumerator();
+        Assert.True(await explicitCodec.MoveNextAsync());
+        Assert.Equal("COMMENT", Assert.IsType<string>(explicitCodec.Current["DM100:COMMENT"]));
+        Assert.Equal(["RDC DM100"], server.ReceivedCommands.ToArray());
     }
 
     [Fact]

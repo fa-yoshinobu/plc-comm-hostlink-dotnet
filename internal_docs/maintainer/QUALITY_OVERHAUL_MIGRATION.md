@@ -221,15 +221,20 @@ Evidence checklist:
 
 ## D-061
 
-Scope: Direct/queued ReadCommentsAsync
-Target contract: No padding option remains; only trailing ASCII 0x20 bytes are removed before comment decoding.
-Compatibility impact: Callers that retained padding must use maintainer raw bytes.
+Scope: Historical direct/queued `ReadCommentsAsync` padding contract. The later
+codec/API contract is governed by `HL-EVAL-TODO-006`.
+Target contract: No padding option remains; only trailing ASCII 0x20 bytes are
+removed before explicitly selected strict comment decoding. Exact padding is
+available through the public raw-byte method.
+Compatibility impact: Text callers do not retain padding. Callers requiring the
+exact payload use `ReadCommentBytesAsync`.
 
 Acceptance criteria:
 
 1. Trailing ASCII spaces are removed.
 2. Tabs, full-width spaces, Unicode whitespace, and embedded spaces are preserved.
-3. UTF-8/Shift_JIS invalid data produces protocol error rather than replacement text.
+3. Invalid data under the explicitly selected UTF-8 or CP932 codec produces a
+   protocol error rather than replacement text or codec fallback.
 
 Evidence checklist:
 
@@ -773,17 +778,17 @@ Acceptance criteria:
 ## 2026-08-01 overhaul verification evidence
 
 - `run_ci.bat`: passed after the final implementation state, including build,
-  API-generator helper tests and freshness, 201 tests on each of net8.0,
+  API-generator helper tests and freshness, 221 tests on each of net8.0,
   net9.0, and net10.0, formatting, all six solution samples plus the two
   separately restored sample projects, high-level XML docs, sample inventory,
   release-workflow guards, and NuGet package inspection.
 - NuGet inspection: `PlcComm.KvHostLink.3.2.1.nupkg` contained 12 allowed
   consumer files and no repository tests, samples, scripts, maintainer docs, or
   source inputs. No registry publication was performed.
-- Synthetic working-tree source archive: 73 files, all tracked tests and 15
+- Synthetic working-tree source archive: 74 files, all tracked tests and 15
   sample files present; extracted restore/build/format/API/docs/sample/package
-  gates passed and 603 test results passed across the three target frameworks.
-- Generated API reference: regenerated from 32 public types; the removed queued
+  gates passed and 663 test results passed across the three target frameworks.
+- Generated API reference: regenerated from 33 public types; the removed queued
   wrapper and multi-request write helper are absent, and the global
   single-request/aggregate classification is present.
 - Codex self-review inspected the actual public surface, diff, validation order,
@@ -798,8 +803,114 @@ Acceptance criteria:
 - Live PLC disposition: not required for these items. They change deterministic
   client admission, validation, socket address-family policy, local error
   classification, and planner behavior without making a new PLC capability
-  claim. The separately deferred device-comment encoding investigation remains
-  unchanged and outside this implementation set.
+  claim. The device-comment encoding decision was subsequently approved and is
+  tracked independently as `HL-EVAL-TODO-006` below.
+
+## HL-EVAL-TODO-006 — Explicit device-comment encoding and raw payload
+
+Implementation scope: .NET `RDC` handling in `KvHostLinkClient`, comment entries
+in `ReadNamedAsync` and `PollAsync`, public XML/API documentation, tests, and
+the packed-consumer boundary.
+
+Target contract: `HostLinkCommentEncoding` exposes exactly `Utf8` and `Cp932`.
+Every public comment-text path requires one of those selections and uses strict
+decoding without replacement, fallback, profile selection, or guessing.
+`Cp932` means Windows code page 932 / Windows-31J and is the compatibility
+selection for KEYENCE material using the name "Shift_JIS"; there is no separate
+strict-Shift_JIS selection. `ReadCommentBytesAsync` returns the exact response
+body after the Host Link frame terminator is removed, retaining trailing ASCII
+space padding. Text reads remove only trailing ASCII `0x20` before decode.
+Malformed selected text raises `HostLinkProtocolError` and retires the
+connection. Aggregate overloads without a codec remain usable for non-comment
+reads, but reject a complete plan containing `:COMMENT` before any send. The
+explicit-codec aggregate overloads require at least one `:COMMENT`; an unused
+codec on a non-comment or empty aggregate is an argument error before transport.
+
+Strict CP932 uses the cross-runtime shared assigned set: ASCII `00..7F` is
+preserved, halfwidth `A1..DF` is accepted, assigned double-byte mappings and the
+398 mapped Windows extension pairs are accepted, and `80`, `A0`, `FD..FF`,
+incomplete sequences, invalid trails, and unassigned pairs are rejected. The
+.NET exception-fallback decoder alone is not the contract because it rejects
+those 398 pairs even though default .NET CP932, Python CP932, and Node WHATWG
+Shift_JIS map them consistently.
+
+Compatibility impact: this intentionally removes the implicit
+UTF-8-first/Shift_JIS-fallback `ReadCommentsAsync` contract. Callers must select
+UTF-8 or CP932 explicitly, or consume raw bytes when they cannot assert the
+encoding. Comment-containing named/polling aggregates must also move to the
+explicit-codec overload.
+
+Acceptance criteria:
+
+1. Reflection and compile-time tests prove the enum contains only `Utf8` and
+   `Cp932`, the old no-codec text signature is absent, and the text/raw methods
+   have the approved signatures.
+2. Raw reads retain every response-body byte, including malformed text bytes
+   and trailing ASCII spaces, while excluding the CR/LF frame terminator.
+3. Ambiguous `C2 A2` decodes only as selected (`¢` for UTF-8 and `ﾂ｢` for
+   CP932); malformed UTF-8 `C2` and CP932 `81 00` never fall back or replace.
+   CP932 preserves control bytes `1A`, `1C`, and `7F`, accepts `8790`, `ED40`,
+   and `FA4A` with the shared mappings, and rejects `80`, `A0`, `FD..FF`,
+   incomplete input, invalid trails, and unassigned `81AD`. `EF BB BF 41` is
+   preserved as `U+FEFF` plus `A` only under UTF-8 and is rejected under CP932.
+4. Malformed text raises `HostLinkProtocolError` and retires the connection;
+   PLC `E0` through `E9` responses retain their existing error classification.
+5. Invalid enum values and no-codec comment aggregates fail during complete
+   preflight with zero sends. Explicit-codec named and polling reads work in the
+   ordinary FIFO turn only when at least one `:COMMENT` is present; an explicit
+   unused codec is an argument error with zero sends.
+6. User docs, XML/API reference, changelog, tests, package consumer, and this
+   migration record agree with the approved behavior.
+
+Evidence checklist:
+
+- [x] User approved the explicit-codec/raw-byte target and compatibility break.
+- [x] .NET implementation completed against the approved public surface.
+- [x] Deterministic raw, ambiguous-codec, malformed, padding, aggregate,
+  invalid-enum, PLC-error, and connection-state tests were added.
+- [x] Full static, target-framework, sample, package, documentation, and source-archive gates passed.
+- [x] Codex self-review completed and every finding dispositioned and reverified.
+- [x] No further live PLC check is required: the prior read-only evidence rules
+  out a universal codec, while all new behavior is a deterministic API/decoder
+  contract exercised with exact loopback payloads.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final .NET acceptance criteria verified and this repository item marked complete.
+
+Accepted self-review finding: the packed-consumer gate initially restored the
+same package version from the global NuGet cache and could therefore compile
+against a stale assembly instead of the candidate package. The gate now uses a
+fresh isolated package cache and asserts the approved comment enum and raw/text
+method signatures. A second source-archive run exposed IDE discovery of the
+disposable `.csproj`, which held its directory after the packed consumer had
+already passed. The consumer now uses a neutral `.proj` with explicit C# targets,
+disables build-server reuse, and retries short-lived cleanup locks. The final
+isolated package and source-archive gates both passed.
+
+Final verification evidence: ordinary current-worktree CI passed 221 tests on
+each of .NET 8, .NET 9, and .NET 10, formatting, generated API/reference checks,
+all six sample builds, release tooling, and the isolated 12-file NuGet consumer.
+The synthetic 74-file worktree source archive independently passed 663 test
+executions plus restore, build, format, documentation, sample, and package gates.
+No live PLC communication or public-registry publication was performed.
+
+Accepted cross-runtime self-review finding: .NET
+`DecoderFallback.ExceptionFallback` rejects 398 CP932 Windows-extension pairs
+that Python CP932 and Node WHATWG Shift_JIS accept, despite the default .NET
+CP932 table producing the same mappings. Treating ExceptionFallback as the
+contract would therefore violate family parity. The decoder now prevalidates the
+shared assigned byte set, explicitly includes those 398 mapped pairs, rejects
+all forbidden/malformed/unassigned input before decoding, and then uses the
+default mapping without permitting replacement. Deterministic controls,
+extension mappings, UTF-8 BOM preservation/CP932 rejection, singleton,
+incomplete, invalid-trail, and unassigned-pair tests cover the corrected boundary.
+
+Accepted cross-runtime self-review finding: allowing an explicit comment codec
+on an aggregate with no `:COMMENT` made that public setting silently unused and
+diverged from the Node target. The ordinary aggregate overload is now exclusively
+for non-comment plans, while the explicit-codec overload requires at least one
+comment entry. Non-comment and empty explicit-codec plans raise
+`ArgumentException` during complete preflight with zero sends; direct named and
+deferred polling paths are both covered.
 
 ## Accepted self-review finding — packed NuGet consumer boundary
 

@@ -342,15 +342,51 @@ public static class KvHostLinkClientExtensions
     /// Internal wire requests follow the declared input sequence; the planner never sorts entries by
     /// device or address. Contiguous entries may share one wire read without changing result mapping.
     /// </para>
+    /// <para>
+    /// This overload accepts no implicit comment codec. If an address uses
+    /// <c>:COMMENT</c>, the complete aggregate is rejected before transport; use
+    /// the overload that requires <see cref="HostLinkCommentEncoding"/>.
+    /// </para>
     /// </remarks>
-    public static async Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(
+    public static Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(
         this KvHostLinkClient client,
         IEnumerable<string> addresses,
         CancellationToken ct = default)
+        => ReadNamedCoreAsync(client, addresses, commentEncoding: null, ct);
+
+    /// <summary>
+    /// Reads multiple independent named values with an explicit RDC comment encoding.
+    /// </summary>
+    /// <param name="client">The client to use.</param>
+    /// <param name="addresses">Named addresses containing at least one <c>:COMMENT</c> entry.</param>
+    /// <param name="commentEncoding">Explicit strict codec for every RDC comment in the aggregate.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A dictionary keyed by original input address; no partial result is returned.</returns>
+    /// <remarks>
+    /// This overload has the same complete-plan, input-order, one-FIFO-turn,
+    /// non-atomic, and no-partial-result contract as the non-comment overload.
+    /// At least one address must use <c>:COMMENT</c>; an otherwise unused comment
+    /// encoding is rejected during complete preflight before transport.
+    /// </remarks>
+    public static Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(
+        this KvHostLinkClient client,
+        IEnumerable<string> addresses,
+        HostLinkCommentEncoding commentEncoding,
+        CancellationToken ct = default)
+    {
+        KvHostLinkProtocol.ValidateCommentEncoding(commentEncoding);
+        return ReadNamedCoreAsync(client, addresses, commentEncoding, ct);
+    }
+
+    private static async Task<IReadOnlyDictionary<string, object>> ReadNamedCoreAsync(
+        KvHostLinkClient client,
+        IEnumerable<string> addresses,
+        HostLinkCommentEncoding? commentEncoding,
+        CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(addresses);
         string[] addressSnapshot = addresses.ToArray();
-        ValidateReadNamedAggregate(addressSnapshot);
+        ValidateReadNamedAggregate(addressSnapshot, commentEncoding);
         if (addressSnapshot.Length == 0)
             return new Dictionary<string, object>();
 
@@ -358,7 +394,7 @@ public static class KvHostLinkClientExtensions
         return await client.ExecuteExclusiveAsync(
             () => hasPlan
                 ? ExecuteReadNamedPlanAsync(client, plan, ct)
-                : ReadNamedSequentialAsync(client, addressSnapshot, ct),
+                : ReadNamedSequentialAsync(client, addressSnapshot, commentEncoding, ct),
             ct).ConfigureAwait(false);
     }
 
@@ -378,25 +414,62 @@ public static class KvHostLinkClientExtensions
     /// If the address set is batchable, the compiled read plan is reused on every iteration for
     /// lower per-cycle overhead. Every cycle has the same input-order, indivisible-value,
     /// no-interleaving, and no-partial-result contract as <see cref="ReadNamedAsync(KvHostLinkClient, IEnumerable{string}, CancellationToken)"/>.
+    /// This overload accepts no implicit comment codec. A plan containing <c>:COMMENT</c>
+    /// is rejected during complete preflight before its first send; use the overload that
+    /// requires <see cref="HostLinkCommentEncoding"/>.
     /// </remarks>
-    public static async IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollAsync(
+    public static IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollAsync(
         this KvHostLinkClient client,
         IEnumerable<string> addresses,
         TimeSpan interval,
-        [EnumeratorCancellation] CancellationToken ct = default)
+        CancellationToken ct = default)
+        => PollCoreAsync(client, addresses, interval, commentEncoding: null, ct);
+
+    /// <summary>
+    /// Polls named values with an explicit strict codec for every RDC comment entry.
+    /// </summary>
+    /// <param name="client">The client to use.</param>
+    /// <param name="addresses">Named addresses containing at least one <c>:COMMENT</c> entry.</param>
+    /// <param name="interval">Time between polls.</param>
+    /// <param name="commentEncoding">Explicit strict codec for every RDC comment.</param>
+    /// <param name="ct">Cancellation token to stop polling.</param>
+    /// <returns>One non-atomic, all-or-error aggregate result per cycle.</returns>
+    /// <remarks>
+    /// The complete plan is validated and copied before its first send. Every cycle
+    /// retains one FIFO turn and returns either the full non-atomic result or an error.
+    /// At least one address must use <c>:COMMENT</c>; an otherwise unused comment
+    /// encoding is rejected during complete preflight before transport.
+    /// </remarks>
+    public static IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollAsync(
+        this KvHostLinkClient client,
+        IEnumerable<string> addresses,
+        TimeSpan interval,
+        HostLinkCommentEncoding commentEncoding,
+        CancellationToken ct = default)
+    {
+        KvHostLinkProtocol.ValidateCommentEncoding(commentEncoding);
+        return PollCoreAsync(client, addresses, interval, commentEncoding, ct);
+    }
+
+    private static async IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollCoreAsync(
+        KvHostLinkClient client,
+        IEnumerable<string> addresses,
+        TimeSpan interval,
+        HostLinkCommentEncoding? commentEncoding,
+        [EnumeratorCancellation] CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(addresses);
         if (interval < TimeSpan.Zero || interval > TimeSpan.FromMilliseconds(int.MaxValue))
             throw new ArgumentOutOfRangeException(nameof(interval));
         string[] addressSnapshot = addresses.ToArray();
-        ValidateReadNamedAggregate(addressSnapshot);
+        ValidateReadNamedAggregate(addressSnapshot, commentEncoding);
         bool hasPlan = TryCompileReadNamedPlan(addressSnapshot, out CompiledReadNamedPlan plan);
         while (!ct.IsCancellationRequested)
         {
             yield return await client.ExecuteExclusiveAsync(
                 () => hasPlan
                     ? ExecuteReadNamedPlanAsync(client, plan, ct)
-                    : ReadNamedSequentialAsync(client, addressSnapshot, ct),
+                    : ReadNamedSequentialAsync(client, addressSnapshot, commentEncoding, ct),
                 ct).ConfigureAwait(false);
             await Task.Delay(interval, ct).ConfigureAwait(false);
         }
@@ -556,6 +629,7 @@ public static class KvHostLinkClientExtensions
     private static async Task<IReadOnlyDictionary<string, object>> ReadNamedSequentialAsync(
         KvHostLinkClient client,
         IEnumerable<string> addresses,
+        HostLinkCommentEncoding? commentEncoding,
         CancellationToken ct)
     {
         var result = new Dictionary<string, object>();
@@ -584,7 +658,9 @@ public static class KvHostLinkClientExtensions
             }
             else if (dtype == "COMMENT")
             {
-                result[address] = await client.ReadCommentsCoreAsync(baseAddr, ct).ConfigureAwait(false);
+                HostLinkCommentEncoding selectedEncoding = commentEncoding
+                    ?? throw new InvalidOperationException("COMMENT was not rejected during aggregate preflight.");
+                result[address] = await client.ReadCommentsCoreAsync(baseAddr, selectedEncoding, ct).ConfigureAwait(false);
             }
             else
             {
@@ -599,9 +675,12 @@ public static class KvHostLinkClientExtensions
         return result;
     }
 
-    private static void ValidateReadNamedAggregate(IReadOnlyList<string> addresses)
+    private static void ValidateReadNamedAggregate(
+        IReadOnlyList<string> addresses,
+        HostLinkCommentEncoding? commentEncoding)
     {
         var uniqueAddresses = new HashSet<string>(StringComparer.Ordinal);
+        bool hasComment = false;
         foreach (string address in addresses)
         {
             if (address is null)
@@ -614,6 +693,12 @@ public static class KvHostLinkClientExtensions
             string normalized = dtype.Trim().TrimStart('.').ToUpperInvariant();
             if (normalized == "COMMENT")
             {
+                hasComment = true;
+                if (!commentEncoding.HasValue)
+                {
+                    throw new HostLinkProtocolError(
+                        "Named RDC comment reads require the ReadNamedAsync/PollAsync overload with an explicit HostLinkCommentEncoding.");
+                }
                 KvHostLinkDevice.ValidateDeviceType(
                     "RDC",
                     parsed.DeviceType,
@@ -650,6 +735,13 @@ public static class KvHostLinkClientExtensions
             if (normalized is not ("U" or "S" or "D" or "L" or "H"))
                 throw new HostLinkProtocolError($"Unsupported named read data type '{dtype}'.");
             ValidateReadShape(parsed, "." + normalized, 1, consecutive: false);
+        }
+
+        if (commentEncoding.HasValue && !hasComment)
+        {
+            throw new ArgumentException(
+                "An explicit comment encoding requires at least one :COMMENT address.",
+                nameof(commentEncoding));
         }
     }
 

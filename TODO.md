@@ -4,23 +4,24 @@ Current active TODOs only.
 
 ## Current Status
 
-The six approved implementation items are complete in the working tree. The
-evidence-dependent comment-encoding decision remains open, and no
-comment-decoder implementation change is authorized until `HL-EVAL-TODO-006`
-is approved.
+The six earlier approved implementation items are complete in the working tree.
+`HL-EVAL-TODO-006` is approved and its .NET implementation is complete in this
+working tree; family completion remains independent for each affected runtime.
 
 ### Verification evidence — 2026-08-01
 
-- Current-worktree CI passed 201 tests on each of .NET 8, .NET 9, and .NET 10,
+- Current-worktree CI passed 221 tests on each of .NET 8, .NET 9, and .NET 10,
   formatting, generated API reference, all six sample builds, and release-tool checks.
 - A synthetic current-worktree Git tree produced a self-contained source
-  archive; its clean extracted gate passed 603 test executions plus restore,
+  archive; its clean extracted gate passed 663 test executions plus restore,
   build, format, documentation, all-sample, and package-content checks.
-- The independent NuGet guard passed with the approved 12-file minimal package.
+- The independent NuGet guard passed with the approved 12-file minimal package
+  and an isolated consumer that compiled the explicit codec/raw API.
 - Codex reviewed the actual diff, public API, validation and exception order,
   lifecycle races, tests, samples, generated docs, packaging, and cross-language contracts.
 - These deterministic validation and packaging corrections do not require
-  live PLC communication. `HL-EVAL-TODO-006` is intentionally still open.
+  live PLC communication. The separate comment-encoding evidence used to
+  approve `HL-EVAL-TODO-006` is recorded below.
 
 ## HL-EVAL-001 — Reject Float32 writes to direct bit devices before transport
 
@@ -91,7 +92,7 @@ Incorrect numeric bounds and point counts change to their logical values. Displa
 
 ### User disposition
 
-Deferred by the user on 2026-08-01 for evidence investigation followed by implementation in the next Host Link implementation cycle. The current UTF-8-first/Shift_JIS-fallback behavior is not approved as the final contract. Do not change the decoder in the current implementation batch; investigate the exact profile-specific byte contract first, present the resulting target contract one item at a time, and implement only after explicit approval.
+The target contract was approved by the user on 2026-08-01. An `RDC` comment encoding must not be fixed by the library or PLC profile and must not be guessed by UTF-8-first/Shift_JIS-fallback decoding. Text decoding requires an explicit caller-selected encoding, and exact raw comment payload bytes remain available. The user subsequently authorized the .NET implementation in this Host Link implementation cycle.
 
 ### Implementation scope
 
@@ -101,41 +102,80 @@ Deferred by the user on 2026-08-01 for evidence investigation followed by implem
 
 ### Target state
 
-The encoding of `RDC` device-comment response bytes is defined from direct KEYENCE Host Link evidence for every affected PLC profile. The .NET implementation does not infer a target contract merely from successful decoding, a general KV string-encoding statement, or existing UTF-8-first/Shift_JIS-fallback behavior.
+An `RDC` response is first treated as an exact byte payload. A caller that requests text explicitly selects the supported encoding used for that decode. The .NET implementation performs no heuristic UTF-8-first fallback, PLC-profile selection, write-source inference, or silent replacement of malformed bytes. A public raw-byte path exposes the undecoded comment payload.
 
-Until the evidence is complete and the resulting target contract is explicitly approved, the comment-encoding behavior remains undecided and no implementation change is authorized.
+The public codec selection is `HostLinkCommentEncoding` with exactly `Utf8` and `Cp932`. `Utf8` means strict UTF-8. `Cp932` means strict Windows code page 932 / Windows-31J and is documented as the compatibility selection for KEYENCE material that calls the encoding "Shift_JIS". There is no separate strict-Shift_JIS, automatic, profile-derived, or fallback selection because the supported runtimes do not expose one consistent cross-language strict-Shift_JIS mapping distinct from CP932 that is justified by the available Host Link evidence.
+
+The shared strict CP932 subset preserves ASCII `00..7F` byte-for-code-unit,
+accepts halfwidth `A1..DF`, and accepts every assigned double-byte mapping shared
+by Python CP932 and Node WHATWG Shift_JIS. It rejects singleton `80`, `A0`, and
+`FD..FF`, incomplete sequences, invalid trails, and unassigned pairs. .NET's
+ordinary exception-fallback decoder incorrectly rejects 398 mapped Windows
+extension pairs, so .NET validates the shared assigned set before decoding with
+the default CP932 mapping rather than treating those pairs as malformed.
+
+In .NET, the existing plural `ReadCommentsAsync` name remains but its text
+overload requires `HostLinkCommentEncoding`; there is no no-codec compatibility
+overload. Singular `ReadCommentBytesAsync` returns the terminator-free exact
+response body including trailing ASCII-space padding. The text path removes
+only trailing ASCII `0x20` before strict decoding. No-codec `ReadNamedAsync` and
+`PollAsync` remain available for non-comment aggregates, but reject any
+`:COMMENT` item during complete preflight with zero sends; their explicit-codec
+overloads require at least one comment entry. Supplying an explicit but unused
+comment encoding to a non-comment or empty aggregate is an argument error during
+complete preflight with zero sends.
 
 ### Compatibility impact
 
-Undecided. The investigation must identify whether the approved result preserves the current UTF-8-first/Shift_JIS-fallback behavior, fixes one encoding, selects encoding by PLC profile, or introduces an explicit API setting. Any public API, default, decoding, error, or migration impact must be recorded before implementation.
+This is an intentional breaking change. Existing string APIs that silently try UTF-8 and then Shift_JIS must require an explicit encoding selection, while callers that cannot assert an encoding use the raw-byte API. Migration notes must identify the required selection and the removal of heuristic decoding.
 
 ### Acceptance criteria
 
-1. Official KEYENCE communication documentation is checked for the `RDC` response encoding for KV-NANO, KV-3000/KV-5000, KV-7000/KV-8000, and KV-X500 families; evidence is recorded per profile rather than inferred across families.
-2. The exact codec contract is identified, including whether “Shift_JIS” means strict Shift_JIS, Windows-31J/CP932-compatible decoding, or another defined mapping.
-3. Ambiguous byte sequences that are valid under both UTF-8 and Shift_JIS are included in deterministic decoder vectors, and the expected result follows the approved evidence rather than decoder ordering.
-4. If official documentation does not settle a profile, that profile remains `unverified` until an exact live-PLC evidence plan is written with the PLC/profile, endpoint, address, read intent, registered comment value, purpose, expected raw-byte evidence, and restoration requirement, then separately approved by the user with `OK` before communication.
-5. A maintainer decision record defines the encoding selection mechanism, malformed-byte behavior, connection invalidation behavior, public API impact, compatibility impact, and cross-language mapping before source implementation begins.
-6. User documentation, tests, generated API reference, and migration notes agree with the approved contract in every affected implementation.
+1. Every public `RDC` text-decoding path requires an explicit supported encoding and has no automatic or profile-selected codec.
+2. A public raw-byte path returns the undecoded `RDC` comment payload.
+3. The exact codec mapping is defined consistently across all four runtimes, including whether Shift_JIS and Windows-31J/CP932 are separate selections.
+4. Ambiguous byte sequences valid under multiple codecs decode only according to the caller's selection; malformed sequences fail without fallback or replacement.
+5. Decoder failure and connection-state behavior are explicit and consistent with the library's protocol-error contract.
+6. User documentation, tests, generated API reference, changelog, and migration notes agree with the approved contract in every affected implementation.
 
 ### Evidence and completion checklist
 
-- [ ] Official `RDC` encoding evidence recorded for every affected PLC family/profile.
-- [ ] Shift_JIS versus Windows-31J/CP932 mapping resolved for all four language runtimes.
-- [ ] Ambiguous and malformed byte vectors defined with evidence-backed expected results.
-- [ ] Need for live PLC verification decided; any required exact live batch is separately documented and approved.
-- [ ] Target contract and compatibility impact explicitly approved by the user.
-- [ ] Implementation completed in every affected repository.
-- [ ] Tests added or updated for every acceptance criterion.
-- [ ] Relevant static checks, unit tests, integration tests, examples, and package/build checks passed.
-- [ ] Codex self-review completed against the approved contract and cross-language consistency requirements.
-- [ ] Required live-PLC checks passed, or each unavailable check has an explicit release disposition.
-- [ ] Documentation, migration notes, changelog, and generated API reference agree with the implementation.
-- [ ] Final acceptance criteria verified and the item marked complete.
+- [x] Evidence sufficient to reject a universal or profile-fixed `RDC` codec is recorded.
+- [x] Shift_JIS versus Windows-31J/CP932 mapping resolved for all four language runtimes.
+- [x] Ambiguous and malformed byte vectors defined with evidence-backed expected results.
+- [x] Further profile-by-profile live verification is not required to select the explicit-codec/raw-byte contract.
+- [x] Target contract and compatibility impact explicitly approved by the user.
+- [x] Implementation completed in every affected repository.
+  - [x] Host Link .NET implementation completed.
+  - [x] Host Link Python implementation completed and independently evidenced.
+  - [x] Host Link Rust implementation completed and independently evidenced.
+  - [x] Host Link Node-RED implementation completed and independently evidenced.
+- [x] Tests added or updated for every acceptance criterion.
+  - [x] Host Link .NET tests added and passed for every .NET acceptance criterion.
+- [x] Relevant static checks, unit tests, integration tests, examples, and package/build checks passed.
+  - [x] Host Link .NET CI, source archive, samples, docs, and package consumer passed.
+- [x] Codex self-review completed against the approved contract and cross-language consistency requirements.
+  - [x] Host Link .NET self-review completed; accepted findings were corrected and reverified.
+- [x] Required live-PLC checks passed, or each unavailable check has an explicit release disposition.
+- [x] Documentation, migration notes, changelog, and generated API reference agree with the implementation.
+  - [x] Host Link .NET documentation, migration, changelog, XML, and generated API reference agree.
+- [x] Final acceptance criteria verified and the item marked complete.
+  - [x] Final Host Link .NET acceptance criteria and independent four-runtime family completion verified.
 
 ### Current evidence boundary
 
-The current implementations try UTF-8 first and fall back to Shift_JIS. KEYENCE material stating that KV-series strings use Shift_JIS is relevant but does not by itself establish the byte contract of every Host Link `RDC` response. It is supporting evidence only, not approval of a Shift_JIS-only implementation.
+Before this implementation cycle, the reviewed implementations tried UTF-8 first and fell back to Shift_JIS. The located KEYENCE material says that KV-8000 strings use Shift_JIS in a specific EtherNet/IP connection-guide context, but it does not define the Host Link `RDC` response encoding: <https://www.keyence.co.jp/support/user/controls/plc/connection_guide/kv_iv4/>.
+
+The deterministic vectors are `C2 A2`, which decodes as `¢` under strict UTF-8
+and `ﾂ｢` under strict CP932; CP932 controls `1A`, `1C`, and `7F`; Windows
+extension mappings `8790` → `U+2252`, `ED40` → `U+7E8A`, and `FA4A` →
+`U+2160`; `EF BB BF 41`, which UTF-8 preserves as `U+FEFF` plus `A` and CP932
+rejects; malformed UTF-8 `C2`; forbidden CP932 singletons `80`, `A0`, and
+`FD..FF`; and malformed/unassigned CP932 `81`, `81 00`, `81 7F`, and `81 AD`.
+Each malformed vector must raise `HostLinkProtocolError`, perform no replacement
+or alternate-codec fallback, and retire the connection.
+
+On 2026-08-01, after the user's explicit `OK`, a read-only live check used KEYENCE KV-X500 / `keyence:kv-x500` at `192.168.250.100:8501`. `RDC R000` returned `E38182E38184E38186E38188E3818A` (UTF-8 `あいうえお`) and `RDC R001` returned `E3818BE3818DE3818FE38191E38193` (UTF-8 `かきくけこ`). Both payloads fail strict Shift_JIS and CP932 decoding. This proves that a universal Shift_JIS assumption is unsafe; it does not prove that all `RDC` comments are UTF-8 or identify how the comment-writing path determines stored bytes. The approved explicit-selection/raw-byte contract therefore does not depend on resolving that mechanism.
 
 ## HL-EVAL-017 — Distinguish .NET internal timeouts from caller cancellation
 

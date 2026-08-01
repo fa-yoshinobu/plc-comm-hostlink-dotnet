@@ -16,7 +16,8 @@
 | `ReadTimerCounterAsync` | Read timer or counter status, current value, and preset. |
 | `ReadTimerAsync` | Read a timer as status, current value, and preset. |
 | `ReadCounterAsync` | Read a counter as status, current value, and preset. |
-| `ReadCommentsAsync` | Read a PLC device comment label. |
+| `ReadCommentsAsync` | Decode a PLC device comment with an explicit UTF-8 or CP932 selection. |
+| `ReadCommentBytesAsync` | Read the exact undecoded PLC device-comment payload bytes. |
 | `ReadExpansionUnitBufferAsync` | Read expansion unit buffer memory. |
 | `WriteExpansionUnitBufferAsync` | Write expansion unit buffer memory. |
 
@@ -153,7 +154,7 @@ var options = new KvHostLinkConnectionOptions("192.168.250.100", 8501, HostLinkT
 await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(options);
 
 string[] addresses = ["DM0:U", "DM1:S", "DM2:D", "DM4:F", "DM10.A", "DM0:COMMENT"];
-var readResult = await client.ReadNamedAsync(addresses);
+var readResult = await client.ReadNamedAsync(addresses, HostLinkCommentEncoding.Utf8);
 
 foreach (var (address, value) in readResult)
 {
@@ -171,6 +172,12 @@ between independent named entries; a DWord or Float value is never split across
 wire requests. The result is not a simultaneous PLC snapshot because internal
 requests may observe different scan times. For coherent data, use a
 single-request read or a PLC-side snapshot/handshake design.
+
+An aggregate containing `:COMMENT` must use the overload that supplies a
+`HostLinkCommentEncoding`. The overload without that parameter rejects the
+complete aggregate before sending anything. Aggregates without comments do not
+need an encoding selection and must use the overload without one; supplying an
+unused comment encoding is an argument error before transport.
 
 ## Contiguous block reads
 
@@ -243,6 +250,9 @@ await foreach (var readResult in client.PollAsync(addresses, TimeSpan.FromSecond
 `PollAsync` yields a non-atomic aggregate dictionary on each interval until
 cancellation or until your loop exits. Each cycle uses the same validation,
 input-order, no-interleaving, and no-partial-result contract as `ReadNamedAsync`.
+If the address list contains `:COMMENT`, use the overload that adds an explicit
+`HostLinkCommentEncoding` after the interval. If it contains no comment, use the
+ordinary overload; an unused comment encoding is rejected before the first send.
 
 ## Operational recipes
 
@@ -289,9 +299,33 @@ Console.WriteLine($"Generic T0 preset={generic.Preset}");
 
 ## Device comments
 
-Use `string label = await client.ReadCommentsAsync("DM0");` after connecting to
-read the PLC device comment label for `DM0`. The result removes only trailing
-ASCII space padding; tabs, full-width spaces, and embedded spaces are preserved.
+An `RDC` response does not carry an encoding identifier. Select the encoding
+explicitly when requesting text:
+
+```csharp
+string utf8Label = await client.ReadCommentsAsync(
+    "DM0",
+    HostLinkCommentEncoding.Utf8);
+
+string cp932Label = await client.ReadCommentsAsync(
+    "DM1",
+    HostLinkCommentEncoding.Cp932);
+
+byte[] exactPayload = await client.ReadCommentBytesAsync("DM2");
+```
+
+`Utf8` means strict UTF-8. `Cp932` means strict Windows code page 932 /
+Windows-31J and is the compatibility selection for KEYENCE material that calls
+the encoding "Shift_JIS". CP932 accepts its mapped Windows extension pairs but
+rejects forbidden singleton bytes, incomplete sequences, and unassigned pairs.
+The library does not guess, fall back, select from the PLC profile, or replace
+malformed bytes. Invalid text fails with `HostLinkProtocolError` and retires the
+connection.
+
+The text API removes only trailing ASCII `0x20` padding before decoding; tabs,
+full-width spaces, and embedded spaces are preserved. The raw API returns the
+exact response body without the Host Link CR/LF frame terminator, including any
+trailing ASCII padding.
 
 ## Expansion unit buffer
 
@@ -345,10 +379,12 @@ an unsigned Dword.
 | `:L` | `DM100:L` | Signed 32-bit view. |
 | `:F` | `DM100:F` | IEEE 754 32-bit float view. |
 | `:BIT` | `R200:BIT` | Direct bit device view. |
-| `:COMMENT` | `DM100:COMMENT` | PLC device comment text. |
+| `:COMMENT` | `DM100:COMMENT` | PLC device comment text; the aggregate call must select UTF-8 or CP932 explicitly. |
 | `.n` | `DM100.A` | One bit inside a word; `n` is hexadecimal `0` to `F`. |
 
-For `ReadNamedAsync` and `PollAsync`, include the intended type. Use `DM100:U` instead of plain `DM100` for an unsigned word.
+For `ReadNamedAsync` and `PollAsync`, include the intended type. Use `DM100:U`
+instead of plain `DM100` for an unsigned word. When any item is `:COMMENT`, use
+the overload with an explicit `HostLinkCommentEncoding`.
 
 ## Runnable samples
 

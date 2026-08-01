@@ -13,6 +13,25 @@ $workspaceRoot = Split-Path -Parent $repositoryRoot
 $outputDirectory = Join-Path $workspaceRoot (".plc-hostlink-nuget-" + [guid]::NewGuid().ToString("N"))
 $projectPath = Join-Path $repositoryRoot "src\PlcComm.KvHostLink\PlcComm.KvHostLink.csproj"
 
+function Remove-DirectoryWithRetry {
+    param(
+        [Parameter(Mandatory)]
+        [string]$LiteralPath
+    )
+
+    for ($attempt = 1; $attempt -le 5; $attempt++) {
+        if (-not (Test-Path -LiteralPath $LiteralPath)) { return }
+        try {
+            Remove-Item -LiteralPath $LiteralPath -Recurse -Force -ErrorAction Stop
+            return
+        }
+        catch [System.IO.IOException] {
+            if ($attempt -eq 5) { throw }
+            Start-Sleep -Milliseconds 200
+        }
+    }
+}
+
 try {
     New-Item -ItemType Directory -Path $outputDirectory | Out-Null
     $packArguments = @("pack", $projectPath, "-c", $Configuration, "--no-restore", "-o", $outputDirectory)
@@ -79,29 +98,48 @@ try {
     }
 
     $consumerDirectory = Join-Path $outputDirectory "consumer"
+    $consumerPackages = Join-Path $outputDirectory "consumer-packages"
     [void](New-Item -ItemType Directory -Path $consumerDirectory -Force)
-    $consumerProject = Join-Path $consumerDirectory "PackedConsumer.csproj"
+    $consumerProject = Join-Path $consumerDirectory "PackedConsumer.proj"
     $consumerProgram = Join-Path $consumerDirectory "Program.cs"
     [System.IO.File]::WriteAllText($consumerProject, @"
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework></PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LanguageTargets>`$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
+  </PropertyGroup>
   <ItemGroup><PackageReference Include="PlcComm.KvHostLink" Version="$packageVersion" /></ItemGroup>
 </Project>
 "@)
     [System.IO.File]::WriteAllText($consumerProgram, @"
 using System;
+using System.Linq;
+using System.Threading;
 using PlcComm.KvHostLink;
-Console.WriteLine(typeof(KvHostLinkClient).FullName);
+var codecs = Enum.GetValues<HostLinkCommentEncoding>();
+if (!codecs.SequenceEqual(new[] { HostLinkCommentEncoding.Utf8, HostLinkCommentEncoding.Cp932 }))
+    throw new InvalidOperationException("Unexpected comment codec surface.");
+if (typeof(KvHostLinkClient).GetMethod("ReadCommentsAsync", new[] { typeof(string), typeof(CancellationToken) }) is not null)
+    throw new InvalidOperationException("Implicit comment decoder remains public.");
+if (typeof(KvHostLinkClient).GetMethod("ReadCommentsAsync", new[] { typeof(string), typeof(HostLinkCommentEncoding), typeof(CancellationToken) }) is null)
+    throw new InvalidOperationException("Explicit comment decoder is missing.");
+if (typeof(KvHostLinkClient).GetMethod("ReadCommentBytesAsync", new[] { typeof(string), typeof(CancellationToken) }) is null)
+    throw new InvalidOperationException("Raw comment payload API is missing.");
+Console.WriteLine($"{typeof(KvHostLinkClient).FullName}:{string.Join(',', codecs)}");
 "@)
-    & dotnet restore $consumerProject --source $outputDirectory
+    & dotnet restore $consumerProject --source $outputDirectory --packages $consumerPackages --no-cache --disable-build-servers
     if ($LASTEXITCODE -ne 0) { throw "Packed NuGet consumer restore failed." }
-    & dotnet run --project $consumerProject --no-restore
-    if ($LASTEXITCODE -ne 0) { throw "Packed NuGet consumer build/run failed." }
+    & dotnet build $consumerProject --no-restore --disable-build-servers
+    if ($LASTEXITCODE -ne 0) { throw "Packed NuGet consumer build failed." }
+    $consumerAssembly = Join-Path $consumerDirectory "bin\Debug\net8.0\PackedConsumer.dll"
+    & dotnet $consumerAssembly
+    if ($LASTEXITCODE -ne 0) { throw "Packed NuGet consumer run failed." }
 
     Write-Host "[OK] NuGet package content/consumer contract passed: package=$($packages[0].Name) files=$($files.Count) consumer=net8.0"
 }
 finally {
     if (Test-Path -LiteralPath $outputDirectory) {
-        Remove-Item -LiteralPath $outputDirectory -Recurse -Force
+        Remove-DirectoryWithRetry -LiteralPath $outputDirectory
     }
 }

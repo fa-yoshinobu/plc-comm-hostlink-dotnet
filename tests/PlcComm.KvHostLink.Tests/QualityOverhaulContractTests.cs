@@ -49,6 +49,18 @@ public sealed class QualityOverhaulContractTests
             typeof(KvHostLinkClient).GetMethods(),
             method => method.Name == nameof(KvHostLinkClient.SendRawAsync));
         Assert.Equal(typeof(Task<byte[]>), raw.ReturnType);
+        Assert.Equal(
+            [HostLinkCommentEncoding.Utf8, HostLinkCommentEncoding.Cp932],
+            Enum.GetValues<HostLinkCommentEncoding>());
+        Assert.Null(typeof(KvHostLinkClient).GetMethod(
+            nameof(KvHostLinkClient.ReadCommentsAsync),
+            [typeof(string), typeof(CancellationToken)]));
+        Assert.NotNull(typeof(KvHostLinkClient).GetMethod(
+            nameof(KvHostLinkClient.ReadCommentsAsync),
+            [typeof(string), typeof(HostLinkCommentEncoding), typeof(CancellationToken)]));
+        Assert.NotNull(typeof(KvHostLinkClient).GetMethod(
+            nameof(KvHostLinkClient.ReadCommentBytesAsync),
+            [typeof(string), typeof(CancellationToken)]));
         ParameterInfo time = typeof(KvHostLinkClient).GetMethod(
             nameof(KvHostLinkClient.SetTimeAsync))!.GetParameters()[0];
         Assert.False(time.IsOptional);
@@ -136,23 +148,189 @@ public sealed class QualityOverhaulContractTests
     }
 
     [Fact]
+    public async Task CommentRawPathPreservesExactPayloadIncludingPadding()
+    {
+        byte[] payload = [0x81, 0x00, 0x20, 0x20];
+        await using var server = new RawContractServer(_ => [.. payload, (byte)'\r']);
+        await using var client = await OpenClientAsync(server.Port);
+
+        Assert.Equal(payload, await client.ReadCommentBytesAsync("DM100"));
+        Assert.True(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task CommentDecoderUsesOnlyExplicitCodecForAmbiguousBytes()
+    {
+        await using var server = new RawContractServer(_ => [0xC2, 0xA2, (byte)'\r']);
+        await using var client = await OpenClientAsync(server.Port);
+
+        Assert.Equal("¢", await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
+        Assert.Equal("ﾂ｢", await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+    }
+
+    [Fact]
+    public async Task CommentBomBytesFollowOnlyTheExplicitCodec()
+    {
+        await using var server = new RawContractServer(_ =>
+            [0xEF, 0xBB, 0xBF, 0x41, (byte)'\r']);
+        await using var client = await OpenClientAsync(server.Port);
+
+        Assert.Equal(
+            "\uFEFFA",
+            await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+        Assert.False(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task CommentCp932PreservesAsciiControlsAndAcceptsHalfwidthBytes()
+    {
+        await using var server = new RawContractServer(_ =>
+            [0x1A, 0x1C, 0x7F, 0xA1, 0xDF, (byte)'\r']);
+        await using var client = await OpenClientAsync(server.Port);
+
+        Assert.Equal(
+            new string(['\u001A', '\u001C', '\u007F', '\uFF61', '\uFF9F']),
+            await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+    }
+
+    [Theory]
+    [InlineData("8790", "\u2252")]
+    [InlineData("ED40", "\u7E8A")]
+    [InlineData("FA4A", "\u2160")]
+    public async Task CommentCp932AcceptsSharedWindowsExtensionMappings(
+        string payloadHex,
+        string expected)
+    {
+        byte[] payload = Convert.FromHexString(payloadHex);
+        await using var server = new RawContractServer(_ => [.. payload, (byte)'\r']);
+        await using var client = await OpenClientAsync(server.Port);
+
+        Assert.Equal(
+            expected,
+            await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+    }
+
+    [Fact]
     public async Task CommentDecoderRemovesOnlyTrailingAsciiSpaces()
     {
         byte[] response = [.. Encoding.UTF8.GetBytes("A B\t　  "), (byte)'\r'];
         await using var server = new RawContractServer(_ => response);
         await using var client = await OpenClientAsync(server.Port);
 
-        Assert.Equal("A B\t　", await client.ReadCommentsAsync("DM100"));
+        Assert.Equal(
+            "A B\t　",
+            await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
     }
 
     [Fact]
-    public async Task CommentDecoderRejectsBytesInvalidInUtf8AndShiftJis()
+    public async Task CommentDecoderRejectsMalformedUtf8WithoutFallbackOrReplacement()
+    {
+        await using var server = new RawContractServer(_ => [0xC2, (byte)'\r']);
+        await using var client = await OpenClientAsync(server.Port);
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
+        Assert.False(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task CommentDecoderRejectsMalformedCp932WithoutFallbackOrReplacement()
     {
         await using var server = new RawContractServer(_ => [0x81, 0x00, (byte)'\r']);
         await using var client = await OpenClientAsync(server.Port);
 
-        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadCommentsAsync("DM100"));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
         Assert.False(client.IsOpen);
+    }
+
+    [Theory]
+    [InlineData("80")]
+    [InlineData("A0")]
+    [InlineData("FD")]
+    [InlineData("FE")]
+    [InlineData("FF")]
+    [InlineData("81")]
+    [InlineData("817F")]
+    [InlineData("81AD")]
+    public async Task CommentCp932RejectsForbiddenSingletonMalformedAndUnassignedBytes(
+        string payloadHex)
+    {
+        byte[] payload = Convert.FromHexString(payloadHex);
+        await using var server = new RawContractServer(_ => [.. payload, (byte)'\r']);
+        await using var client = await OpenClientAsync(server.Port);
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+        Assert.False(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task CommentCodecAndImplicitAggregateErrorsRejectBeforeSend()
+    {
+        await using var server = new RawContractServer(_ => "COMMENT\r"u8.ToArray());
+        await using var client = await OpenClientAsync(server.Port);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            _ = client.ReadCommentsAsync("DM100", (HostLinkCommentEncoding)99);
+        });
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            _ = client.ReadNamedAsync(["DM100:COMMENT"], (HostLinkCommentEncoding)99);
+        });
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            _ = client.PollAsync(
+                ["DM100:COMMENT"],
+                TimeSpan.FromSeconds(1),
+                (HostLinkCommentEncoding)99);
+        });
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.ReadNamedAsync(["DM100:COMMENT"]));
+
+        Assert.Empty(server.Commands);
+        Assert.True(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task ExplicitAggregateCommentCodecRequiresACommentBeforeSend()
+    {
+        await using var server = new RawContractServer(_ => "0\r"u8.ToArray());
+        await using var client = await OpenClientAsync(server.Port);
+
+        ArgumentException namedError = await Assert.ThrowsAsync<ArgumentException>(() =>
+            client.ReadNamedAsync(["DM100:U"], HostLinkCommentEncoding.Utf8));
+        Assert.Equal("commentEncoding", namedError.ParamName);
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            client.ReadNamedAsync(Array.Empty<string>(), HostLinkCommentEncoding.Cp932));
+
+        await using (var polling = client.PollAsync(
+            ["DM100:U"],
+            TimeSpan.FromSeconds(1),
+            HostLinkCommentEncoding.Cp932).GetAsyncEnumerator())
+        {
+            ArgumentException pollError = await Assert.ThrowsAsync<ArgumentException>(() =>
+                polling.MoveNextAsync().AsTask());
+            Assert.Equal("commentEncoding", pollError.ParamName);
+        }
+
+        Assert.Empty(server.Commands);
+        Assert.True(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task CommentRawAndTextPathsTranslatePlcErrorWithoutClosingConnection()
+    {
+        await using var server = new RawContractServer(_ => "E1\r"u8.ToArray());
+        await using var client = await OpenClientAsync(server.Port);
+
+        await Assert.ThrowsAsync<HostLinkError>(() => client.ReadCommentBytesAsync("DM100"));
+        await Assert.ThrowsAsync<HostLinkError>(() =>
+            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
+        Assert.True(client.IsOpen);
     }
 
     [Fact]

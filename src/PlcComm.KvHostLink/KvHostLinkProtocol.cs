@@ -8,13 +8,15 @@ internal static class KvHostLinkProtocol
     private static readonly Regex ErrorRegex = new(@"^E[0-9]$", RegexOptions.Compiled);
     private static readonly byte[] Cr = { (byte)'\r' };
     private static readonly Encoding Utf8Strict = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-    private static readonly Encoding ShiftJisStrict;
+    private static readonly Encoding Cp932;
+    private static readonly Encoding Cp932Strict;
 
     static KvHostLinkProtocol()
     {
-        // Shift_JIS decoding needs code pages on .NET (Core).
+        // CP932/Windows-31J decoding needs code pages on .NET (Core).
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        ShiftJisStrict = Encoding.GetEncoding(932, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
+        Cp932 = Encoding.GetEncoding(932);
+        Cp932Strict = Encoding.GetEncoding(932, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
     }
 
     public static byte[] BuildFrame(string body)
@@ -43,45 +45,14 @@ internal static class KvHostLinkProtocol
         return result;
     }
 
-    public static string DecodeResponse(byte[] raw)
+    public static void ValidateCommentEncoding(HostLinkCommentEncoding encoding)
     {
-        if (raw == null || raw.Length == 0)
-            throw new HostLinkProtocolError("Empty response");
-
-        // Find the trimmed length first to avoid a second string allocation from TrimEnd.
-        int len = raw.Length;
-        while (len > 0 && (raw[len - 1] == '\r' || raw[len - 1] == '\n'))
-            len--;
-
-        if (len == 0)
-            throw new HostLinkProtocolError("Malformed response frame");
-
-        bool isAscii = true;
-        for (int i = 0; i < len; i++)
+        if (encoding is not HostLinkCommentEncoding.Utf8 and not HostLinkCommentEncoding.Cp932)
         {
-            if (raw[i] > 0x7F)
-            {
-                isAscii = false;
-                break;
-            }
-        }
-        if (isAscii)
-            return Encoding.ASCII.GetString(raw, 0, len);
-
-        try
-        {
-            return Utf8Strict.GetString(raw, 0, len);
-        }
-        catch (DecoderFallbackException)
-        {
-        }
-        try
-        {
-            return ShiftJisStrict.GetString(raw, 0, len);
-        }
-        catch (DecoderFallbackException ex)
-        {
-            throw new HostLinkProtocolError("Response could not be decoded as UTF-8 or Shift_JIS", ex);
+            throw new ArgumentOutOfRangeException(
+                nameof(encoding),
+                encoding,
+                "Comment encoding must be Utf8 or Cp932.");
         }
     }
 
@@ -103,22 +74,101 @@ internal static class KvHostLinkProtocol
         return EnsureSuccess(Encoding.ASCII.GetString(body));
     }
 
-    public static string DecodeCommentResponse(byte[] body)
+    public static void EnsureCommentSuccess(byte[] body)
     {
-        string responseText;
-        if (body.Length > 0 && body.All(static value => value <= 0x7F))
-            responseText = Encoding.ASCII.GetString(body);
-        else
-            responseText = DecodeResponse(body);
+        ArgumentNullException.ThrowIfNull(body);
+        if (body.Length == 2 && body[0] == 'E' && body[1] is >= (byte)'0' and <= (byte)'9')
+        {
+            string errorCode = Encoding.ASCII.GetString(body);
+            throw new HostLinkError($"PLC returned error: {errorCode}", errorCode, errorCode);
+        }
+    }
 
-        EnsureSuccess(responseText);
+    public static string DecodeCommentResponse(byte[] body, HostLinkCommentEncoding encoding)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        ValidateCommentEncoding(encoding);
+        EnsureCommentSuccess(body);
+
         int length = body.Length;
         while (length > 0 && body[length - 1] == 0x20)
             length--;
         if (length == 0)
             return string.Empty;
-        return DecodeResponse(body.AsSpan(0, length).ToArray());
+
+        try
+        {
+            return encoding switch
+            {
+                HostLinkCommentEncoding.Utf8 => Utf8Strict.GetString(body, 0, length),
+                HostLinkCommentEncoding.Cp932 => DecodeCp932(body, length),
+                _ => throw new ArgumentOutOfRangeException(nameof(encoding), encoding, null),
+            };
+        }
+        catch (DecoderFallbackException ex)
+        {
+            throw new HostLinkProtocolError(
+                $"RDC comment payload is not valid {encoding} text.",
+                ex);
+        }
     }
+
+    private static string DecodeCp932(byte[] body, int length)
+    {
+        for (int index = 0; index < length; index++)
+        {
+            byte first = body[index];
+            if (first <= 0x7F || first is >= 0xA1 and <= 0xDF)
+                continue;
+
+            if (first is not (>= 0x81 and <= 0x9F) and not (>= 0xE0 and <= 0xFC) ||
+                index + 1 >= length)
+            {
+                throw new DecoderFallbackException(
+                    $"Invalid CP932 byte 0x{first:X2} at offset {index}.");
+            }
+
+            byte second = body[++index];
+            if (!IsStrictCp932Pair(first, second) && !IsCp932WindowsExtensionPair(first, second))
+            {
+                throw new DecoderFallbackException(
+                    $"Invalid CP932 byte pair 0x{first:X2}{second:X2} at offset {index - 1}.");
+            }
+        }
+
+        // The default .NET CP932 table maps the Windows extension pairs that
+        // ExceptionFallback rejects even though Python cp932 and WHATWG
+        // Shift_JIS accept them. Prevalidation above prevents replacement text.
+        return Cp932.GetString(body, 0, length);
+    }
+
+    private static bool IsStrictCp932Pair(byte first, byte second)
+    {
+        Span<byte> pair = stackalloc byte[2] { first, second };
+        try
+        {
+            _ = Cp932Strict.GetCharCount(pair);
+            return true;
+        }
+        catch (DecoderFallbackException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsCp932WindowsExtensionPair(byte first, byte second)
+        => first switch
+        {
+            0x87 => second is >= 0x90 and <= 0x92 or
+                >= 0x95 and <= 0x97 or
+                >= 0x9A and <= 0x9C,
+            0xED => second is >= 0x40 and <= 0x7E or >= 0x80 and <= 0xFC,
+            0xEE => second is >= 0x40 and <= 0x7E or
+                >= 0x80 and <= 0xEC or
+                >= 0xEF and <= 0xFC,
+            0xFA => second is >= 0x4A and <= 0x54 or >= 0x58 and <= 0x5B,
+            _ => false,
+        };
 
     public static byte[] ExtractBody(byte[] frame)
     {

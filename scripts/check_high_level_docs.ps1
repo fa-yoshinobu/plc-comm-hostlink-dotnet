@@ -43,6 +43,20 @@ $expected = @(
         Tags = @("summary")
     },
     @{
+        Name = 'T:PlcComm.KvHostLink.HostLinkCommentEncoding'
+        Tags = @("summary")
+    },
+    @{
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentBytesAsync(System.String,System.Threading.CancellationToken)'
+        Tags = @("summary", "returns")
+        Params = @("device", "cancellationToken")
+    },
+    @{
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(System.String,PlcComm.KvHostLink.HostLinkCommentEncoding,System.Threading.CancellationToken)'
+        Tags = @("summary", "returns", "remarks")
+        Params = @("device", "encoding", "cancellationToken")
+    },
+    @{
         Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)'
         Tags = @("summary", "returns", "remarks")
         Params = @("client", "device", "dtype", "ct")
@@ -63,9 +77,19 @@ $expected = @(
         Params = @("client", "addresses", "ct")
     },
     @{
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},PlcComm.KvHostLink.HostLinkCommentEncoding,System.Threading.CancellationToken)'
+        Tags = @("summary", "returns", "remarks")
+        Params = @("client", "addresses", "commentEncoding", "ct")
+    },
+    @{
         Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,System.Threading.CancellationToken)'
         Tags = @("summary", "remarks")
         Params = @("client", "addresses", "interval", "ct")
+    },
+    @{
+        Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,PlcComm.KvHostLink.HostLinkCommentEncoding,System.Threading.CancellationToken)'
+        Tags = @("summary", "returns")
+        Params = @("client", "addresses", "interval", "commentEncoding", "ct")
     },
     @{
         Name = 'M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsSingleRequestAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)'

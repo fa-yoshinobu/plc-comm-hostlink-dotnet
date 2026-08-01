@@ -17,7 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Docs: Corrected the final current-worktree verification evidence to 201 tests per target framework (603 extracted-archive test executions).
+- Library: **Breaking:** Device-comment text reads now require an explicit `HostLinkCommentEncoding.Utf8` or `.Cp932`; removed UTF-8-first/Shift_JIS-fallback decoding, added exact `ReadCommentBytesAsync` payload access, and reject comment aggregates without a codec before transport.
+- Library: Comment aggregate overloads are disjoint: the ordinary overload rejects `:COMMENT`, while the explicit-codec overload requires at least one `:COMMENT` and rejects an unused codec with an argument error before transport.
+- Library: Strict comment decoding now rejects malformed selected text without replacement or fallback and retires the connection; `Cp932` is Windows-31J/code page 932 compatibility for KEYENCE "Shift_JIS" terminology, accepts the shared mapped Windows-extension pairs, and rejects forbidden singleton bytes and unassigned pairs consistently across runtimes.
+- Tests: Added raw comment payload, explicit ambiguous-codec, malformed-input, aggregate preflight, invalid-enum, PLC-error, padding, and connection-retirement coverage.
+- Docs: Documented explicit device-comment codec selection, raw payload semantics, aggregate requirements, and migration impact in user and maintainer references.
+- CI: The packed-consumer gate now uses an isolated NuGet cache so an existing same-version global package cannot mask the candidate, uses a neutral disposable MSBuild project to avoid IDE discovery locks, and retries transient Windows cleanup locks separately from the package result.
+- Docs: Corrected the final current-worktree verification evidence to 221 tests per target framework (663 extracted-archive test executions).
 - Library: **Breaking:** Removed `QueuedKvHostLinkClient`; the ordinary `KvHostLinkClient` now owns exact FIFO admission for all low- and high-level operations, rejects same-client reentrancy, snapshots admitted inputs and timeout configuration, starts the absolute transaction deadline only on activation, and retires active/queued generations on close.
 - Library: **Breaking:** Removed the multi-request `WriteBitInWordAsync` read-modify-write helper. Single-request writes remain available, and individual direct-bit writes accept only Boolean scalar/collection values; numeric `0`/`1` compatibility inputs are rejected before transport.
 - Library: **Breaking:** TCP and UDP endpoints are IPv4-only. IPv6 literals are rejected before socket creation, and hostname resolution selects IPv4 without IPv6 fallback.
