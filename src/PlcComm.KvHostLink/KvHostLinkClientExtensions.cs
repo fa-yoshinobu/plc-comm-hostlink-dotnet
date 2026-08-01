@@ -159,7 +159,8 @@ public static class KvHostLinkClientExtensions
             ? RequireLastDataToken(tokens, device)
             : RequireDataToken(tokens, device);
         if (normalized == "H")
-            return raw.Trim().ToUpperInvariant();
+            return ushort.Parse(raw, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture)
+                .ToString("X4", CultureInfo.InvariantCulture);
         return normalized switch
         {
             "S" => (object)short.Parse(raw, CultureInfo.InvariantCulture),

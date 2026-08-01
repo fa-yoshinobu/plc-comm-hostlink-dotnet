@@ -104,6 +104,75 @@ public sealed class KvHostLinkTransportTests
     }
 
     [Fact]
+    public async Task TcpRejectsExtraNonEmptyResponseBufferedAfterTerminator()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var serverTask = Task.Run(async () =>
+        {
+            using TcpClient accepted = await listener.AcceptTcpClientAsync();
+            NetworkStream stream = accepted.GetStream();
+            while (stream.ReadByte() is int value && value >= 0 && value != '\r') { }
+            await stream.WriteAsync("1\r2\r"u8.ToArray());
+            await stream.FlushAsync();
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Tcp, "keyence:kv-8000");
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadAsync("DM0", ".U"));
+        Assert.False(client.IsOpen);
+        await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+        listener.Stop();
+    }
+
+    [Fact]
+    public async Task TcpRejectsDelayedUnownedResponseBeforeSendingNextCommand()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var extraSent = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var serverTask = Task.Run(async () =>
+        {
+            using TcpClient accepted = await listener.AcceptTcpClientAsync();
+            NetworkStream stream = accepted.GetStream();
+            while (stream.ReadByte() is int value && value >= 0 && value != '\r') { }
+            await stream.WriteAsync("1\r"u8.ToArray());
+            await stream.FlushAsync();
+            await Task.Delay(20);
+            await stream.WriteAsync("2\r"u8.ToArray());
+            await stream.FlushAsync();
+            extraSent.SetResult();
+
+            using var noSecondRequest = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+            var buffer = new byte[1];
+            try
+            {
+                return await stream.ReadAsync(buffer, noSecondRequest.Token) != 0;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Tcp, "keyence:kv-8000");
+        await client.OpenAsync();
+
+        Assert.Equal(["1"], await client.ReadAsync("DM0", ".U"));
+        await extraSent.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(20);
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.WriteAsync("DM1", 2, ".U"));
+        Assert.False(client.IsOpen);
+        Assert.False(await serverTask.WaitAsync(TimeSpan.FromSeconds(5)));
+        listener.Stop();
+    }
+
+    [Fact]
     public async Task TcpOversizePartialResponseDoesNotIncrementReceiveStats()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -207,6 +276,54 @@ public sealed class KvHostLinkTransportTests
         Assert.IsType<OperationCanceledException>(error.InnerException);
         Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task UdpUsesDedicatedSocketGenerationForEachSuccessfulRequest()
+    {
+        using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+        int port = ((IPEndPoint)server.Client.LocalEndPoint!).Port;
+        var endpoints = new List<IPEndPoint>();
+        var secondReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseSecondResponse = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var serverTask = Task.Run(async () =>
+        {
+            UdpReceiveResult first = await server.ReceiveAsync();
+            endpoints.Add(first.RemoteEndPoint);
+            await server.SendAsync("FIRST\r"u8.ToArray(), first.RemoteEndPoint);
+
+            UdpReceiveResult second = await server.ReceiveAsync();
+            endpoints.Add(second.RemoteEndPoint);
+            secondReceived.SetResult();
+            await releaseSecondResponse.Task;
+            await server.SendAsync("STALE\r"u8.ToArray(), first.RemoteEndPoint);
+            await server.SendAsync("SECOND\r"u8.ToArray(), second.RemoteEndPoint);
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Udp, "keyence:kv-8000");
+        await client.OpenAsync();
+
+        Assert.Equal("FIRST"u8.ToArray(), await client.SendRawAsync("ONE"));
+        Assert.True(client.IsOpen);
+        using (var duplicateBind = new UdpClient(AddressFamily.InterNetwork))
+        {
+            Assert.Throws<SocketException>(() =>
+                duplicateBind.Client.Bind(new IPEndPoint(IPAddress.Any, endpoints[0].Port)));
+        }
+
+        Task<byte[]> secondRequest = client.SendRawAsync("TWO");
+        await secondReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.NotEqual(endpoints[0].Port, endpoints[1].Port);
+        using var releasedPredecessorPort = new UdpClient(
+            new IPEndPoint(IPAddress.Any, endpoints[0].Port));
+        releaseSecondResponse.SetResult();
+
+        Assert.Equal("SECOND"u8.ToArray(), await secondRequest);
+        Assert.True(client.IsOpen);
+        await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(2, endpoints.Count);
+        Assert.NotEqual(endpoints[0].Port, endpoints[1].Port);
     }
 
     [Fact]

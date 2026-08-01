@@ -71,6 +71,13 @@ Choose TCP or UDP explicitly for every endpoint. TCP provides stream delivery;
 UDP avoids stream state but does not provide retransmission. The TCP transport
 disables Nagle buffering for small Host Link command frames.
 
+One TCP request owns one non-empty response line. CR/LF-only separators are
+ignored, but an additional non-empty line received before the next send is a
+protocol error and retires the transport. A UDP open is a logical session:
+every admitted operation binds a fresh request-owned socket and source port.
+The preceding successful socket remains bound only until its successor has
+bound a different port, so its delayed datagrams cannot satisfy the successor.
+
 Reuse one connected client for repeated reads and writes. Prefer
 `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, or
 `ReadNamedAsync` over many individual `ReadTypedAsync` calls when its explicitly
@@ -142,13 +149,19 @@ finally
 
 This is a matched read/write/readback pattern. Keep it on a test address until you know the register is safe for your machine.
 Float32 (`F`) reads and writes are available only for the canonical ordinary
-one-word families `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `Z`, `CM`, `VM`, `D`,
-`E`, and `F`, where the value uses two consecutive `.U` words. Direct-bit
-families and special-response families such as `R`, `T`, `C`, and `AT` are
+one-word families `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `CM`, `VM`, `D`,
+`E`, and `F`, where the value uses two consecutive `.U` words. The native
+32-bit `Z` family is not a two-word Float32 route. Direct-bit families and
+special-response families such as `R`, `T`, `C`, and `AT` are
 rejected before FIFO admission and transport in parsed, normalized, formatted,
 typed, named, and polling addresses. Float32 write input must also be finite and
 within the binary32 range; NaN, infinities, and finite values that would
 overflow to infinity are rejected before transport.
+
+Semantic `H` reads return exactly four uppercase hexadecimal digits, such as
+`000F`, through low-level, typed, named, monitor, and polling APIs. Raw response
+body APIs preserve the PLC bytes, and hexadecimal writes keep the minimal wire
+representation accepted by the PLC.
 
 ## Named aggregate read
 

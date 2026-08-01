@@ -25,6 +25,9 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private TcpClient? _tcp;
     private NetworkStream? _tcpStream;
     private UdpClient? _udp;
+    private UdpClient? _udpPredecessor;
+    private IPEndPoint? _udpRemoteEndPoint;
+    private bool _udpSessionOpen;
     private readonly object _lifecycleSync = new();
     private readonly object _operationSync = new();
     private readonly LinkedList<OperationWaiter> _operationWaiters = new();
@@ -139,7 +142,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         get
         {
             lock (_lifecycleSync)
-                return _transportMode == HostLinkTransportMode.Tcp ? _tcpStream is not null : _udp is not null;
+                return _transportMode == HostLinkTransportMode.Tcp ? _tcpStream is not null : _udpSessionOpen;
         }
     }
 
@@ -194,14 +197,13 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             return;
         }
 
-        var udp = new UdpClient(AddressFamily.InterNetwork);
         try
         {
             IPAddress remoteAddress = await KvHostLinkNetwork.ResolveIpv4AddressAsync(
                 _host,
                 operationCancellation.Token).ConfigureAwait(false);
             operationCancellation.Token.ThrowIfCancellationRequested();
-            udp.Connect(new IPEndPoint(remoteAddress, _port));
+            var remoteEndPoint = new IPEndPoint(remoteAddress, _port);
             lock (_lifecycleSync)
             {
                 if (_disposed != 0 || _closing != 0 ||
@@ -212,13 +214,13 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                         new OperationCanceledException(operationCancellation.Token),
                         "UDP connect");
                 }
-                _udp = udp;
+                _udpRemoteEndPoint = remoteEndPoint;
+                _udpSessionOpen = true;
                 ResetProtocolStateNoLock();
             }
         }
         catch (Exception error)
         {
-            udp.Dispose();
             throw operationCancellation.Translate(error, "UDP connect");
         }
     }
@@ -244,6 +246,10 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         _tcp = null;
         _udp?.Dispose();
         _udp = null;
+        _udpPredecessor?.Dispose();
+        _udpPredecessor = null;
+        _udpRemoteEndPoint = null;
+        _udpSessionOpen = false;
         ResetProtocolStateNoLock();
     }
 
@@ -567,6 +573,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             try
             {
                 operationCancellation.Token.ThrowIfCancellationRequested();
+                RejectUnownedTcpResponse();
                 sendMayHaveStarted = true;
                 await _tcpStream!.WriteAsync(frame, operationCancellation.Token).ConfigureAwait(false);
                 RecordSend(frame.Length);
@@ -586,19 +593,23 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             }
         }
 
+        UdpClient? udp = null;
+        bool exchangeCompleted = false;
         try
         {
             operationCancellation.Token.ThrowIfCancellationRequested();
+            udp = CreateUdpRequestSocket(operationCancellation);
             sendMayHaveStarted = true;
-            await _udp!.SendAsync(frame, operationCancellation.Token).ConfigureAwait(false);
+            await udp.SendAsync(frame, operationCancellation.Token).ConfigureAwait(false);
             RecordSend(frame.Length);
             FireTrace(HostLinkTraceDirection.Send, frame);
-            var result = await _udp.ReceiveAsync(operationCancellation.Token).ConfigureAwait(false);
+            var result = await udp.ReceiveAsync(operationCancellation.Token).ConfigureAwait(false);
             RecordReceive(result.Buffer.Length);
             FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
             byte[] responseBody = KvHostLinkProtocol.ExtractBody(result.Buffer);
             if (responseBody.Length > MaxResponseBodyLength)
                 throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
+            exchangeCompleted = true;
             return responseBody;
         }
         catch (Exception error)
@@ -610,6 +621,104 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             throw stateChanging && sendMayHaveStarted
                 ? CreateOutcomeUnknown(translated)
                 : translated;
+        }
+        finally
+        {
+            if (exchangeCompleted)
+                RetainCompletedUdpRequestSocket(udp!);
+        }
+    }
+
+    private UdpClient CreateUdpRequestSocket(
+        KvHostLinkOperationCancellation operationCancellation)
+    {
+        UdpClient? createdSocket = null;
+        UdpClient? predecessorToDispose = null;
+        lock (_lifecycleSync)
+        {
+            operationCancellation.Token.ThrowIfCancellationRequested();
+            if (!_udpSessionOpen || _udpRemoteEndPoint is null || _disposed != 0 || _closing != 0)
+                throw new HostLinkClosedError();
+
+            IPEndPoint? predecessorEndPoint = _udpPredecessor?.Client.LocalEndPoint as IPEndPoint;
+            for (int attempt = 0; attempt < 16; attempt++)
+            {
+                var udp = new UdpClient(AddressFamily.InterNetwork);
+                try
+                {
+                    udp.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
+                    var localEndPoint = (IPEndPoint)udp.Client.LocalEndPoint!;
+                    if (predecessorEndPoint is not null && localEndPoint.Port == predecessorEndPoint.Port)
+                    {
+                        udp.Dispose();
+                        continue;
+                    }
+
+                    udp.Connect(_udpRemoteEndPoint);
+                    _udp = udp;
+                    createdSocket = udp;
+                    predecessorToDispose = _udpPredecessor;
+                    _udpPredecessor = null;
+                    break;
+                }
+                catch
+                {
+                    udp.Dispose();
+                    throw;
+                }
+            }
+
+            if (createdSocket is null)
+                throw new HostLinkConnectionError(
+                    "UDP bind did not allocate a local endpoint distinct from the predecessor generation.");
+        }
+
+        predecessorToDispose?.Dispose();
+        return createdSocket;
+    }
+
+    private void RetainCompletedUdpRequestSocket(UdpClient udp)
+    {
+        UdpClient? socketToDispose = null;
+        lock (_lifecycleSync)
+        {
+            if (_udpSessionOpen && ReferenceEquals(_udp, udp))
+            {
+                _udp = null;
+                socketToDispose = _udpPredecessor;
+                _udpPredecessor = udp;
+            }
+            else
+            {
+                socketToDispose = udp;
+            }
+        }
+        socketToDispose?.Dispose();
+    }
+
+    private void RejectUnownedTcpResponse()
+    {
+        while (_rxCount > 0 && (_rxBuf[_rxStart] == '\r' || _rxBuf[_rxStart] == '\n'))
+        {
+            _rxStart++;
+            _rxCount--;
+        }
+        if (_rxCount > 0)
+            throw new HostLinkProtocolError(
+                "Received an unowned extra TCP response before sending the next request.");
+        _rxStart = 0;
+
+        Socket socket = _tcp!.Client;
+        while (socket.Available > 0)
+        {
+            int read = socket.Receive(
+                _tcpReadBuf,
+                0,
+                Math.Min(_tcpReadBuf.Length, socket.Available),
+                SocketFlags.None);
+            if (_tcpReadBuf.AsSpan(0, read).IndexOfAnyExcept((byte)'\r', (byte)'\n') >= 0)
+                throw new HostLinkProtocolError(
+                    "Received an unowned extra TCP response before sending the next request.");
         }
     }
 
@@ -668,11 +777,14 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                 int frameLength = foundIdx + 1;
                 while (frameLength < _rxCount && (_rxBuf[_rxStart + frameLength] == '\r' || _rxBuf[_rxStart + frameLength] == '\n'))
                     frameLength++;
+                if (frameLength < _rxCount)
+                    throw new HostLinkProtocolError("TCP response contained extra non-empty data after its terminator");
                 _skipLeadingSeparators = true;
                 byte[] body = _rxBuf.AsSpan(_rxStart, foundIdx).ToArray();
                 byte[] receivedFrame = _rxBuf.AsSpan(_rxStart, frameLength).ToArray();
                 _rxStart += frameLength;
                 _rxCount -= frameLength;
+                RejectUnownedTcpResponse();
                 if (_rxStart > _rxBuf.Length / 2)
                 {
                     _rxBuf.AsSpan(_rxStart, _rxCount).CopyTo(_rxBuf);
@@ -877,11 +989,14 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         int expectedCount = consecutive
             ? count
             : KvHostLinkDevice.ReadResponseTokenCount(address.DeviceType, suffix);
+        string responseFormat = KvHostLinkModels.DirectBitDeviceTypes.Contains(address.DeviceType)
+            ? ""
+            : suffix;
         try
         {
-            KvHostLinkProtocol.ValidateResponseTokens(
+            KvHostLinkProtocol.ValidateAndNormalizeResponseTokens(
                 tokens,
-                suffix,
+                responseFormat,
                 expectedCount,
                 timerCounterComposite: address.DeviceType is "T" or "C");
         }
@@ -1107,7 +1222,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                     throw new HostLinkProtocolError(
                         $"Response contained {tokens.Length} values; expected {_monitorWordFormats.Length}.");
                 for (int index = 0; index < tokens.Length; index++)
-                    KvHostLinkProtocol.ValidateResponseTokens([tokens[index]], _monitorWordFormats[index], 1);
+                {
+                    string[] token = [tokens[index]];
+                    KvHostLinkProtocol.ValidateAndNormalizeResponseTokens(token, _monitorWordFormats[index], 1);
+                    tokens[index] = token[0];
+                }
             }
             catch (HostLinkProtocolError)
             {
@@ -1157,7 +1276,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             string[] tokens = KvHostLinkProtocol.SplitDataTokens(response);
             try
             {
-                KvHostLinkProtocol.ValidateResponseTokens(tokens, effectiveFormat, count);
+                KvHostLinkProtocol.ValidateAndNormalizeResponseTokens(tokens, effectiveFormat, count);
             }
             catch (HostLinkProtocolError)
             {
@@ -1265,7 +1384,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             string[] tokens = KvHostLinkProtocol.SplitDataTokens(response);
             try
             {
-                KvHostLinkProtocol.ValidateResponseTokens(tokens, suffix, count);
+                KvHostLinkProtocol.ValidateAndNormalizeResponseTokens(tokens, suffix, count);
             }
             catch (HostLinkProtocolError)
             {

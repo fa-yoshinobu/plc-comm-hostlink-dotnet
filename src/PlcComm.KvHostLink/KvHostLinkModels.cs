@@ -71,7 +71,7 @@ internal static class KvHostLinkModels
 
     public static readonly IReadOnlySet<string> Float32DeviceTypes =
         DefaultFormatByDeviceType
-            .Where(static pair => pair.Value == ".U")
+            .Where(static pair => pair.Value == ".U" && pair.Key != "Z")
             .Select(static pair => pair.Key)
             .ToHashSet(StringComparer.Ordinal);
 }

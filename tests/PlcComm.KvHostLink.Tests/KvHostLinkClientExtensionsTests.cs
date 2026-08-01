@@ -285,6 +285,7 @@ public sealed class KvHostLinkClientExtensionsTests
     [InlineData("T0")]
     [InlineData("C0")]
     [InlineData("AT0")]
+    [InlineData("Z0")]
     public async Task Float32TypedNamedAndPollingEntriesRejectIneligibleFamiliesBeforeTransport(string device)
     {
         await using var client = new KvHostLinkClient(
@@ -352,10 +353,14 @@ public sealed class KvHostLinkClientExtensionsTests
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
-            "RD DM210.H" => "00ff",
+            "RD DM210.H" => "f",
             "WR DM210.H FF" => "OK",
             "WR DM211.H AA" => "OK",
-            "RD DM212.H" => "ABCD",
+            "RD DM212.H" => "a",
+            "RD DM213.H" => "f",
+            "RDS DM214.H 2" => "0 ff",
+            "RDE DM216.H 2" => "a ffff",
+            "URD 01 10.H 2" => "1 b",
             _ => "E1",
         });
 
@@ -366,12 +371,62 @@ public sealed class KvHostLinkClientExtensionsTests
         await client.WriteTypedAsync("DM210", "H", (ushort)0x00FF);
         await client.WriteTypedAsync("DM211", "H", (ushort)0x00AA);
         var named = await client.ReadNamedAsync(["DM212:H"]);
+        var lowLevel = await client.ReadAsync("DM213", ".H");
+        var consecutive = await client.ReadConsecutiveAsync("DM214", 2, ".H");
+        var legacy = await client.ReadConsecutiveLegacyAsync("DM216", 2, ".H");
+        var expansion = await client.ReadExpansionUnitBufferAsync(1, 10, 2, ".H");
 
-        Assert.Equal("00FF", Assert.IsType<string>(value));
-        Assert.Equal("ABCD", Assert.IsType<string>(named["DM212:H"]));
+        Assert.Equal("000F", Assert.IsType<string>(value));
+        Assert.Equal("000A", Assert.IsType<string>(named["DM212:H"]));
+        Assert.Equal(["000F"], lowLevel);
+        Assert.Equal(["0000", "00FF"], consecutive);
+        Assert.Equal(["000A", "FFFF"], legacy);
+        Assert.Equal(["0001", "000B"], expansion);
         Assert.Equal(
-            ["RD DM210.H", "WR DM210.H FF", "WR DM211.H AA", "RD DM212.H"],
+            [
+                "RD DM210.H", "WR DM210.H FF", "WR DM211.H AA", "RD DM212.H", "RD DM213.H",
+                "RDS DM214.H 2", "RDE DM216.H 2", "URD 01 10.H 2"
+            ],
             server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task MonitorWordReadUsesEachRegisteredFormat()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "MWS DM0.U DM1.S DM2.H" => "OK",
+            "MWR" => "1,-2,00ff",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await client.RegisterMonitorWordsAsync(
+        [
+            new("DM0", ".U"),
+            new("DM1", ".S"),
+            new("DM2", ".H"),
+        ]);
+        string[] values = await client.ReadMonitorWordsAsync();
+
+        Assert.Equal(["1", "-2", "00FF"], values);
+        Assert.Equal(["MWS DM0.U DM1.S DM2.H", "MWR"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task FactoryPreservesOpenFailure()
+    {
+        var options = new KvHostLinkConnectionOptions(
+            "127.0.0.1", 1, HostLinkTransportMode.Tcp, TestPlcProfile);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => KvHostLinkClientFactory.OpenAndConnectAsync(options, cancellation.Token));
+
+        Assert.Equal(cancellation.Token, error.CancellationToken);
     }
 
     [Fact]

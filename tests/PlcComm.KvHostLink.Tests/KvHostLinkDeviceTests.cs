@@ -123,11 +123,11 @@ public class KvHostLinkDeviceTests
         ];
         var eligibleFamilies = new HashSet<string>(StringComparer.Ordinal)
         {
-            "DM", "EM", "FM", "ZF", "W", "TM", "Z", "CM", "VM", "D", "E", "F",
+            "DM", "EM", "FM", "ZF", "W", "TM", "CM", "VM", "D", "E", "F",
         };
 
         Assert.Equal(31, allFamilies.Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(12, eligibleFamilies.Count);
+        Assert.Equal(11, eligibleFamilies.Count);
 
         foreach (string family in allFamilies)
         {

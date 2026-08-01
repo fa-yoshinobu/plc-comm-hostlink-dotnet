@@ -37,7 +37,22 @@ public static class KvHostLinkClientFactory
             Timeout = options.EffectiveTimeout,
         };
 
-        await inner.OpenAsync(cancellationToken).ConfigureAwait(false);
-        return inner;
+        try
+        {
+            await inner.OpenAsync(cancellationToken).ConfigureAwait(false);
+            return inner;
+        }
+        catch
+        {
+            try
+            {
+                await inner.DisposeAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // Cleanup must never replace the connection failure reported to the caller.
+            }
+            throw;
+        }
     }
 }

@@ -17,7 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Library: **Breaking:** Float32 parsing, normalization, formatting, typed reads and writes, named reads, and polling now accept only the canonical ordinary one-word families `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `Z`, `CM`, `VM`, `D`, `E`, and `F`; direct-bit and special-response families such as `R`, `T`, `C`, and `AT` are rejected before FIFO admission and transport.
+- Library: TCP rejects and retires the connection when one receive already contains non-empty data after the first terminated response, preventing response misassociation.
+- Library: Successful UDP requests now retire their dedicated socket generation while keeping the logical client open, so a delayed datagram cannot satisfy the next request.
+- Library: The connected-client factory disposes a client whose open operation fails without replacing the original failure.
+- Library: **Breaking:** Every semantic hexadecimal read, including low-level and monitor reads, returns exactly four uppercase digits; raw body bytes and write wire formatting are unchanged.
+- Library: **Breaking:** Float32 parsing, normalization, formatting, typed reads and writes, named reads, and polling now accept only the canonical ordinary one-word families `DM`, `EM`, `FM`, `ZF`, `W`, `TM`, `CM`, `VM`, `D`, `E`, and `F`; `Z`, direct-bit, and special-response families such as `R`, `T`, `C`, and `AT` are rejected before FIFO admission and transport.
 - Library: **Breaking:** Typed Float32 writes now reject NaN, infinities, and values that overflow binary32 before transport while accepting the finite binary32 boundary values.
 - Library: **Breaking:** Timer/counter composite response status must be exactly `0` or `1`; any other numeric status is an invalid response and retires the connection.
 - Library: **Breaking:** `PollAsync` now requires a strictly positive interval and continues to reject intervals above `Int32.MaxValue` milliseconds before communication.

@@ -215,4 +215,24 @@ internal static class KvHostLinkProtocol
             throw new HostLinkProtocolError(
                 $"Timer/counter response status '{tokens[0]}' is invalid; expected 0 or 1.");
     }
+
+    public static void ValidateAndNormalizeResponseTokens(
+        string[] tokens,
+        string dataFormat,
+        int expectedCount,
+        bool timerCounterComposite = false)
+    {
+        ValidateResponseTokens(tokens, dataFormat, expectedCount, timerCounterComposite);
+        if (dataFormat != ".H")
+            return;
+
+        for (int index = 0; index < tokens.Length; index++)
+        {
+            ushort value = ushort.Parse(
+                tokens[index],
+                System.Globalization.NumberStyles.HexNumber,
+                System.Globalization.CultureInfo.InvariantCulture);
+            tokens[index] = value.ToString("X4", System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
 }
