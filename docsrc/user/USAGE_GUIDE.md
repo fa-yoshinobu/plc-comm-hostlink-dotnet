@@ -256,7 +256,10 @@ ordinary overload; an unused comment encoding is rejected before the first send.
 
 ## Operational recipes
 
-The samples include two read-only operational recipes for repeatable collection:
+The samples include three read-only operational recipes for repeatable collection:
+
+- `PlcComm.KvHostLink.PollingReconnectSample` polls one PLC and demonstrates
+  bounded reconnect backoff after transport loss.
 
 - `PlcComm.KvHostLink.MultiPlcMonitorSample` monitors multiple PLC endpoints at
   the same time. Each PLC has its own task, connection, and reconnect loop, so

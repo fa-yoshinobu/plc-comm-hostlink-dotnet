@@ -133,10 +133,14 @@ try {
         "LICENSE",
         "PlcComm.KvHostLink.sln",
         "README.md",
+        "internal_docs/maintainer/api_baselines/PlcComm.KvHostLink-3.2.1.json",
+        "internal_docs/maintainer/documented_api_diff_classifications.json",
+        "scripts/check_documented_api_diff.py",
         "scripts/check_high_level_docs.ps1",
         "scripts/check_package_contents.ps1",
         "scripts/check_sample_inventory.ps1",
         "scripts/generate_api_reference.py",
+        "scripts/test_documented_api_diff.py",
         "scripts/test_generate_api_reference.py"
     )
     $missingRequired = @($requiredFiles | Where-Object { $_ -notin $archiveFiles })
@@ -181,6 +185,7 @@ try {
             "restore",
             "samples/PlcComm.KvHostLink.NamedPollingSample/PlcComm.KvHostLink.NamedPollingSample.csproj")
         Invoke-ArchiveCommand dotnet @("build", "PlcComm.KvHostLink.sln", "-c", "Release", "--no-restore")
+        Invoke-ArchiveCommand python @("scripts/test_documented_api_diff.py")
         Invoke-ArchiveCommand dotnet @(
             "test",
             "tests/PlcComm.KvHostLink.Tests/PlcComm.KvHostLink.Tests.csproj",

@@ -9,6 +9,7 @@ public sealed class KvHostLinkLifecycleTests
     private const string TestProfile = "keyence:kv-8000";
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task TcpCallerCancellationWinsBeforeConfiguredTimeout()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -45,6 +46,7 @@ public sealed class KvHostLinkLifecycleTests
     }
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task TcpCloseAsyncInterruptsPendingReceiveAndCanReopen()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -96,6 +98,7 @@ public sealed class KvHostLinkLifecycleTests
     }
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task UdpCloseAsyncInterruptsPendingReceive()
     {
         using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
@@ -124,6 +127,7 @@ public sealed class KvHostLinkLifecycleTests
     }
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task NormalClientCloseInterruptsActiveIoAndRejectsQueuedWork()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -174,6 +178,7 @@ public sealed class KvHostLinkLifecycleTests
     }
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task StateChangingTimeoutWinsBeforeLaterCallerCancellation()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -207,5 +212,43 @@ public sealed class KvHostLinkLifecycleTests
         Assert.False(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
         listener.Stop();
+    }
+
+    [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
+    public async Task TcpConnectFailureRetiresCandidateAndLaterOpenCanConnect()
+    {
+        var portReservation = new TcpListener(IPAddress.Loopback, 0);
+        portReservation.Start();
+        int port = ((IPEndPoint)portReservation.LocalEndpoint).Port;
+        portReservation.Stop();
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Tcp, TestProfile)
+        {
+            Timeout = TimeSpan.FromMilliseconds(250),
+        };
+
+        Exception connectError = await Record.ExceptionAsync(() => client.OpenAsync());
+        Assert.True(
+            connectError is SocketException or HostLinkTimeoutError,
+            $"Expected connection refusal or a bounded connect timeout, got {connectError.GetType().FullName}.");
+        Assert.False(client.IsOpen);
+
+        var listener = new TcpListener(IPAddress.Loopback, port);
+        listener.Start();
+        try
+        {
+            Task<TcpClient> acceptedTask = listener.AcceptTcpClientAsync();
+            await client.OpenAsync();
+            using TcpClient accepted = await acceptedTask.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert.True(client.IsOpen);
+            await client.CloseAsync();
+            Assert.False(client.IsOpen);
+        }
+        finally
+        {
+            listener.Stop();
+        }
     }
 }

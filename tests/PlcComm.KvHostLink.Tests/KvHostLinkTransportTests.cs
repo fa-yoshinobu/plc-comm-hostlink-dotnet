@@ -7,6 +7,7 @@ namespace PlcComm.KvHostLink.Tests;
 public sealed class KvHostLinkTransportTests
 {
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task TcpEofBeforeTerminatorRejectsPartialResponseAndClosesTransport()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -39,6 +40,7 @@ public sealed class KvHostLinkTransportTests
     }
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task TcpTimeoutDoesNotCountAnIncompleteResponse()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -69,6 +71,7 @@ public sealed class KvHostLinkTransportTests
     }
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task TcpConsumesCrThatArrivesAfterAnLfTerminatedResponse()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -129,6 +132,7 @@ public sealed class KvHostLinkTransportTests
     }
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task UdpTimeoutClosesTransportAndDelayedResponseIsNotReused()
     {
         using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
@@ -171,6 +175,7 @@ public sealed class KvHostLinkTransportTests
     }
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task UdpCancellationClosesTransport()
     {
         using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
