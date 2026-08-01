@@ -186,7 +186,11 @@ internal static class KvHostLinkProtocol
         return responseText.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries);
     }
 
-    public static void ValidateResponseTokens(IReadOnlyList<string> tokens, string dataFormat, int expectedCount)
+    public static void ValidateResponseTokens(
+        IReadOnlyList<string> tokens,
+        string dataFormat,
+        int expectedCount,
+        bool timerCounterComposite = false)
     {
         if (tokens.Count != expectedCount)
             throw new HostLinkProtocolError($"Response contained {tokens.Count} values; expected {expectedCount}.");
@@ -206,5 +210,9 @@ internal static class KvHostLinkProtocol
             if (!valid)
                 throw new HostLinkProtocolError($"Response value '{token}' is invalid for data format '{dataFormat}'.");
         }
+
+        if (timerCounterComposite && tokens[0] is not ("0" or "1"))
+            throw new HostLinkProtocolError(
+                $"Timer/counter response status '{tokens[0]}' is invalid; expected 0 or 1.");
     }
 }

@@ -111,6 +111,49 @@ public class KvHostLinkDeviceTests
         Assert.Throws<HostLinkProtocolError>(() => KvHostLinkAddress.ParseLogical(input));
     }
 
+    [Fact]
+    public void Float32EligibleFamiliesMatchCanonicalMetadataAcrossEveryAddressEntry()
+    {
+        string[] allFamilies =
+        [
+            "R", "B", "MR", "LR", "CR", "VB",
+            "DM", "EM", "FM", "ZF", "W", "TM", "Z", "T", "TC", "TS",
+            "C", "CC", "CS", "CTH", "CTC", "AT", "CM", "VM",
+            "X", "Y", "M", "L", "D", "E", "F",
+        ];
+        var eligibleFamilies = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "DM", "EM", "FM", "ZF", "W", "TM", "Z", "CM", "VM", "D", "E", "F",
+        };
+
+        Assert.Equal(31, allFamilies.Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(12, eligibleFamilies.Count);
+
+        foreach (string family in allFamilies)
+        {
+            string input = $"{family}0:F";
+            var handConstructed = new KvLogicalAddress(new KvDeviceAddress(family, 0), "F", null);
+            if (eligibleFamilies.Contains(family))
+            {
+                KvLogicalAddress parsed = KvHostLinkAddress.ParseLogical(input);
+                string expected = $"{KvHostLinkAddress.Format(new KvDeviceAddress(family, 0))}:F";
+                Assert.Equal(expected, parsed.ToText());
+                Assert.Equal(expected, handConstructed.ToText());
+                Assert.Equal(expected, KvHostLinkAddress.Normalize(input.ToLowerInvariant()));
+                Assert.Equal(expected, KvHostLinkAddress.NormalizeLogical(input.ToLowerInvariant()));
+                Assert.True(KvHostLinkAddress.TryParseLogical(input, out _));
+            }
+            else
+            {
+                Assert.Throws<HostLinkProtocolError>(() => KvHostLinkAddress.ParseLogical(input));
+                Assert.Throws<HostLinkProtocolError>(() => KvHostLinkAddress.Normalize(input));
+                Assert.Throws<HostLinkProtocolError>(() => KvHostLinkAddress.NormalizeLogical(input));
+                Assert.Throws<HostLinkProtocolError>(() => handConstructed.ToText());
+                Assert.False(KvHostLinkAddress.TryParseLogical(input, out _));
+            }
+        }
+    }
+
     [Theory]
     [InlineData(".U", 1)]
     [InlineData(".U", 1000)]

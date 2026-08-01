@@ -213,6 +213,35 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.Equal(["RDS DM200.U 2", "WRS DM200.U 2 0 16712"], server.ReceivedCommands.ToArray());
     }
 
+    [Fact]
+    public async Task WriteTypedAsync_Float32RequiresFiniteBinary32BeforeSend()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await client.WriteTypedAsync("DM0", "F", float.MaxValue);
+        await client.WriteTypedAsync("DM2", "F", -float.MaxValue);
+        int acceptedCommands = server.ReceivedCommands.Count;
+
+        foreach (double invalid in new[]
+        {
+            double.MaxValue,
+            double.MinValue,
+            double.NaN,
+            double.PositiveInfinity,
+            double.NegativeInfinity,
+        })
+        {
+            await Assert.ThrowsAsync<HostLinkProtocolError>(
+                () => client.WriteTypedAsync("DM4", "F", invalid));
+        }
+
+        Assert.Equal(2, acceptedCommands);
+        Assert.Equal(acceptedCommands, server.ReceivedCommands.Count);
+    }
+
     [Theory]
     [InlineData("R0")]
     [InlineData("B0")]
@@ -249,6 +278,73 @@ public sealed class KvHostLinkClientExtensionsTests
             () => client.WriteTypedAsync("R0", "F", 12.5f));
 
         Assert.Empty(server.ReceivedCommands);
+    }
+
+    [Theory]
+    [InlineData("R0")]
+    [InlineData("T0")]
+    [InlineData("C0")]
+    [InlineData("AT0")]
+    public async Task Float32TypedNamedAndPollingEntriesRejectIneligibleFamiliesBeforeTransport(string device)
+    {
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", 1, HostLinkTransportMode.Tcp, TestPlcProfile);
+        string address = $"{device}:F";
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadTypedAsync(device, "F"));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.WriteTypedAsync(device, "F", 12.5f));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadNamedAsync([address]));
+        await using var polling = client.PollAsync([address], TimeSpan.FromMilliseconds(1)).GetAsyncEnumerator();
+        await Assert.ThrowsAsync<HostLinkProtocolError>(async () => await polling.MoveNextAsync());
+
+        Assert.False(client.IsOpen);
+        Assert.Equal(default, client.TrafficStats);
+    }
+
+    [Fact]
+    public async Task Float32RejectionOccursBeforeWaitingForTheClientFifo()
+    {
+        using var requestReceived = new ManualResetEventSlim();
+        using var releaseResponse = new ManualResetEventSlim();
+        await using var server = new ScriptedHostLinkServer(command =>
+        {
+            if (command == "RD DM0.U")
+            {
+                requestReceived.Set();
+                releaseResponse.Wait();
+                return "1";
+            }
+
+            return "E1";
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        Task<string[]> active = client.ReadAsync("DM0", ".U");
+        Assert.True(requestReceived.Wait(TimeSpan.FromSeconds(2)));
+        try
+        {
+            TimeSpan admissionDeadline = TimeSpan.FromSeconds(1);
+            await Assert.ThrowsAsync<HostLinkProtocolError>(
+                () => client.ReadTypedAsync("T0", "F").WaitAsync(admissionDeadline));
+            await Assert.ThrowsAsync<HostLinkProtocolError>(
+                () => client.WriteTypedAsync("C0", "F", 12.5f).WaitAsync(admissionDeadline));
+            await Assert.ThrowsAsync<HostLinkProtocolError>(
+                () => client.ReadNamedAsync(["AT0:F"]).WaitAsync(admissionDeadline));
+            await using var polling = client.PollAsync(["R0:F"], TimeSpan.FromMilliseconds(1)).GetAsyncEnumerator();
+            await Assert.ThrowsAsync<HostLinkProtocolError>(
+                async () => await polling.MoveNextAsync().AsTask().WaitAsync(admissionDeadline));
+
+            Assert.Equal(["RD DM0.U"], server.ReceivedCommands.ToArray());
+        }
+        finally
+        {
+            releaseResponse.Set();
+        }
+
+        Assert.Equal(["1"], await active);
+        Assert.Equal(1UL, client.TrafficStats.RequestCount);
     }
 
     [Fact]
@@ -432,6 +528,24 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.Equal(["RD T10.D"], server.ReceivedCommands.ToArray());
     }
 
+    [Theory]
+    [InlineData("RD T0.D", "2,10,20", "D")]
+    [InlineData("RD C0.L", "-1,10,20", "L")]
+    public async Task TimerCounterStatusMustBeZeroOrOneInSharedReadParser(
+        string command,
+        string response,
+        string dtype)
+    {
+        await using var server = new ScriptedHostLinkServer(received => received == command ? response : "E1");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        string device = command.Contains(" T", StringComparison.Ordinal) ? "T0" : "C0";
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadTypedAsync(device, dtype));
+        Assert.False(client.IsOpen);
+    }
+
     [Fact]
     public async Task OpenAndConnectAsync_ReturnsNormalClientWithIntegratedFifo()
     {
@@ -606,6 +720,21 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.Equal(
             ["RDS DM100.U 3", "RDS DM100.U 3"],
             server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task PollAsync_RejectsNonPositiveIntervalBeforeCommunication()
+    {
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", 8501, HostLinkTransportMode.Tcp, TestPlcProfile);
+
+        foreach (TimeSpan interval in new[] { TimeSpan.Zero, TimeSpan.FromMilliseconds(-1) })
+        {
+            await using var polling = client.PollAsync(["DM0:U"], interval).GetAsyncEnumerator();
+            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await polling.MoveNextAsync());
+        }
+
+        Assert.False(client.IsOpen);
     }
 
     [Fact]

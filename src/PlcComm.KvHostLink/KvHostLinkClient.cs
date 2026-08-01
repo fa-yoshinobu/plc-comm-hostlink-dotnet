@@ -879,7 +879,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             : KvHostLinkDevice.ReadResponseTokenCount(address.DeviceType, suffix);
         try
         {
-            KvHostLinkProtocol.ValidateResponseTokens(tokens, suffix, expectedCount);
+            KvHostLinkProtocol.ValidateResponseTokens(
+                tokens,
+                suffix,
+                expectedCount,
+                timerCounterComposite: address.DeviceType is "T" or "C");
         }
         catch (HostLinkProtocolError)
         {

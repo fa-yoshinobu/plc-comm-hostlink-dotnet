@@ -115,6 +115,20 @@ public static class KvHostLinkDevice
         return KvHostLinkModels.DefaultFormatByDeviceType.GetValueOrDefault(deviceType, "");
     }
 
+    internal static void ValidateFloat32DeviceType(string deviceType, string? address = null)
+    {
+        if (KvHostLinkModels.Float32DeviceTypes.Contains(deviceType))
+            return;
+
+        string subject = string.IsNullOrEmpty(address)
+            ? $"Device family '{deviceType}'"
+            : $"Address '{address}'";
+        throw new HostLinkProtocolError(
+            $"{subject} uses Float32 on ineligible device family '{deviceType}'; " +
+            "direct bit and special-response families are excluded, and Float32 requires " +
+            "an ordinary one-word family with consecutive two-word access.");
+    }
+
     internal static int ReadResponseTokenCount(string deviceType, string dataFormat)
     {
         if (deviceType is "T" or "C") return 3;
