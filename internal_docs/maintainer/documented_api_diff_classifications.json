@@ -1,0 +1,368 @@
+{
+  "schemaVersion": 2,
+  "baselineIdentity": "NuGet:PlcComm.KvHostLink@3.2.1#sha256:782F605D7D5A45D8402B0D0AE7A61E42BCD2B2C7DD2B101EF424BA53E66B2E28",
+  "evidenceSets": {
+    "fifo-client-break": {
+      "decision": "GOAL-HL-SERIAL-DEFER-006",
+      "rationale": "The documented queued wrapper and queued extension overloads were intentionally replaced by FIFO admission owned by KvHostLinkClient.",
+      "migrationPath": "internal_docs/maintainer/QUALITY_OVERHAUL_MIGRATION.md",
+      "changelogPath": "CHANGELOG.md",
+      "changelogNeedle": "**Breaking:** Removed `QueuedKvHostLinkClient`",
+      "documentationEvidence": [
+        { "path": "README.md", "needle": "KvHostLinkClient" },
+        { "path": "docsrc/user/USAGE_GUIDE.md", "needle": "FIFO" },
+        { "path": "docsrc/user/API_REFERENCE.md", "needle": "Public operations enter one arrival-order FIFO queue" }
+      ],
+      "versionPolicy": "major-version-required-before-release"
+      ,"priorContractCommit": "19df212d9bbed545d137e1e6d71b8afb30237628"
+      ,"priorContractTerm": "QueuedKvHostLinkClient"
+    },
+    "bit-helper-break": {
+      "decision": "GOAL-HL-AGGREGATE-DEFER-001",
+      "rationale": "The documented multi-request read-modify-write helper was intentionally removed because it cannot provide one-request state-changing semantics.",
+      "migrationPath": "internal_docs/maintainer/QUALITY_OVERHAUL_MIGRATION.md",
+      "changelogPath": "CHANGELOG.md",
+      "changelogNeedle": "**Breaking:** Removed the multi-request `WriteBitInWordAsync`",
+      "documentationEvidence": [
+        { "path": "docsrc/user/USAGE_GUIDE.md", "needle": "The former read-modify-write bit-in-word helper was removed" },
+        { "path": "docsrc/user/API_REFERENCE.md", "needle": "Direct bit device families cannot represent that two-word value" }
+      ],
+      "versionPolicy": "major-version-required-before-release"
+      ,"priorContractCommit": "19df212d9bbed545d137e1e6d71b8afb30237628"
+      ,"priorContractTerm": "WriteBitInWordAsync"
+    },
+    "comment-codec-break": {
+      "decision": "HL-EVAL-TODO-006",
+      "rationale": "The documented implicit device-comment decoder was intentionally replaced by explicit strict UTF-8 or CP932 selection and raw-byte access.",
+      "migrationPath": "internal_docs/maintainer/QUALITY_OVERHAUL_MIGRATION.md",
+      "changelogPath": "CHANGELOG.md",
+      "changelogNeedle": "**Breaking:** Device-comment text reads now require an explicit",
+      "documentationEvidence": [
+        { "path": "docsrc/user/USAGE_GUIDE.md", "needle": "HostLinkCommentEncoding" },
+        { "path": "docsrc/user/GOTCHAS.md", "needle": "ReadCommentBytesAsync" },
+        { "path": "docsrc/user/API_REFERENCE.md", "needle": "ReadCommentBytesAsync" }
+      ],
+      "versionPolicy": "major-version-required-before-release"
+      ,"priorContractCommit": "19df212d9bbed545d137e1e6d71b8afb30237628"
+      ,"priorContractTerm": "ReadCommentsAsync"
+    },
+    "error-additions": {
+      "decision": "GOAL-HL-ERROR-DEFER-001",
+      "rationale": "Dedicated lifecycle and outcome-unknown error types are reviewed additive surfaces required by the approved error contract.",
+      "documentationDisposition": "documented",
+      "documentationPaths": [
+        "docsrc/user/USAGE_GUIDE.md",
+        "docsrc/user/API_REFERENCE.md"
+      ]
+    },
+    "comment-additions": {
+      "decision": "HL-EVAL-TODO-006",
+      "rationale": "The explicit codec, raw payload method, and aggregate codec overloads are reviewed additive counterparts to the approved comment migration.",
+      "documentationDisposition": "documented",
+      "documentationPaths": [
+        "docsrc/user/USAGE_GUIDE.md",
+        "docsrc/user/GOTCHAS.md",
+        "docsrc/user/API_REFERENCE.md"
+      ]
+    },
+    "boolean-write-additions": {
+      "decision": "GOAL-HL-BIT-BOOL-AUDIT-001",
+      "rationale": "Exact Boolean scalar and collection overloads are reviewed additive surfaces that replace ambiguous generic direct-bit inputs.",
+      "documentationDisposition": "documented",
+      "documentationPaths": [
+        "docsrc/user/USAGE_GUIDE.md",
+        "docsrc/user/API_REFERENCE.md"
+      ]
+    }
+  },
+  "classifications": [
+    {
+      "change": "removed",
+      "symbol": "T:PlcComm.KvHostLink.QueuedKvHostLinkClient",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;kind=class;abstract=False;sealed=True;base=System.Object;interfaces=System.IAsyncDisposable,System.IDisposable;enumUnderlying=;enumValues=;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(System.String,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{System.String};returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "comment-codec-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Collections.Generic.IAsyncEnumerable{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{System.String}|addresses|required|read=NotNull|write=NotNull,value|System.TimeSpan|interval|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Int32|bitIndex|required|read=NotNull|write=NotNull,value|System.Boolean|value|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "bit-helper-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Int32|bitIndex|required|read=NotNull|write=NotNull,value|System.Boolean|value|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "bit-helper-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteDWordsSingleRequestAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Collections.Generic.IReadOnlyList{System.UInt32},System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IReadOnlyList{System.UInt32}|values|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.String,System.Boolean,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.String|dtype|required|read=NotNull|write=NotNull,value|System.Boolean|value|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteTypedAsync``1(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.String,``0,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.String|dtype|required|read=NotNull|write=NotNull,value|``0|value|required|read=Unknown|write=Unknown,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=T:System.IFormattable",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteWordsSingleRequestAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Collections.Generic.IReadOnlyList{System.UInt16},System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IReadOnlyList{System.UInt16}|values|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{System.String}|addresses|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadCounterAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{PlcComm.KvHostLink.KvTimerCounterValue};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTimerAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{PlcComm.KvHostLink.KvTimerCounterValue};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTimerCounterAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{PlcComm.KvHostLink.KvTimerCounterValue};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadTypedAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.String,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{System.Object};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.String|dtype|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{System.UInt32[]};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Int32|count|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadDWordsSingleRequestAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{System.UInt32[]};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Int32|count|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{System.UInt16[]};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Int32|count|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadWordsSingleRequestAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{System.UInt16[]};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Int32|count|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "changed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.OpenAndConnectAsync(System.String,System.Int32,PlcComm.KvHostLink.HostLinkTransportMode,System.String,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{PlcComm.KvHostLink.QueuedKvHostLinkClient};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|System.String|host|required|read=NotNull|write=NotNull,value|System.Int32|port|required|read=NotNull|write=NotNull,value|PlcComm.KvHostLink.HostLinkTransportMode|transport|required|read=NotNull|write=NotNull,value|System.String|plcProfile|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "after": "access=public;return=System.Threading.Tasks.Task{PlcComm.KvHostLink.KvHostLinkClient};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|System.String|host|required|read=NotNull|write=NotNull,value|System.Int32|port|required|read=NotNull|write=NotNull,value|PlcComm.KvHostLink.HostLinkTransportMode|transport|required|read=NotNull|write=NotNull,value|System.String|plcProfile|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "changed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientFactory.OpenAndConnectAsync(PlcComm.KvHostLink.KvHostLinkConnectionOptions,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task{PlcComm.KvHostLink.QueuedKvHostLinkClient};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkConnectionOptions|options|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=",
+      "after": "access=public;return=System.Threading.Tasks.Task{PlcComm.KvHostLink.KvHostLinkClient};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkConnectionOptions|options|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=",
+      "category": "documented-contract",
+      "evidence": "fifo-client-break"
+    },
+    {
+      "change": "added",
+      "symbol": "T:PlcComm.KvHostLink.HostLinkClosedError",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;kind=class;abstract=False;sealed=True;base=PlcComm.KvHostLink.HostLinkConnectionError;interfaces=;enumUnderlying=;enumValues=;constraints=",
+      "category": "additive",
+      "evidence": "error-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "T:PlcComm.KvHostLink.HostLinkOutcomeUnknownError",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;kind=class;abstract=False;sealed=True;base=PlcComm.KvHostLink.HostLinkError;interfaces=;enumUnderlying=;enumValues=;constraints=",
+      "category": "additive",
+      "evidence": "error-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "T:PlcComm.KvHostLink.HostLinkOutcomeUnknownReason",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;kind=enum;abstract=False;sealed=True;base=System.Enum;interfaces=;enumUnderlying=System.Int32;enumValues=Timeout=0,CallerCancellation=1,ConnectionClosed=2,TransportFailure=3,InvalidResponse=4;constraints=",
+      "category": "additive",
+      "evidence": "error-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "T:PlcComm.KvHostLink.HostLinkReentrancyError",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;kind=class;abstract=False;sealed=True;base=PlcComm.KvHostLink.HostLinkError;interfaces=;enumUnderlying=;enumValues=;constraints=",
+      "category": "additive",
+      "evidence": "error-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "T:PlcComm.KvHostLink.HostLinkTimeoutError",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;kind=class;abstract=False;sealed=True;base=PlcComm.KvHostLink.HostLinkConnectionError;interfaces=;enumUnderlying=;enumValues=;constraints=",
+      "category": "additive",
+      "evidence": "error-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "T:PlcComm.KvHostLink.HostLinkCommentEncoding",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;kind=enum;abstract=False;sealed=True;base=System.Enum;interfaces=;enumUnderlying=System.Int32;enumValues=Utf8=0,Cp932=1;constraints=",
+      "category": "additive",
+      "evidence": "comment-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.WriteAsync(System.String,System.Boolean,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|System.Boolean|value|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "boolean-write-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync(System.String,System.Collections.Generic.IEnumerable{System.Boolean},System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{System.Boolean}|values|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "boolean-write-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentBytesAsync(System.String,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task{System.Byte[]};returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "comment-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentsAsync(System.String,PlcComm.KvHostLink.HostLinkCommentEncoding,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task{System.String};returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|PlcComm.KvHostLink.HostLinkCommentEncoding|encoding|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "comment-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.PollAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},System.TimeSpan,PlcComm.KvHostLink.HostLinkCommentEncoding,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Collections.Generic.IAsyncEnumerable{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{System.String}|addresses|required|read=NotNull|write=NotNull,value|System.TimeSpan|interval|required|read=NotNull|write=NotNull,value|PlcComm.KvHostLink.HostLinkCommentEncoding|commentEncoding|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "comment-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.String},PlcComm.KvHostLink.HostLinkCommentEncoding,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{System.String}|addresses|required|read=NotNull|write=NotNull,value|PlcComm.KvHostLink.HostLinkCommentEncoding|commentEncoding|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "comment-additions"
+    }
+  ]
+}

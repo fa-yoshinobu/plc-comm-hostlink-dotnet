@@ -59,6 +59,16 @@ jobs:
         run: dotnet restore PlcComm.KvHostLink.sln
       - name: Build
         run: dotnet build PlcComm.KvHostLink.sln -c Release --no-restore
+      - name: Test documented API classification policy
+        run: python scripts/test_documented_api_diff.py
+      - name: Enforce release API diff and version policy
+        run: >-
+          python scripts/check_documented_api_diff.py
+          --baseline-metadata internal_docs/maintainer/api_baselines/PlcComm.KvHostLink-3.2.1.json
+          --candidate-assembly-root src/PlcComm.KvHostLink/bin/Release
+          --classifications internal_docs/maintainer/documented_api_diff_classifications.json
+          --repository-root .
+          --require-release-version-policy
       - name: Test
         run: dotnet test PlcComm.KvHostLink.sln -c Release --no-build --logger "trx;LogFileName=test-results.trx"
       - name: Format check

@@ -2,6 +2,11 @@
 
 This directory contains buildable console projects that demonstrate the recommended high-level KEYENCE KV Host Link API. Each endpoint requires a host, port, TCP/UDP transport, and canonical PLC profile; the examples below use `192.168.250.100`, `8501`, `tcp`, and `keyence:kv-8000`.
 
+Building or running these repository samples requires the .NET 10 SDK. The
+library package continues to provide its separately supported .NET 8, .NET 9,
+and .NET 10 target-framework assets; this sample prerequisite does not require
+an existing consuming application to retarget.
+
 All samples are read-only by default. The two write demonstrations require an explicit
 `--allow-writes` argument, use changing test values, and restore the values captured before writing.
 Use that option only with addresses reserved for a controlled test PLC program; it is not a

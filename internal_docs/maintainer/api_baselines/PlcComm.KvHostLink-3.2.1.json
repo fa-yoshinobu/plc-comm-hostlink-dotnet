@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 2,
+  "identity": "NuGet:PlcComm.KvHostLink@3.2.1#sha256:782F605D7D5A45D8402B0D0AE7A61E42BCD2B2C7DD2B101EF424BA53E66B2E28",
+  "packageId": "PlcComm.KvHostLink",
+  "version": "3.2.1",
+  "fileName": "PlcComm.KvHostLink.3.2.1.nupkg",
+  "url": "https://api.nuget.org/v3-flatcontainer/plccomm.kvhostlink/3.2.1/plccomm.kvhostlink.3.2.1.nupkg",
+  "sha256": "782F605D7D5A45D8402B0D0AE7A61E42BCD2B2C7DD2B101EF424BA53E66B2E28",
+  "frameworks": {
+    "net8.0": { "assemblyEntry": "lib/net8.0/PlcComm.KvHostLink.dll" },
+    "net9.0": { "assemblyEntry": "lib/net9.0/PlcComm.KvHostLink.dll" },
+    "net10.0": { "assemblyEntry": "lib/net10.0/PlcComm.KvHostLink.dll" }
+  },
+  "contractProvenance": {
+    "repository": "https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet",
+    "commit": "19df212d9bbed545d137e1e6d71b8afb30237628",
+    "rawBaseUrl": "https://raw.githubusercontent.com/fa-yoshinobu/plc-comm-hostlink-dotnet/19df212d9bbed545d137e1e6d71b8afb30237628",
+    "files": [
+      { "scope": "README", "path": "README.md", "gitBlob": "4c9f4666263c6d1a8d00050b4829131266d2a8cd" },
+      { "scope": "standard-user-pages", "path": "docsrc/user/GETTING_STARTED.md", "gitBlob": "6e4ce81739332f2627d113ad96d1f678aa8aeed1" },
+      { "scope": "standard-user-pages", "path": "docsrc/user/GOTCHAS.md", "gitBlob": "ccbdd6e58e28c72aa7e36a8e85abbcb5c935feb3" },
+      { "scope": "standard-user-pages", "path": "docsrc/user/PROFILES.md", "gitBlob": "0e0e93f618393c11e52c45dd8748e9241cbe2ca7" },
+      { "scope": "standard-user-pages", "path": "docsrc/user/USAGE_GUIDE.md", "gitBlob": "d1ab26e381f3805431f13ea2286c04a1ffb10c24" },
+      { "scope": "generated-api-reference", "path": "docsrc/user/API_REFERENCE.md", "gitBlob": "343ade26a9bf6d346b8335ce00fd5c93b13bfc93" },
+      { "scope": "maintained-samples", "path": "samples/OperationalCommon/OperationalCommon.cs", "gitBlob": "8fb0cc5f5fee37662599d8a857f63e10eea1f0a3" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.BasicReadWriteSample/PlcComm.KvHostLink.BasicReadWriteSample.csproj", "gitBlob": "f3a11e8c88537987d4b7b59c217ae08ffb4c906d" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.BasicReadWriteSample/Program.cs", "gitBlob": "39fac66b2f0977010eb137e1744e6e567173c5d6" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.ConfigPollingSample/PlcComm.KvHostLink.ConfigPollingSample.csproj", "gitBlob": "cfb34096da36d0989aa90b490bc27efd92b535db" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.ConfigPollingSample/Program.cs", "gitBlob": "5edcb9764910caa01c5e4216a0849507fb307bcd" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.ConfigPollingSample/config_polling.example.json", "gitBlob": "0f612db067ce973f850b4c72f1431a74e175188e" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.HighLevelSample/PlcComm.KvHostLink.HighLevelSample.csproj", "gitBlob": "d1bf96e33663dd3b9a048ede0dad5e06d8c893e4" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.HighLevelSample/Program.cs", "gitBlob": "816abedd60c265e91151726fd44aaf2e1e163d11" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.MultiPlcMonitorSample/PlcComm.KvHostLink.MultiPlcMonitorSample.csproj", "gitBlob": "9250bf8d74fd28739bd8cc820286eb0e5953b84e" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.MultiPlcMonitorSample/Program.cs", "gitBlob": "bc61379e4cbdf2893c580359ae57978f82e816c4" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.NamedPollingSample/PlcComm.KvHostLink.NamedPollingSample.csproj", "gitBlob": "d40ad2cbc76b7d682b2e5f9491be72cd38490712" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.NamedPollingSample/Program.cs", "gitBlob": "f67f6bc366307e98cbc6db1802012036c7d64f9f" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.PollingReconnectSample/PlcComm.KvHostLink.PollingReconnectSample.csproj", "gitBlob": "0b9eb74968fc7abb70e48b60702b9811609d86b0" },
+      { "scope": "maintained-samples", "path": "samples/PlcComm.KvHostLink.PollingReconnectSample/Program.cs", "gitBlob": "4a825c78056098ac51aa74826fefd0dad1acbb11" },
+      { "scope": "maintained-samples", "path": "samples/README.md", "gitBlob": "5c1fa3836b8465efa66b85c32bbfca10584f504d" }
+    ]
+  },
+  "provenance": "Immutable prior stable NuGet package plus immutable README, standard user pages, generated API reference, and maintained samples selected for GOAL-DOCUMENTED-API-DIFF-001. Package bytes are SHA-256 pinned; contract-source bytes are pinned by full commit and Git blob IDs."
+}

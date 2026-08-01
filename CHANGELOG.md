@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Samples: Retargeted all six repository samples from `net9.0` to the current LTS `net10.0`; building or running these samples now requires the .NET 10 SDK, while library and test projects retain `net8.0;net9.0;net10.0` multi-targeting.
 - Library: **Breaking:** Device-comment text reads now require an explicit `HostLinkCommentEncoding.Utf8` or `.Cp932`; removed UTF-8-first/Shift_JIS-fallback decoding, added exact `ReadCommentBytesAsync` payload access, and reject comment aggregates without a codec before transport.
 - Library: Comment aggregate overloads are disjoint: the ordinary overload rejects `:COMMENT`, while the explicit-codec overload requires at least one `:COMMENT` and rejects an unused codec with an argument error before transport.
 - Library: Strict comment decoding now rejects malformed selected text without replacement or fallback and retires the connection; `Cp932` is Windows-31J/code page 932 compatibility for KEYENCE "Shift_JIS" terminology, accepts the shared mapped Windows-extension pairs, and rejects forbidden singleton bytes and unassigned pairs consistently across runtimes.

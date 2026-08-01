@@ -912,6 +912,167 @@ comment entry. Non-comment and empty explicit-codec plans raise
 `ArgumentException` during complete preflight with zero sends; direct named and
 deferred polling paths are both covered.
 
+## GOAL-CROSS-OS-CI-001 — Bounded Linux network-lifecycle smoke
+
+Implementation scope: one Linux/.NET 10 CI job and the focused
+`CrossOsLifecycle` test trait in the existing transport/lifecycle suites.
+
+Target contract: the Windows .NET 8/9/10 solution gate remains authoritative.
+One independent Linux/.NET 10 job executes only twelve fake/IPv4-loopback
+tests covering fragmented TCP receive, refused connection cleanup, connection
+and request deadlines, caller cancellation, close while waiting, TCP/UDP
+transport retirement, reopen, and rejection of delayed UDP data. It performs
+no package, sample, full-matrix, or live-PLC work.
+
+Compatibility impact: none. This is CI and deterministic test coverage only.
+
+Acceptance criteria:
+
+1. CI contains exactly one required Ubuntu lifecycle-smoke job on net10.0.
+2. The existing Windows full gate and its three target frameworks remain intact.
+3. The selected trait covers each applicable TCP/UDP lifecycle criterion with fake or loopback peers only.
+4. The Linux job does not duplicate package, source, sample, format, or complete test gates.
+
+- [x] Implementation completed in this repository.
+- [x] Deterministic connection-refusal test added and existing lifecycle tests explicitly selected.
+- [ ] Windows full gate and Linux bounded smoke passed on the same reviewed source state.
+- [x] Codex self-review completed against scope, filter, lifecycle coverage, and test isolation.
+- [x] Live PLC verification is not required; all selected endpoints are fake or IPv4 loopback.
+- [x] CI and maintainer documentation agree; no user migration or generated API change is required.
+- [ ] Final acceptance criteria verified and the item marked complete.
+
+Self-review disposition:
+
+- Accepted: no deterministic test directly proved that a refused TCP candidate
+  is retired and that the same client can later open successfully. The focused
+  loopback test now proves both states.
+- Reused: existing deterministic tests cover all other approved lifecycle
+  paths, including stale UDP response rejection, so they are trait-selected
+  instead of duplicated.
+- Rejected: running every TFM, package/source validation, format, or all tests
+  on Linux would duplicate the authoritative Windows gate.
+- No deferred finding remains for this implementation.
+
+## GOAL-DOCUMENTED-API-DIFF-001 — Immutable API baseline and classification gate
+
+Implementation scope: the net8.0, net9.0, and net10.0 package assemblies, the
+immutable 3.2.1 NuGet baseline and prior stable documentation/example
+provenance, before/after full-signature classifications, classifier tests,
+normal CI, release CI, source-archive validation, and maintainer evidence.
+
+Target contract: each candidate target framework's externally accessible
+assembly surface is compared with `PlcComm.KvHostLink` 3.2.1 selected by
+package URL, exact matching archive entry, and
+SHA-256 `782F605D7D5A45D8402B0D0AE7A61E42BCD2B2C7DD2B101EF424BA53E66B2E28`.
+Every exact added, removed, or changed ID in each target framework must have
+one non-wildcard classification pinned to the complete before and after
+signatures. Missing, duplicate, invalid, signature-drifted, or stale records fail. Release
+enforcement also requires a major version above the baseline while documented
+incompatible differences remain.
+
+Compatibility impact: this tooling does not change runtime behavior. The
+recorded actual differences retain their independently approved compatibility
+impact and migration instructions.
+
+Acceptance criteria:
+
+1. Baseline identity, package URL, three target-framework assembly entries, digest, prior stable contract commit, and per-file Git blob IDs are tracked and visible in repository diffs.
+2. Public/protected/protected-internal surface (including editor-hidden and compiler-generated accessible symbols), inheritance, parameter/return/nullability metadata, defaults, generic constraints, operators, indexers, init-only setters, enum underlying types, const values, and profile names/descriptors are compared independently for every target framework; duplicate API IDs fail.
+3. Every difference is classified exactly once under one of the four approved categories with exact before/after signatures, and stale or signature-drifted classifications fail.
+4. Documented breaks require decision, migration, changelog, user/generated documentation, and major-release disposition evidence.
+5. Documented and undocumented public records use reproducible presence or absence searches over immutable prior stable README, standard pages, generated API reference, and samples.
+6. Synthetic policy tests cover all four categories, three-framework completeness, exact signature drift, duplicate API IDs, special surface kinds, unclassified failure, and same-major release rejection.
+
+- [x] Immutable baseline metadata and exact classifications completed in this repository.
+- [x] Classifier and four-category enforcement tests implemented.
+- [x] Build, classifier tests, actual API diff, generated docs, package, and source-archive gates passed for the reviewed worktree state.
+- [x] Codex self-review completed against actual v3.2.1/current generated API signatures and public source changes.
+- [x] Live PLC verification is not required; this gate inspects package metadata and maintained documentation.
+- [x] Changelog, migration records, user/generated docs, and version-policy disposition are linked from classification evidence.
+- [x] Three-TFM tests, all six net10.0 samples, package consumer, format, and extracted worktree source-archive validation passed.
+- [x] The release-major gate correctly rejected current version `3.2.1` because documented incompatible changes require a major above `3`.
+- [ ] Update the actual release version to major `4` or later and record final release acceptance.
+
+Current actual-diff disposition:
+
+- `documented-contract` (20): removal of the queued client/type-specific
+  overloads, removal of `WriteBitInWordAsync`, explicit comment-codec break,
+  and the two factory return-type changes. Each maps to
+  `GOAL-HL-SERIAL-DEFER-006`, `GOAL-HL-AGGREGATE-DEFER-001`, or
+  `HL-EVAL-TODO-006` and requires a major version before release.
+- `additive` (12): approved lifecycle/outcome errors, comment encoding/raw and
+  aggregate overloads, and Boolean-only direct-bit overloads.
+- `undocumented-public` and `generated-or-noncontract` (0 current): supported
+  and enforced by focused synthetic cases; no empty classification is invented.
+
+Self-review disposition:
+
+- Accepted: a source-regenerated baseline could hide candidate changes. The
+  selected stable package identity and digest are independent of candidate
+  source, and a baseline/classification edit remains visible in review.
+- Accepted: mutable candidate docs cannot establish whether a prior symbol was
+  documented. The stable tag resolves to full commit
+  `19df212d9bbed545d137e1e6d71b8afb30237628`; every README, standard user page,
+  generated API page, and maintained sample input is also pinned by Git blob
+  ID before presence/absence classification.
+- Accepted: a dictionary comprehension could silently overwrite colliding API
+  IDs. Both baseline and candidate surfaces now reject duplicate IDs before
+  comparison, and classifications reject duplicates after per-TFM expansion.
+- Accepted: public metadata alone does not expose canonical runtime profile
+  string values. The inspector records every value returned by
+  `KvHostLinkPlcProfiles.GetNames()` and every public descriptor as separate
+  exact contract entries.
+- Accepted: a normal CI gate cannot require the not-yet-selected release
+  version while work is still `Unreleased`. Normal CI requires the explicit
+  major-release disposition; release CI additionally enforces the actual major
+  version before packaging.
+- Rejected: blanket type/namespace suppressions would allow later unrelated
+  changes to pass. Only exact IDs without wildcard characters are accepted.
+- Detector limitation: reflection does not prove behavioral exception paths or
+  interpret prose. Existing generated-reference freshness, XML coverage,
+  package checks, and required self-review remain independent evidence.
+- No deferred implementation finding remains. On 2026-08-01 the exact comparison passed 96
+  per-TFM records (32 distinct differences repeated across net8.0, net9.0, and net10.0), with
+  `documented-contract=20`, `additive=12`, and no unclassified or stale item. The verified stable
+  package SHA-256 was
+  `782F605D7D5A45D8402B0D0AE7A61E42BCD2B2C7DD2B101EF424BA53E66B2E28` from two independent NuGet
+  endpoints. The worktree and extracted archive each passed 222 tests per TFM; all six samples,
+  generated API freshness, XML coverage, package consumer, format, and archive gates passed. No
+  version was changed and no package was published.
+
+## GOAL-DOTNET-SAMPLE-TFM-001 — Six user samples on current LTS
+
+Implementation scope: all six projects under `samples`, sample prerequisites,
+sample inventory enforcement, changelog, normal sample CI, and source-archive
+sample validation.
+
+Target contract: every user-facing sample targets exactly `net10.0`. The
+library and test projects continue to multi-target
+`net8.0;net9.0;net10.0`, and the package keeps all three assets.
+
+Compatibility impact: cloning and building a repository sample now requires
+the .NET 10 SDK. Existing applications consuming the package do not need to
+retarget.
+
+Acceptance criteria:
+
+1. Exactly six discovered sample projects target exactly net10.0.
+2. Sample inventory rejects missing, extra, multi-targeted, or non-net10.0 sample projects.
+3. Samples README and getting-started prerequisites state the .NET 10 SDK requirement without changing package compatibility.
+4. Library/tests and package-content expectations retain net8.0, net9.0, and net10.0.
+
+- [x] All six user-facing sample project files updated.
+- [x] Sample inventory and prerequisite documentation updated.
+- [x] All six sample builds, inventory, source-archive, format, and package checks passed for the reviewed worktree state.
+- [x] Codex self-review completed across all six projects and library/test/package TFM boundaries.
+- [x] Live PLC verification is not required; sample build targets make no PLC capability claim.
+- [x] Changelog and sample prerequisites agree without inventing a package migration.
+- [x] Final sample acceptance criteria verified by the executed worktree and extracted source-archive gates.
+
+Self-review found no additional sample project, no library/test TFM change, and
+no maintainer-only project in this repository requiring exclusion. No finding
+is deferred.
+
 ## Accepted self-review finding — packed NuGet consumer boundary
 
 The package guard previously inspected the generated NuGet entries but did not

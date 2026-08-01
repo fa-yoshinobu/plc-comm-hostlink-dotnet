@@ -55,7 +55,7 @@ Console.WriteLine($"DM0 = {value}");
 | [Full documentation site](https://fa-yoshinobu.github.io/plc-comm-docs-site/) | Unified docs for all PLC communication libraries. |
 | [Performance](https://fa-yoshinobu.github.io/plc-comm-docs-site/performance/) | See measured latency, throughput, and long-run soak results from real PLC hardware. |
 | [Choosing a Language](https://fa-yoshinobu.github.io/plc-comm-docs-site/choosing-a-language/) | Compare the .NET, Python, Rust, C++, and Node-RED implementations before you pick one. |
-| [Examples](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/samples/README.md) | Run maintained .NET samples: `samples\PlcComm.KvHostLink.HighLevelSample\PlcComm.KvHostLink.HighLevelSample.csproj`, `samples\PlcComm.KvHostLink.BasicReadWriteSample\PlcComm.KvHostLink.BasicReadWriteSample.csproj`, `samples\PlcComm.KvHostLink.NamedPollingSample\PlcComm.KvHostLink.NamedPollingSample.csproj`. |
+| [Examples](https://github.com/fa-yoshinobu/plc-comm-hostlink-dotnet/blob/main/samples/README.md) | Run the six maintained projects: `PlcComm.KvHostLink.HighLevelSample`, `PlcComm.KvHostLink.BasicReadWriteSample`, `PlcComm.KvHostLink.NamedPollingSample`, `PlcComm.KvHostLink.PollingReconnectSample`, `PlcComm.KvHostLink.MultiPlcMonitorSample`, and `PlcComm.KvHostLink.ConfigPollingSample`. |
 
 For a zero-code connectivity check, see [PLC Scope](https://github.com/fa-yoshinobu/plc-scope-dotnet) (Windows).
 

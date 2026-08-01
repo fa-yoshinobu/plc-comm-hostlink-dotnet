@@ -329,6 +329,7 @@ public sealed class OverhaulConcurrencyAndAggregateTests
     }
 
     [Fact]
+    [Trait("Category", "CrossOsLifecycle")]
     public async Task ByteAtATimeTcpProgressCannotRestartAbsoluteDeadline()
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
