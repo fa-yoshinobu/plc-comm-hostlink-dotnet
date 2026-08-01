@@ -935,11 +935,11 @@ Acceptance criteria:
 
 - [x] Implementation completed in this repository.
 - [x] Deterministic connection-refusal test added and existing lifecycle tests explicitly selected.
-- [ ] Windows full gate and Linux bounded smoke passed on the same reviewed source state.
+- [x] Windows full gate and Linux bounded smoke passed on the same reviewed source state.
 - [x] Codex self-review completed against scope, filter, lifecycle coverage, and test isolation.
 - [x] Live PLC verification is not required; all selected endpoints are fake or IPv4 loopback.
 - [x] CI and maintainer documentation agree; no user migration or generated API change is required.
-- [ ] Final acceptance criteria verified and the item marked complete.
+- [x] Final acceptance criteria verified and the item marked complete.
 
 Self-review disposition:
 
