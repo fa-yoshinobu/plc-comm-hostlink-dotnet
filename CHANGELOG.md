@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Library: Transport receive buffers are now allocated only for the selected transport after open admission, reused for the logical session, and released on explicit close. TCP framing scans incrementally, UDP receives into its session buffer, and tracing creates an owned receive snapshot only while a hook is installed.
+- Tests: Added deterministic transport-buffer allocation/reuse/release checks, maximum-size one-byte-fragment TCP scan/copy bounds, and hostile trace-callback ownership coverage.
 - Library: **Breaking:** Reject bracketed IPv4 host input such as `[127.0.0.1]` during construction; use an unbracketed IPv4 address.
 - Library: **Breaking:** Limit raw ASCII command bodies to 65,506 bytes and complete CR-terminated request frames to 65,507 bytes for both TCP and UDP, rejecting oversized input before transport access.
 - Tests: Prevent the asynchronous TCP test server shutdown race by treating `InvalidOperationException` as expected only after cancellation, with repeated immediate-disposal coverage.

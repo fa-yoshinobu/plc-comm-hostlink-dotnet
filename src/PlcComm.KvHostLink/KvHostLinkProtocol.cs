@@ -181,12 +181,17 @@ internal static class KvHostLinkProtocol
     public static byte[] ExtractBody(byte[] frame)
     {
         ArgumentNullException.ThrowIfNull(frame);
+        return ExtractBody(frame.AsSpan());
+    }
+
+    internal static byte[] ExtractBody(ReadOnlySpan<byte> frame)
+    {
         int length = frame.Length;
         if (length == 0 || (frame[length - 1] != '\r' && frame[length - 1] != '\n'))
             throw new HostLinkProtocolError("Response frame is missing a CR or LF terminator");
         while (length > 0 && (frame[length - 1] == '\r' || frame[length - 1] == '\n'))
             length--;
-        return frame.AsSpan(0, length).ToArray();
+        return frame[..length].ToArray();
     }
 
     public static string[] SplitDataTokens(string responseText)

@@ -38,11 +38,16 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private Task? _closeTask;
     private int _closing;
     private int _disposed;
-    private byte[] _rxBuf = new byte[4096];
+    private byte[]? _rxBuf;
     private int _rxStart;
     private int _rxCount;
+    private int _rxScan;
     private bool _skipLeadingSeparators;
-    private readonly byte[] _tcpReadBuf = new byte[8192];
+    private byte[]? _tcpReadBuf;
+    private byte[]? _udpReadBuf;
+    private long _tcpScanBytes;
+    private long _tcpCopyBytes;
+    private long _transportBufferAllocationCount;
     private TimeSpan _timeout = TimeSpan.FromSeconds(3);
     private int _monitorBitCount;
     private string[] _monitorWordFormats = [];
@@ -167,6 +172,8 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             context.Timeout);
         if (_transportMode == HostLinkTransportMode.Tcp)
         {
+            byte[] rxBuffer = new byte[4096];
+            byte[] tcpReadBuffer = new byte[8192];
             var tcp = new TcpClient(AddressFamily.InterNetwork);
             try
             {
@@ -188,6 +195,10 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                     }
                     _tcp = tcp;
                     _tcpStream = stream;
+                    _rxBuf = rxBuffer;
+                    _tcpReadBuf = tcpReadBuffer;
+                    _udpReadBuf = null;
+                    _transportBufferAllocationCount++;
                     ResetProtocolStateNoLock();
                 }
             }
@@ -199,6 +210,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             return;
         }
 
+        byte[] udpReadBuffer = new byte[MaxResponseBodyLength + 2];
         UdpClient? udp = null;
         try
         {
@@ -221,6 +233,10 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                 _udp = udp;
                 _udpRemoteEndPoint = remoteEndPoint;
                 _udpSessionOpen = true;
+                _rxBuf = null;
+                _tcpReadBuf = null;
+                _udpReadBuf = udpReadBuffer;
+                _transportBufferAllocationCount++;
                 ResetProtocolStateNoLock();
             }
         }
@@ -254,12 +270,15 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         _udp = null;
         _udpRemoteEndPoint = null;
         _udpSessionOpen = false;
+        _rxBuf = null;
+        _tcpReadBuf = null;
+        _udpReadBuf = null;
         ResetProtocolStateNoLock();
     }
 
     private void ResetProtocolStateNoLock()
     {
-        _rxStart = 0; _rxCount = 0;
+        _rxStart = 0; _rxCount = 0; _rxScan = 0;
         _skipLeadingSeparators = false;
         _monitorBitCount = 0;
         _monitorWordFormats = [];
@@ -481,15 +500,33 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             throw new HostLinkClosedError();
     }
 
-    private void FireTrace(HostLinkTraceDirection direction, byte[] data)
+    private void FireTrace(HostLinkTraceDirection direction, ReadOnlySpan<byte> data)
     {
+        Action<HostLinkTraceFrame>? hook = TraceHook;
+        if (hook is null)
+            return;
         try
         {
-            TraceHook?.Invoke(new HostLinkTraceFrame(direction, data.ToArray(), DateTime.UtcNow));
+            hook(new HostLinkTraceFrame(direction, data.ToArray(), DateTime.UtcNow));
         }
         catch
         {
             // Diagnostic hooks must not change frame bytes, retries, timeout, or command results.
+        }
+    }
+
+    private void FireOwnedTrace(HostLinkTraceDirection direction, byte[]? ownedData)
+    {
+        Action<HostLinkTraceFrame>? hook = TraceHook;
+        if (hook is null || ownedData is null)
+            return;
+        try
+        {
+            hook(new HostLinkTraceFrame(direction, ownedData, DateTime.UtcNow));
+        }
+        catch
+        {
+            // The owned diagnostic snapshot is no longer used by transport or decoding.
         }
     }
 
@@ -586,7 +623,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                 FireTrace(HostLinkTraceDirection.Send, frame);
                 var response = await RecvTcpFrameAsync(operationCancellation.Token).ConfigureAwait(false);
                 RecordReceive(response.CountedLength);
-                FireTrace(HostLinkTraceDirection.Receive, response.Frame);
+                FireOwnedTrace(HostLinkTraceDirection.Receive, response.TraceFrame);
                 return response.Body;
             }
             catch (Exception error)
@@ -609,11 +646,17 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             await udp.SendAsync(frame, operationCancellation.Token).ConfigureAwait(false);
             RecordSend(frame.Length);
             FireTrace(HostLinkTraceDirection.Send, frame);
-            var result = await udp.ReceiveAsync(operationCancellation.Token).ConfigureAwait(false);
+            byte[] udpReadBuffer = _udpReadBuf
+                ?? throw new HostLinkConnectionError("UDP receive buffer is not allocated for the open session.");
+            int received = await udp.Client.ReceiveAsync(
+                udpReadBuffer.AsMemory(),
+                SocketFlags.None,
+                operationCancellation.Token).ConfigureAwait(false);
             RejectExtraUdpResponse(udp);
-            RecordReceive(result.Buffer.Length);
-            FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
-            byte[] responseBody = KvHostLinkProtocol.ExtractBody(result.Buffer);
+            RecordReceive(received);
+            ReadOnlySpan<byte> responseFrame = udpReadBuffer.AsSpan(0, received);
+            FireTrace(HostLinkTraceDirection.Receive, responseFrame);
+            byte[] responseBody = KvHostLinkProtocol.ExtractBody(responseFrame);
             if (responseBody.Length > MaxResponseBodyLength)
                 throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
             return responseBody;
@@ -686,7 +729,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
     private void RejectUnownedTcpResponse()
     {
-        while (_rxCount > 0 && (_rxBuf[_rxStart] == '\r' || _rxBuf[_rxStart] == '\n'))
+        byte[] rxBuffer = _rxBuf
+            ?? throw new HostLinkConnectionError("TCP receive accumulator is not allocated for the open session.");
+        byte[] readBuffer = _tcpReadBuf
+            ?? throw new HostLinkConnectionError("TCP socket read buffer is not allocated for the open session.");
+        while (_rxCount > 0 && (rxBuffer[_rxStart] == '\r' || rxBuffer[_rxStart] == '\n'))
         {
             _rxStart++;
             _rxCount--;
@@ -695,16 +742,17 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             throw new HostLinkProtocolError(
                 "Received an unowned extra TCP response before sending the next request.");
         _rxStart = 0;
+        _rxScan = 0;
 
         Socket socket = _tcp!.Client;
         while (socket.Available > 0)
         {
             int read = socket.Receive(
-                _tcpReadBuf,
+                readBuffer,
                 0,
-                Math.Min(_tcpReadBuf.Length, socket.Available),
+                Math.Min(readBuffer.Length, socket.Available),
                 SocketFlags.None);
-            if (_tcpReadBuf.AsSpan(0, read).IndexOfAnyExcept((byte)'\r', (byte)'\n') >= 0)
+            if (readBuffer.AsSpan(0, read).IndexOfAnyExcept((byte)'\r', (byte)'\n') >= 0)
                 throw new HostLinkProtocolError(
                     "Received an unowned extra TCP response before sending the next request.");
         }
@@ -734,27 +782,42 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
 
     private void RecordReceive(int length) => Interlocked.Add(ref _rxBytes, length);
 
-    private async Task<(byte[] Body, byte[] Frame, int CountedLength)> RecvTcpFrameAsync(
+    private async Task<(byte[] Body, byte[]? TraceFrame, int CountedLength)> RecvTcpFrameAsync(
         CancellationToken cancellationToken)
     {
+        byte[] rxBuffer = _rxBuf
+            ?? throw new HostLinkConnectionError("TCP receive accumulator is not allocated for the open session.");
+        byte[] readBuffer = _tcpReadBuf
+            ?? throw new HostLinkConnectionError("TCP socket read buffer is not allocated for the open session.");
         while (true)
         {
             if (_skipLeadingSeparators && _rxCount > 0)
             {
-                while (_rxCount > 0 && (_rxBuf[_rxStart] == '\r' || _rxBuf[_rxStart] == '\n'))
+                while (_rxCount > 0 && (rxBuffer[_rxStart] == '\r' || rxBuffer[_rxStart] == '\n'))
                 {
                     _rxStart++;
                     _rxCount--;
+                    _rxScan = Math.Max(_rxScan, _rxStart);
+                    _tcpScanBytes++;
                 }
                 if (_rxCount > 0)
                     _skipLeadingSeparators = false;
             }
 
             int foundIdx = -1;
-            for (int i = 0; i < _rxCount; i++)
+            int end = _rxStart + _rxCount;
+            while (_rxScan < end)
             {
-                byte b = _rxBuf[_rxStart + i];
-                if (b == '\r' || b == '\n') { foundIdx = i; break; }
+                byte b = rxBuffer[_rxScan];
+                _tcpScanBytes++;
+                if (b == '\r' || b == '\n')
+                {
+                    foundIdx = _rxScan - _rxStart;
+                    break;
+                }
+                _rxScan++;
+                if (_rxScan - _rxStart > MaxResponseBodyLength)
+                    throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
             }
 
             if (foundIdx >= 0)
@@ -763,28 +826,34 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                     throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
 
                 int frameLength = foundIdx + 1;
-                while (frameLength < _rxCount && (_rxBuf[_rxStart + frameLength] == '\r' || _rxBuf[_rxStart + frameLength] == '\n'))
+                while (frameLength < _rxCount && (rxBuffer[_rxStart + frameLength] == '\r' || rxBuffer[_rxStart + frameLength] == '\n'))
+                {
+                    _tcpScanBytes++;
                     frameLength++;
+                }
                 if (frameLength < _rxCount)
                     throw new HostLinkProtocolError("TCP response contained extra non-empty data after its terminator");
                 _skipLeadingSeparators = true;
-                byte[] body = _rxBuf.AsSpan(_rxStart, foundIdx).ToArray();
-                byte[] receivedFrame = _rxBuf.AsSpan(_rxStart, frameLength).ToArray();
+                byte[] body = rxBuffer.AsSpan(_rxStart, foundIdx).ToArray();
+                byte[]? traceFrame = TraceHook is null
+                    ? null
+                    : rxBuffer.AsSpan(_rxStart, frameLength).ToArray();
+                _tcpCopyBytes += body.Length + (traceFrame?.Length ?? 0);
                 _rxStart += frameLength;
                 _rxCount -= frameLength;
+                _rxScan = _rxStart;
                 RejectUnownedTcpResponse();
-                if (_rxStart > _rxBuf.Length / 2)
+                if (_rxStart > rxBuffer.Length / 2)
                 {
-                    _rxBuf.AsSpan(_rxStart, _rxCount).CopyTo(_rxBuf);
+                    rxBuffer.AsSpan(_rxStart, _rxCount).CopyTo(rxBuffer);
+                    _tcpCopyBytes += _rxCount;
                     _rxStart = 0;
+                    _rxScan = 0;
                 }
-                return (body, receivedFrame, foundIdx + 1);
+                return (body, traceFrame, foundIdx + 1);
             }
 
-            if (_rxCount > MaxResponseBodyLength)
-                throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
-
-            int read = await _tcpStream!.ReadAsync(_tcpReadBuf, cancellationToken).ConfigureAwait(false);
+            int read = await _tcpStream!.ReadAsync(readBuffer, cancellationToken).ConfigureAwait(false);
             if (read == 0)
             {
                 bool hadPartialResponse = _rxCount > 0;
@@ -795,19 +864,26 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                 throw new HostLinkConnectionError(message);
             }
 
-            if (_rxStart + _rxCount + read > _rxBuf.Length)
+            if (_rxStart + _rxCount + read > rxBuffer.Length)
             {
-                if (_rxCount > 0)
-                    _rxBuf.AsSpan(_rxStart, _rxCount).CopyTo(_rxBuf);
-                _rxStart = 0;
-                if (_rxCount + read > _rxBuf.Length)
+                if (_rxStart > 0 && _rxCount > 0)
                 {
-                    var grown = new byte[Math.Max(_rxBuf.Length * 2, _rxCount + read)];
-                    _rxBuf.AsSpan(0, _rxCount).CopyTo(grown);
+                    rxBuffer.AsSpan(_rxStart, _rxCount).CopyTo(rxBuffer);
+                    _tcpCopyBytes += _rxCount;
+                }
+                _rxScan = Math.Max(0, _rxScan - _rxStart);
+                _rxStart = 0;
+                if (_rxCount + read > rxBuffer.Length)
+                {
+                    var grown = new byte[Math.Max(Math.Max(1, rxBuffer.Length) * 2, _rxCount + read)];
+                    rxBuffer.AsSpan(0, _rxCount).CopyTo(grown);
+                    _tcpCopyBytes += _rxCount;
                     _rxBuf = grown;
+                    rxBuffer = grown;
                 }
             }
-            _tcpReadBuf.AsSpan(0, read).CopyTo(_rxBuf.AsSpan(_rxStart + _rxCount));
+            readBuffer.AsSpan(0, read).CopyTo(rxBuffer.AsSpan(_rxStart + _rxCount));
+            _tcpCopyBytes += read;
             _rxCount += read;
         }
     }

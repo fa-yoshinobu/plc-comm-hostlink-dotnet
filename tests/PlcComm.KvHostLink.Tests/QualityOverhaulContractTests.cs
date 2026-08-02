@@ -558,7 +558,8 @@ public sealed class QualityOverhaulContractTests
         var frames = new List<HostLinkTraceFrame>();
         client.TraceHook = frame =>
         {
-            frames.Add(frame);
+            frames.Add(frame with { Data = frame.Data.ToArray() });
+            frame.Data.AsSpan().Fill((byte)'X');
             throw new InvalidOperationException("diagnostic failure");
         };
 
