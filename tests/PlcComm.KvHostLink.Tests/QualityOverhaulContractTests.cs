@@ -102,6 +102,37 @@ public sealed class QualityOverhaulContractTests
     }
 
     [Fact]
+    public async Task RawRequestFrameLimitIs65507BytesIncludingTerminatingCr()
+    {
+        string boundaryBody = new('A', 65_506);
+        await using var server = new RawContractServer(command =>
+            command.Length == boundaryBody.Length ? "OK\r"u8.ToArray() : "E1\r"u8.ToArray());
+        await using var client = await OpenClientAsync(server.Port);
+        byte[]? sentFrame = null;
+        client.TraceHook = frame =>
+        {
+            if (frame.Direction == HostLinkTraceDirection.Send)
+                sentFrame = frame.Data;
+        };
+
+        Assert.Equal("OK"u8.ToArray(), await client.SendRawAsync(boundaryBody));
+        Assert.NotNull(sentFrame);
+        Assert.Equal(65_507, sentFrame.Length);
+        Assert.Equal((byte)'\r', sentFrame[^1]);
+
+        foreach (HostLinkTransportMode transport in Enum.GetValues<HostLinkTransportMode>())
+        {
+            await using var rejectingClient = new KvHostLinkClient(
+                "invalid.invalid", 8501, transport, TestProfile);
+            await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+                rejectingClient.SendRawAsync(new string('A', 65_507)));
+            Assert.Equal(default, rejectingClient.TrafficStats);
+        }
+
+        Assert.Single(server.Commands);
+    }
+
+    [Fact]
     public async Task RawApiExcludesCrLfAndCrLfTerminators()
     {
         await using var server = new RawContractServer(command => command switch

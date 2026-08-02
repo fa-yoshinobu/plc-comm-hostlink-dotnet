@@ -26,8 +26,10 @@ public static class KvHostLinkClientExtensions
         Unsigned32,
         Signed32,
         Float32,
+        Hex16,
         BitInWord,
         DirectBit,
+        Individual,
     }
 
     private enum ReadPlanSegmentMode
@@ -50,7 +52,9 @@ public static class KvHostLinkClientExtensions
         string Address,
         KvDeviceAddress BaseAddress,
         ReadPlanValueKind Kind,
-        int BitIndex);
+        int BitIndex,
+        string DataType,
+        bool Batchable);
 
     private sealed class ReadPlanSegment
     {
@@ -59,12 +63,20 @@ public static class KvHostLinkClientExtensions
         public required int Count { get; init; }
         public required ReadPlanSegmentMode Mode { get; init; }
         public required ReadPlanRequest[] Requests { get; init; }
+        public bool IsIndividual { get; init; }
     }
 
     private sealed class CompiledReadNamedPlan
     {
         public required ReadPlanRequest[] RequestsInInputOrder { get; init; }
         public required ReadPlanSegment[] Segments { get; init; }
+    }
+
+    private sealed class ReadPlanGroup
+    {
+        public required ReadPlanSegmentMode Mode { get; init; }
+        public required bool IsIndividual { get; init; }
+        public required List<ReadPlanRequest> Requests { get; init; }
     }
 
     /// <summary>
@@ -327,19 +339,14 @@ public static class KvHostLinkClientExtensions
     /// For example, bit 12 is addressed as <c>"DM100.C"</c>, not <c>"DM100.12"</c>.
     /// </para>
     /// <para>
-    /// When all requested addresses are compatible with helper-layer batching,
-    /// this method merges contiguous reads into one or more <c>RDS</c>
-    /// operations. Mixed or non-optimizable address sets fall back to
-    /// sequential helper reads with the same return shape.
-    /// </para>
-    /// <para>
     /// A multi-request result is non-atomic: separate requests can observe different PLC scan times.
     /// Each declared scalar, float32 value, or bit-in-word value remains wholly inside one request,
     /// but callers requiring one coherent point in time must use a single-request read or a PLC-side
     /// snapshot/handshake. The complete plan is validated and copied before the first send, and the
-    /// client turn is retained until every internal read succeeds or the aggregate fails.
-    /// Internal wire requests follow the declared input sequence; the planner never sorts entries by
-    /// device or address. Contiguous entries may share one wire read without changing result mapping.
+    /// client turn is retained until every internal read succeeds or the aggregate fails. The planner
+    /// groups wire-compatible device families in first-appearance order, sorts addresses within each
+    /// group, and merges contiguous spans up to the request limit. A non-batchable entry uses its
+    /// native single read without disabling batching for other groups.
     /// </para>
     /// <para>
     /// Named keys must be semantically unique after device, number, data type, bit index, and
@@ -395,12 +402,11 @@ public static class KvHostLinkClientExtensions
         if (addressSnapshot.Length == 0)
             return new Dictionary<string, object>();
 
-        bool hasPlan = TryCompileReadNamedPlan(addressSnapshot, out CompiledReadNamedPlan plan);
-        return await client.ExecuteExclusiveAsync(
-            () => hasPlan
-                ? ExecuteReadNamedPlanAsync(client, plan, ct)
-                : ReadNamedSequentialAsync(client, addressSnapshot, commentEncoding, ct),
+        CompiledReadNamedPlan plan = CompileReadNamedPlan(addressSnapshot);
+        object[] resolved = await client.ExecuteExclusiveAsync(
+            () => ExecuteReadNamedPlanAsync(client, plan, commentEncoding, ct),
             ct).ConfigureAwait(false);
+        return MaterializeReadNamedResult(plan, resolved);
     }
 
     // -----------------------------------------------------------------------
@@ -416,9 +422,10 @@ public static class KvHostLinkClientExtensions
     /// <param name="interval">Strictly positive time between polls.</param>
     /// <param name="ct">Cancellation token to stop polling.</param>
     /// <remarks>
-    /// If the address set is batchable, the compiled read plan is reused on every iteration for
-    /// lower per-cycle overhead. Every cycle has the same input-order, indivisible-value,
+    /// The validated compiled read plan is reused on every iteration for lower per-cycle overhead.
+    /// Every cycle has the same input-order result, indivisible-value,
     /// no-interleaving, and no-partial-result contract as <see cref="ReadNamedAsync(KvHostLinkClient, IEnumerable{string}, CancellationToken)"/>.
+    /// The interval is a completion delay outside the client FIFO turn; cycles never overlap or catch up.
     /// This overload accepts no implicit comment codec. A plan containing <c>:COMMENT</c>
     /// is rejected during complete preflight before its first send; use the overload that
     /// requires <see cref="HostLinkCommentEncoding"/>.
@@ -468,14 +475,13 @@ public static class KvHostLinkClientExtensions
             throw new ArgumentOutOfRangeException(nameof(interval));
         string[] addressSnapshot = addresses.ToArray();
         ValidateReadNamedAggregate(addressSnapshot, commentEncoding);
-        bool hasPlan = TryCompileReadNamedPlan(addressSnapshot, out CompiledReadNamedPlan plan);
+        CompiledReadNamedPlan plan = CompileReadNamedPlan(addressSnapshot);
         while (!ct.IsCancellationRequested)
         {
-            yield return await client.ExecuteExclusiveAsync(
-                () => hasPlan
-                    ? ExecuteReadNamedPlanAsync(client, plan, ct)
-                    : ReadNamedSequentialAsync(client, addressSnapshot, commentEncoding, ct),
+            object[] resolved = await client.ExecuteExclusiveAsync(
+                () => ExecuteReadNamedPlanAsync(client, plan, commentEncoding, ct),
                 ct).ConfigureAwait(false);
+            yield return MaterializeReadNamedResult(plan, resolved);
             await Task.Delay(interval, ct).ConfigureAwait(false);
         }
     }
@@ -631,55 +637,6 @@ public static class KvHostLinkClientExtensions
         => KvHostLinkClientFactory.OpenAndConnectAsync(
             new KvHostLinkConnectionOptions(host, port, transport, plcProfile), ct);
 
-    private static async Task<IReadOnlyDictionary<string, object>> ReadNamedSequentialAsync(
-        KvHostLinkClient client,
-        IEnumerable<string> addresses,
-        HostLinkCommentEncoding? commentEncoding,
-        CancellationToken ct)
-    {
-        var result = new Dictionary<string, object>();
-        foreach (var address in addresses)
-        {
-            var (baseAddr, dtype, bitIdx) = ParseAddress(address);
-            if (dtype == "BIT_IN_WORD")
-            {
-                if (!bitIdx.HasValue)
-                    throw new HostLinkProtocolError($"Bit index is required for bit-in-word address '{address}'.");
-                var tokens = await client.ReadCoreAsync(baseAddr, ".U", 1, false, ct).ConfigureAwait(false);
-                var parsed = KvHostLinkDevice.ParseDevice(baseAddr);
-                int w = DirectBitDeviceTypes.Contains(parsed.DeviceType)
-                    ? (ushort)PackDirectBitTokens(tokens, 16, baseAddr)
-                    : ushort.Parse(RequireDataToken(tokens, baseAddr), CultureInfo.InvariantCulture);
-                result[address] = ((w >> bitIdx.Value) & 1) != 0;
-            }
-            else if (dtype == "BIT")
-            {
-                var parsed = KvHostLinkDevice.ParseDevice(baseAddr);
-                if (!DirectBitDeviceTypes.Contains(parsed.DeviceType))
-                    throw new HostLinkProtocolError($"Logical data type BIT is only valid for direct bit devices: '{address}'.");
-
-                var tokens = await client.ReadCoreAsync(baseAddr, null, 1, false, ct).ConfigureAwait(false);
-                result[address] = ParseBoolToken(RequireDataToken(tokens, baseAddr));
-            }
-            else if (dtype == "COMMENT")
-            {
-                HostLinkCommentEncoding selectedEncoding = commentEncoding
-                    ?? throw new InvalidOperationException("COMMENT was not rejected during aggregate preflight.");
-                result[address] = await client.ReadCommentsCoreAsync(baseAddr, selectedEncoding, ct).ConfigureAwait(false);
-            }
-            else
-            {
-                result[address] = await ReadTypedCoreAsync(
-                    client,
-                    baseAddr,
-                    dtype,
-                    operationAlreadyAdmitted: true,
-                    ct).ConfigureAwait(false);
-            }
-        }
-        return result;
-    }
-
     private static void ValidateReadNamedAggregate(
         IReadOnlyList<string> addresses,
         HostLinkCommentEncoding? commentEncoding)
@@ -764,95 +721,144 @@ public static class KvHostLinkClientExtensions
         KvHostLinkDevice.ValidateDeviceSpan(address.DeviceType, address.Number, suffix, count);
     }
 
-    private static bool TryCompileReadNamedPlan(
-        IEnumerable<string> addresses,
-        out CompiledReadNamedPlan plan)
+    private static CompiledReadNamedPlan CompileReadNamedPlan(IEnumerable<string> addresses)
     {
         var requestsInInputOrder = new List<ReadPlanRequest>();
+        var groups = new List<ReadPlanGroup>();
+        var batchGroups = new Dictionary<(string DeviceType, ReadPlanSegmentMode Mode), ReadPlanGroup>();
         int index = 0;
         foreach (var address in addresses)
         {
-            if (!TryParseOptimizableReadNamedRequest(address, index, out var request))
-            {
-                plan = null!;
-                return false;
-            }
-
+            ReadPlanRequest request = CompileReadNamedRequest(address, index);
             requestsInInputOrder.Add(request);
             index++;
+
+            ReadPlanSegmentMode mode = request.Kind == ReadPlanValueKind.DirectBit
+                ? ReadPlanSegmentMode.DirectBits
+                : ReadPlanSegmentMode.Words;
+            if (!request.Batchable)
+            {
+                groups.Add(new ReadPlanGroup
+                {
+                    Mode = mode,
+                    IsIndividual = true,
+                    Requests = [request],
+                });
+                continue;
+            }
+
+            var key = (request.BaseAddress.DeviceType, mode);
+            if (!batchGroups.TryGetValue(key, out ReadPlanGroup? group))
+            {
+                group = new ReadPlanGroup
+                {
+                    Mode = mode,
+                    IsIndividual = false,
+                    Requests = [],
+                };
+                batchGroups.Add(key, group);
+                groups.Add(group);
+            }
+            group.Requests.Add(request);
         }
 
         var segments = new List<ReadPlanSegment>();
-        var pending = new List<ReadPlanRequest>();
-        KvDeviceAddress? currentStart = null;
-        int currentStartNumber = 0;
-        int currentEndExclusive = 0;
-        ReadPlanSegmentMode currentMode = ReadPlanSegmentMode.Words;
-
-        void FinishCurrentSegment()
+        foreach (ReadPlanGroup group in groups)
         {
-            if (currentStart is null)
-                return;
-            segments.Add(new ReadPlanSegment
+            if (group.IsIndividual)
             {
-                StartAddress = currentStart,
-                StartNumber = currentStartNumber,
-                Count = currentEndExclusive - currentStartNumber,
-                Mode = currentMode,
-                Requests = [.. pending],
-            });
-            pending.Clear();
-        }
-
-        foreach (ReadPlanRequest request in requestsInInputOrder)
-        {
-            int requestStart = ReadPlanNumber(request);
-            int requestEndExclusive = requestStart + GetWordWidth(request.Kind);
-            ReadPlanSegmentMode requestMode = request.Kind == ReadPlanValueKind.DirectBit
-                ? ReadPlanSegmentMode.DirectBits
-                : ReadPlanSegmentMode.Words;
-            int segmentLimit = ReadPlanSegmentLimit(request.BaseAddress.DeviceType, requestMode);
-            bool startsNewSegment = currentStart is null ||
-                currentStart.DeviceType != request.BaseAddress.DeviceType ||
-                currentMode != requestMode ||
-                requestStart < currentStartNumber ||
-                requestStart > currentEndExclusive ||
-                requestEndExclusive - currentStartNumber > segmentLimit;
-
-            if (startsNewSegment)
-            {
-                FinishCurrentSegment();
-                currentStart = request.BaseAddress with { Suffix = "" };
-                currentStartNumber = requestStart;
-                currentEndExclusive = requestEndExclusive;
-                currentMode = requestMode;
-            }
-            else if (requestEndExclusive > currentEndExclusive)
-            {
-                currentEndExclusive = requestEndExclusive;
+                ReadPlanRequest request = group.Requests[0];
+                segments.Add(new ReadPlanSegment
+                {
+                    StartAddress = request.BaseAddress,
+                    StartNumber = ReadPlanNumber(request),
+                    Count = 1,
+                    Mode = group.Mode,
+                    Requests = [request],
+                    IsIndividual = true,
+                });
+                continue;
             }
 
-            pending.Add(request);
-        }
-        FinishCurrentSegment();
+            ReadPlanRequest[] sorted = group.Requests
+                .OrderBy(ReadPlanNumber)
+                .ThenBy(static request => request.Index)
+                .ToArray();
+            var pending = new List<ReadPlanRequest>();
+            KvDeviceAddress? currentStart = null;
+            int currentStartNumber = 0;
+            int currentEndExclusive = 0;
 
-        plan = new CompiledReadNamedPlan
+            void FinishCurrentSegment()
+            {
+                if (currentStart is null)
+                    return;
+                segments.Add(new ReadPlanSegment
+                {
+                    StartAddress = currentStart,
+                    StartNumber = currentStartNumber,
+                    Count = currentEndExclusive - currentStartNumber,
+                    Mode = group.Mode,
+                    Requests = [.. pending],
+                    IsIndividual = false,
+                });
+                pending.Clear();
+            }
+
+            foreach (ReadPlanRequest request in sorted)
+            {
+                int requestStart = ReadPlanNumber(request);
+                int requestEndExclusive = requestStart + GetWordWidth(request.Kind);
+                int segmentLimit = ReadPlanSegmentLimit(request.BaseAddress.DeviceType, group.Mode);
+                bool startsNewSegment = currentStart is null ||
+                    requestStart > currentEndExclusive ||
+                    requestEndExclusive - currentStartNumber > segmentLimit;
+
+                if (startsNewSegment)
+                {
+                    FinishCurrentSegment();
+                    currentStart = request.BaseAddress with { Suffix = "" };
+                    currentStartNumber = requestStart;
+                    currentEndExclusive = requestEndExclusive;
+                }
+                else if (requestEndExclusive > currentEndExclusive)
+                {
+                    currentEndExclusive = requestEndExclusive;
+                }
+
+                pending.Add(request);
+            }
+            FinishCurrentSegment();
+        }
+
+        return new CompiledReadNamedPlan
         {
             RequestsInInputOrder = [.. requestsInInputOrder],
             Segments = [.. segments],
         };
-        return true;
     }
 
-    private static async Task<IReadOnlyDictionary<string, object>> ExecuteReadNamedPlanAsync(
+    private static async Task<object[]> ExecuteReadNamedPlanAsync(
         KvHostLinkClient client,
         CompiledReadNamedPlan plan,
+        HostLinkCommentEncoding? commentEncoding,
         CancellationToken ct)
     {
         var resolved = new object[plan.RequestsInInputOrder.Length];
 
         foreach (var segment in plan.Segments)
         {
+            if (segment.IsIndividual)
+            {
+                ReadPlanRequest request = segment.Requests[0];
+                resolved[request.Index] = await ExecuteIndividualReadNamedRequestAsync(
+                    client,
+                    request,
+                    commentEncoding,
+                    ct).ConfigureAwait(false);
+                continue;
+            }
+
             if (segment.Mode == ReadPlanSegmentMode.DirectBits)
             {
                 string[] tokens = await client.ReadCoreAsync(
@@ -887,10 +893,47 @@ public static class KvHostLinkClientExtensions
                 }
             }
         }
+        return resolved;
+    }
 
+    private static async Task<object> ExecuteIndividualReadNamedRequestAsync(
+        KvHostLinkClient client,
+        ReadPlanRequest request,
+        HostLinkCommentEncoding? commentEncoding,
+        CancellationToken ct)
+    {
+        string baseAddress = request.BaseAddress.ToText();
+        if (request.DataType == "BIT_IN_WORD")
+        {
+            string[] tokens = await client.ReadCoreAsync(baseAddress, ".U", 1, false, ct).ConfigureAwait(false);
+            int word = DirectBitDeviceTypes.Contains(request.BaseAddress.DeviceType)
+                ? (ushort)PackDirectBitTokens(tokens, 16, baseAddress)
+                : ushort.Parse(RequireDataToken(tokens, baseAddress), CultureInfo.InvariantCulture);
+            return ((word >> request.BitIndex) & 1) != 0;
+        }
+
+        if (request.DataType == "COMMENT")
+        {
+            HostLinkCommentEncoding selectedEncoding = commentEncoding
+                ?? throw new InvalidOperationException("COMMENT was not rejected during aggregate preflight.");
+            return await client.ReadCommentsCoreAsync(baseAddress, selectedEncoding, ct).ConfigureAwait(false);
+        }
+
+        return await ReadTypedCoreAsync(
+            client,
+            baseAddress,
+            request.DataType,
+            operationAlreadyAdmitted: true,
+            ct).ConfigureAwait(false);
+    }
+
+    private static Dictionary<string, object> MaterializeReadNamedResult(
+        CompiledReadNamedPlan plan,
+        object[] resolved)
+    {
         var result = new Dictionary<string, object>(plan.RequestsInInputOrder.Length);
-        foreach (var request in plan.RequestsInInputOrder)
-            result[request.Address] = resolved[request.Index];
+        foreach (ReadPlanRequest request in plan.RequestsInInputOrder)
+            result.Add(request.Address, resolved[request.Index]);
         return result;
     }
 
@@ -908,8 +951,10 @@ public static class KvHostLinkClientExtensions
             ReadPlanValueKind.Signed32 => unchecked((int)(words[offset] | (words[offset + 1] << 16))),
             ReadPlanValueKind.Float32 => BitConverter.Int32BitsToSingle(
                 unchecked((int)(words[offset] | (words[offset + 1] << 16)))),
+            ReadPlanValueKind.Hex16 => words[offset].ToString("X4", CultureInfo.InvariantCulture),
             ReadPlanValueKind.BitInWord => ((words[offset] >> bitIndex) & 1) != 0,
             ReadPlanValueKind.DirectBit => throw new HostLinkProtocolError("Direct bit values must be resolved from bit tokens."),
+            ReadPlanValueKind.Individual => throw new HostLinkProtocolError("Individual values must be resolved by their native command."),
             _ => throw new ArgumentOutOfRangeException(nameof(kind)),
         };
     }
@@ -921,50 +966,41 @@ public static class KvHostLinkClientExtensions
         return ParseBoolToken(tokens[offset]);
     }
 
-    private static bool TryParseOptimizableReadNamedRequest(
-        string address,
-        int index,
-        out ReadPlanRequest request)
+    private static ReadPlanRequest CompileReadNamedRequest(string address, int index)
     {
-        request = default;
-        try
+        var (baseAddress, dataType, bitIndex) = ParseAddress(address);
+        KvDeviceAddress parsed = KvHostLinkDevice.ParseDevice(baseAddress) with { Suffix = "" };
+        string normalized = dataType.Trim().TrimStart('.').ToUpperInvariant();
+
+        if ((normalized.Length == 0 || normalized == "BIT") &&
+            DirectBitDeviceTypes.Contains(parsed.DeviceType))
         {
-            var (baseAddr, dtype, bitIdx) = ParseAddress(address);
-            var parsed = KvHostLinkDevice.ParseDevice(baseAddr);
-            if (string.IsNullOrEmpty(dtype) && DirectBitDeviceTypes.Contains(parsed.DeviceType))
-            {
-                request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, ReadPlanValueKind.DirectBit, 0);
-                return true;
-            }
-            if (dtype == "BIT" && DirectBitDeviceTypes.Contains(parsed.DeviceType))
-            {
-                request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, ReadPlanValueKind.DirectBit, 0);
-                return true;
-            }
-            if (!OptimizableReadNamedDeviceTypes.Contains(parsed.DeviceType))
-                return false;
-
-            if (dtype == "BIT_IN_WORD")
-            {
-                if (!bitIdx.HasValue)
-                    return false;
-                request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, ReadPlanValueKind.BitInWord, bitIdx.Value);
-                return true;
-            }
-
-            if (!TryMapReadPlanValueKind(dtype, out var kind))
-                return false;
-            if (KvHostLinkModels.Native32BitDeviceTypes.Contains(parsed.DeviceType) &&
-                kind is ReadPlanValueKind.Unsigned32 or ReadPlanValueKind.Signed32)
-                return false;
-
-            request = new ReadPlanRequest(index, address, parsed with { Suffix = "" }, kind, 0);
-            return true;
+            return new ReadPlanRequest(
+                index, address, parsed, ReadPlanValueKind.DirectBit, 0, normalized, Batchable: true);
         }
-        catch (HostLinkProtocolError)
+
+        if (normalized == "BIT_IN_WORD" &&
+            bitIndex.HasValue &&
+            OptimizableReadNamedDeviceTypes.Contains(parsed.DeviceType))
         {
-            return false;
+            return new ReadPlanRequest(
+                index, address, parsed, ReadPlanValueKind.BitInWord, bitIndex.Value, normalized, Batchable: true);
         }
+
+        if (OptimizableReadNamedDeviceTypes.Contains(parsed.DeviceType) &&
+            TryMapReadPlanValueKind(normalized, out ReadPlanValueKind kind))
+        {
+            return new ReadPlanRequest(index, address, parsed, kind, 0, normalized, Batchable: true);
+        }
+
+        return new ReadPlanRequest(
+            index,
+            address,
+            parsed,
+            ReadPlanValueKind.Individual,
+            bitIndex.GetValueOrDefault(),
+            normalized,
+            Batchable: false);
     }
 
     private static bool TryMapReadPlanValueKind(string dtype, out ReadPlanValueKind kind)
@@ -985,6 +1021,9 @@ public static class KvHostLinkClientExtensions
                 return true;
             case "F":
                 kind = ReadPlanValueKind.Float32;
+                return true;
+            case "H":
+                kind = ReadPlanValueKind.Hex16;
                 return true;
             default:
                 kind = default;

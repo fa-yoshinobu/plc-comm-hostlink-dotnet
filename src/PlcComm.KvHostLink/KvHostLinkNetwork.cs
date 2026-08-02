@@ -11,10 +11,16 @@ internal static class KvHostLinkNetwork
             throw new ArgumentException("Host must not be empty.", parameterName);
 
         string normalized = host.Trim();
-        string literalCandidate = normalized.Length >= 2 && normalized[0] == '[' && normalized[^1] == ']'
-            ? normalized[1..^1]
-            : normalized;
-        if (IPAddress.TryParse(literalCandidate, out IPAddress? literal) &&
+        if (normalized.Length >= 2 && normalized[0] == '[' && normalized[^1] == ']' &&
+            IPAddress.TryParse(normalized[1..^1], out IPAddress? bracketedLiteral) &&
+            bracketedLiteral.AddressFamily == AddressFamily.InterNetwork)
+        {
+            throw new ArgumentException(
+                "IPv4 addresses must not be enclosed in brackets.",
+                parameterName);
+        }
+
+        if (IPAddress.TryParse(normalized, out IPAddress? literal) &&
             literal.AddressFamily != AddressFamily.InterNetwork)
         {
             throw new ArgumentException(

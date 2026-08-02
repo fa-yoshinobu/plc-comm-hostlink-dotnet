@@ -42,8 +42,14 @@ Console.WriteLine($"Connected: {client.IsOpen}");
 `Timeout` may be omitted; its default is 3 seconds. Explicit values must be
 from 1 through `Int32.MaxValue` milliseconds. Sub-millisecond, zero, negative,
 or larger timeouts are rejected. Normal Host Link command frames always end in CR.
-Connections are IPv4-only. IPv6 literals are rejected before socket creation;
-hostnames are resolved only to IPv4 and never fall back to IPv6.
+Connections are IPv4-only. IPv6 literals and bracketed IPv4 literals such as
+`[192.168.250.100]` are rejected before socket creation. Write IPv4 addresses
+without brackets; hostnames are resolved only to IPv4 and never fall back to IPv6.
+
+The maintainer `SendRawAsync` API accepts at most 65,506 ASCII bytes in the
+command body. The terminating CR makes the maximum complete request frame
+65,507 bytes. Larger input is rejected before connection-state checks or I/O;
+command-specific limits that are smaller still apply.
 
 `SetTimeAsync` requires an explicit `DateTime` whose year is 2000 through
 2099. Years outside that PLC clock range are rejected before communication;
@@ -74,9 +80,15 @@ disables Nagle buffering for small Host Link command frames.
 One TCP request owns one non-empty response line. CR/LF-only separators are
 ignored, but an additional non-empty line received before the next send is a
 protocol error and retires the transport. A UDP open is a logical session:
-every admitted operation binds a fresh request-owned socket and source port.
-The preceding successful socket remains bound only until its successor has
-bound a different port, so its delayed datagrams cannot satisfy the successor.
+it resolves the IPv4 endpoint once and creates one connected socket. Fully
+valid exchanges reuse that socket. Timeout, cancellation, I/O, malformed
+response, protocol, an extra response, or a queued unowned datagram detected
+before send discards the socket but retains the resolved logical endpoint. The next request creates
+one replacement socket without DNS resolution and does not retry the failed
+request. Because Host Link UDP has no transaction ID, a duplicate datagram that
+arrives in the narrow interval after the pre-send check and before the new send
+cannot be distinguished from that request's response; choose TCP when strict
+response association is required.
 
 Reuse one connected client for repeated reads and writes. Prefer
 `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, or
@@ -91,10 +103,13 @@ active wire transaction. Cancelling a waiting operation sends nothing; its
 transaction timeout starts only when it becomes active, and the open transport
 generation remains usable. Recursive use of the same client from a callback is
 rejected with `HostLinkReentrancyError`. Separate client instances remain
-independent. Commands never open or reconnect implicitly. After `CloseAsync`,
-timeout, active-operation cancellation, EOF, or transport failure, call
-`OpenAsync` explicitly before a new command when it is safe to do so. A failed
-command is never retried automatically.
+independent. Commands never open a closed logical session implicitly. TCP
+timeout, active-operation cancellation, EOF, protocol failure, or transport
+failure retires the connection; call `OpenAsync` explicitly before a new
+command when it is safe to do so. UDP exchange anomalies retain `IsOpen` and
+the resolved endpoint while discarding the affected socket; the next command
+creates a replacement socket. `CloseAsync` closes either transport completely.
+A failed command is never retried automatically.
 
 ## Read a single value
 
@@ -185,13 +200,17 @@ foreach (var (address, value) in readResult)
 Use `ReadNamedAsync` when one application aggregate mixes unsigned words, signed words, double words, floats, PLC comment strings, and bit-in-word values.
 
 `ReadNamedAsync` is an explicitly aggregate read. It validates and snapshots
-the complete plan before sending, preserves the declared input order and result
-mapping, keeps one FIFO turn for all internal requests, and stops at the first
-failure without returning a partial dictionary. It may combine or split only
-between independent named entries; a DWord or Float value is never split across
-wire requests. The result is not a simultaneous PLC snapshot because internal
-requests may observe different scan times. For coherent data, use a
-single-request read or a PLC-side snapshot/handshake design.
+the complete plan before sending. Wire-compatible device families are handled
+in first-appearance order; addresses inside each family are sorted and
+contiguous spans are merged up to the protocol request limit. A comment,
+native-32-bit device, direct-bit word view, or other non-batchable entry keeps
+its native single request without disabling batching elsewhere. Result keys
+and values remain in declared input order. All sends and response decoding keep
+one FIFO turn, stop at the first failure, and expose no partial dictionary; pure
+dictionary materialization occurs after that turn. A DWord or Float value is
+never split across wire requests. The result is not a simultaneous PLC snapshot
+because internal requests may observe different scan times. For coherent data,
+use a single-request read or a PLC-side snapshot/handshake design.
 
 Named keys must be semantically unique by device family, numeric address,
 dtype, bit index, and scalar count. Case, leading zeros, or an explicit default
@@ -274,10 +293,14 @@ await foreach (var readResult in client.PollAsync(addresses, TimeSpan.FromSecond
 ```
 
 `PollAsync` yields a non-atomic aggregate dictionary on each interval until
-cancellation or until your loop exits. Each cycle uses the same validation,
-input-order, no-interleaving, and no-partial-result contract as `ReadNamedAsync`.
-The interval must be greater than zero and no more than `Int32.MaxValue`
-milliseconds; invalid intervals are rejected before communication.
+cancellation or until your loop exits. It snapshots, validates, and compiles the
+fixed plan once when polling starts. Every cycle reuses that plan and one FIFO
+turn with the same input-order result, no-interleaving, and no-partial-result
+contract as `ReadNamedAsync`. The interval is a delay after a completed cycle
+and runs outside the FIFO turn, so other client operations may proceed during
+the delay. Cycles never overlap and missed time is not caught up. The interval
+must be greater than zero and no more than `Int32.MaxValue` milliseconds;
+invalid intervals are rejected before communication.
 If the address list contains `:COMMENT`, use the overload that adds an explicit
 `HostLinkCommentEncoding` after the interval. If it contains no comment, use the
 ordinary overload; an unused comment encoding is rejected before the first send.

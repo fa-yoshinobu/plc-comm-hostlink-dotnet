@@ -31,8 +31,9 @@ This opens the ordinary client, which is the recommended surface for normal appl
 It includes arrival-order FIFO admission; no queued wrapper is needed.
 The port, TCP/UDP transport, and canonical PLC profile are all explicit. The
 factory performs the network connection; constructing options does not.
-Host Link endpoints are IPv4-only. An IPv6 literal is rejected before socket
-creation, and a hostname must resolve to IPv4.
+Host Link endpoints are IPv4-only. An IPv6 literal and a bracketed IPv4 literal
+such as `[192.168.250.100]` are rejected before socket creation. Write IPv4
+addresses without brackets; a hostname must resolve to IPv4.
 
 ## First read (step by step)
 
@@ -95,6 +96,7 @@ Only write to a test address that is safe for your machine and program.
 |---|---|
 | The connection fails immediately. | Confirm that the explicitly configured port and TCP/UDP transport match the PLC connection settings. |
 | An IPv6 endpoint is rejected. | Use the PLC's IPv4 address or a hostname with an IPv4 result. IPv6 is intentionally unsupported. |
+| A bracketed IPv4 endpoint is rejected. | Remove the brackets: use `192.168.250.100`, not `[192.168.250.100]`. |
 | A command reports `HostLinkNotConnectedError`. | Call `OpenAsync` after construction or after a timeout, cancellation, close, EOF, or transport failure. |
 | A read reports `HostLinkTimeoutError`. | The one transaction deadline expired and invalidated the connection. Check the endpoint and timeout, then explicitly call `OpenAsync` before another command. |
 | A write reports `HostLinkOutcomeUnknownError`. | Transmission may have begun, but no definitive result was received. Inspect `Reason`, do not retry automatically, determine PLC state safely, then explicitly reopen if appropriate. |

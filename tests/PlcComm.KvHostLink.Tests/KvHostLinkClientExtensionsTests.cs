@@ -51,11 +51,63 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
-    public async Task ReadNamedAsync_ReadsCommentAddressesThroughSequentialFallback()
+    public async Task ReadNamedAsync_GroupsByFirstAppearanceSortsWithinGroupAndPreservesResultOrder()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
-            "RD DM100.U" => "1025",
+            "RDS EM1.U 2" => "11 12",
+            "RDS DM1.U 3" => "10 20 30",
+            "RD Z1.D" => "70000",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+        string[] addresses = ["EM2:U", "DM3:U", "Z1:D", "DM1:H", "DM2:S", "EM1:U"];
+
+        IReadOnlyDictionary<string, object> result = await client.ReadNamedAsync(addresses);
+
+        Assert.Equal(addresses, result.Keys);
+        Assert.Equal((ushort)12, result["EM2:U"]);
+        Assert.Equal((ushort)30, result["DM3:U"]);
+        Assert.Equal((uint)70_000, result["Z1:D"]);
+        Assert.Equal("000A", result["DM1:H"]);
+        Assert.Equal((short)20, result["DM2:S"]);
+        Assert.Equal((ushort)11, result["EM1:U"]);
+        Assert.Equal(
+            ["RDS EM1.U 2", "RDS DM1.U 3", "RD Z1.D"],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task ReadNamedAsync_AlternatingDeviceTypesDoNotSplitACompatibleGroup()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RDS DM10.U 2" => "10 11",
+            "RDS MR000 1" => "1",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+        string[] addresses = ["DM11:U", "MR0", "DM10:U"];
+
+        IReadOnlyDictionary<string, object> result = await client.ReadNamedAsync(addresses);
+
+        Assert.Equal(addresses, result.Keys);
+        Assert.Equal((ushort)11, result["DM11:U"]);
+        Assert.True(Assert.IsType<bool>(result["MR0"]));
+        Assert.Equal((ushort)10, result["DM10:U"]);
+        Assert.Equal(["RDS DM10.U 2", "RDS MR000 1"], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task ReadNamedAsync_BatchesCompatibleReadsWhenCommentIsAlsoPresent()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RDS DM100.U 1" => "1025",
             "RDC DM101" => "MAIN COMMENT                    ",
             _ => "E1",
         });
@@ -69,7 +121,7 @@ public sealed class KvHostLinkClientExtensionsTests
 
         Assert.Equal((ushort)1025, Assert.IsType<ushort>(result["DM100:U"]));
         Assert.Equal("MAIN COMMENT", Assert.IsType<string>(result["DM101:COMMENT"]));
-        Assert.Equal(["RD DM100.U", "RDC DM101"], server.ReceivedCommands.ToArray());
+        Assert.Equal(["RDS DM100.U 1", "RDC DM101"], server.ReceivedCommands.ToArray());
     }
 
     [Fact]
@@ -356,7 +408,7 @@ public sealed class KvHostLinkClientExtensionsTests
             "RD DM210.H" => "f",
             "WR DM210.H FF" => "OK",
             "WR DM211.H AA" => "OK",
-            "RD DM212.H" => "a",
+            "RDS DM212.U 1" => "10",
             "RD DM213.H" => "f",
             "RDS DM214.H 2" => "0 ff",
             "RDE DM216.H 2" => "a ffff",
@@ -384,7 +436,7 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.Equal(["0001", "000B"], expansion);
         Assert.Equal(
             [
-                "RD DM210.H", "WR DM210.H FF", "WR DM211.H AA", "RD DM212.H", "RD DM213.H",
+                "RD DM210.H", "WR DM210.H FF", "WR DM211.H AA", "RDS DM212.U 1", "RD DM213.H",
                 "RDS DM214.H 2", "RDE DM216.H 2", "URD 01 10.H 2"
             ],
             server.ReceivedCommands.ToArray());
@@ -774,6 +826,33 @@ public sealed class KvHostLinkClientExtensionsTests
 
         Assert.Equal(
             ["RDS DM100.U 3", "RDS DM100.U 3"],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task PollAsync_ReleasesFifoDuringCompletionDelay()
+    {
+        int pollResponse = 0;
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RDS DM0.U 1" => (++pollResponse).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "RD DM9.U" => "9",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await using var polling = client.PollAsync(
+            ["DM0:U"], TimeSpan.FromMilliseconds(100), cancellation.Token).GetAsyncEnumerator();
+
+        Assert.True(await polling.MoveNextAsync());
+        Task<bool> secondCycle = polling.MoveNextAsync().AsTask();
+        Assert.Equal(["9"], await client.ReadAsync("DM9", ".U"));
+        Assert.True(await secondCycle);
+
+        Assert.Equal(
+            ["RDS DM0.U 1", "RD DM9.U", "RDS DM0.U 1"],
             server.ReceivedCommands.ToArray());
     }
 

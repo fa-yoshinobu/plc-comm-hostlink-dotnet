@@ -202,7 +202,7 @@ public sealed class KvHostLinkTransportTests
 
     [Fact]
     [Trait("Category", "CrossOsLifecycle")]
-    public async Task UdpTimeoutClosesTransportAndDelayedResponseIsNotReused()
+    public async Task UdpTimeoutDiscardsSocketAndDelayedResponseIsNotReused()
     {
         using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
         int port = ((IPEndPoint)server.Client.LocalEndPoint!).Port;
@@ -232,12 +232,10 @@ public sealed class KvHostLinkTransportTests
         var timeout = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => client.SendRawAsync("FIRST"));
         Assert.Equal(HostLinkOutcomeUnknownReason.Timeout, timeout.Reason);
         Assert.IsType<HostLinkTimeoutError>(timeout.InnerException);
-        Assert.False(client.IsOpen);
+        Assert.True(client.IsOpen);
         Assert.Equal(new HostLinkTrafficStats(1, 6, 0), client.TrafficStats);
 
         client.Timeout = TimeSpan.FromSeconds(2);
-        await Assert.ThrowsAsync<HostLinkNotConnectedError>(() => client.SendRawAsync("SECOND"));
-        await client.OpenAsync();
         Assert.Equal(Encoding.ASCII.GetBytes("SECOND"), await client.SendRawAsync("SECOND"));
         Assert.Equal(new HostLinkTrafficStats(2, 13, 7), client.TrafficStats);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
@@ -245,7 +243,7 @@ public sealed class KvHostLinkTransportTests
 
     [Fact]
     [Trait("Category", "CrossOsLifecycle")]
-    public async Task UdpCancellationClosesTransport()
+    public async Task UdpCancellationDiscardsSocketButRetainsLogicalEndpoint()
     {
         using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
         int port = ((IPEndPoint)server.Client.LocalEndPoint!).Port;
@@ -255,6 +253,8 @@ public sealed class KvHostLinkTransportTests
         {
             await server.ReceiveAsync();
             received.SetResult();
+            UdpReceiveResult recovered = await server.ReceiveAsync();
+            await server.SendAsync("RECOVERED\r"u8.ToArray(), recovered.RemoteEndPoint);
         });
 
         await using var client = new KvHostLinkClient(
@@ -274,18 +274,17 @@ public sealed class KvHostLinkTransportTests
         var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(() => request);
         Assert.Equal(HostLinkOutcomeUnknownReason.CallerCancellation, error.Reason);
         Assert.IsType<OperationCanceledException>(error.InnerException);
-        Assert.False(client.IsOpen);
+        Assert.True(client.IsOpen);
+        Assert.Equal("RECOVERED"u8.ToArray(), await client.SendRawAsync("RECOVER"));
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     [Fact]
-    public async Task UdpUsesDedicatedSocketGenerationForEachSuccessfulRequest()
+    public async Task UdpReusesHealthyConnectedSocketAcrossSuccessfulRequests()
     {
         using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
         int port = ((IPEndPoint)server.Client.LocalEndPoint!).Port;
         var endpoints = new List<IPEndPoint>();
-        var secondReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var releaseSecondResponse = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var serverTask = Task.Run(async () =>
         {
             UdpReceiveResult first = await server.ReceiveAsync();
@@ -294,9 +293,6 @@ public sealed class KvHostLinkTransportTests
 
             UdpReceiveResult second = await server.ReceiveAsync();
             endpoints.Add(second.RemoteEndPoint);
-            secondReceived.SetResult();
-            await releaseSecondResponse.Task;
-            await server.SendAsync("STALE\r"u8.ToArray(), first.RemoteEndPoint);
             await server.SendAsync("SECOND\r"u8.ToArray(), second.RemoteEndPoint);
         });
 
@@ -312,18 +308,107 @@ public sealed class KvHostLinkTransportTests
                 duplicateBind.Client.Bind(new IPEndPoint(IPAddress.Any, endpoints[0].Port)));
         }
 
-        Task<byte[]> secondRequest = client.SendRawAsync("TWO");
-        await secondReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        Assert.NotEqual(endpoints[0].Port, endpoints[1].Port);
-        using var releasedPredecessorPort = new UdpClient(
-            new IPEndPoint(IPAddress.Any, endpoints[0].Port));
-        releaseSecondResponse.SetResult();
-
-        Assert.Equal("SECOND"u8.ToArray(), await secondRequest);
+        Assert.Equal("SECOND"u8.ToArray(), await client.SendRawAsync("TWO"));
         Assert.True(client.IsOpen);
         await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(2, endpoints.Count);
-        Assert.NotEqual(endpoints[0].Port, endpoints[1].Port);
+        Assert.Equal(endpoints[0], endpoints[1]);
+    }
+
+    [Fact]
+    public async Task UdpUnownedDatagramIsRejectedBeforeSendAndSocketIsRecreated()
+    {
+        using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+        int port = ((IPEndPoint)server.Client.LocalEndPoint!).Port;
+        var releaseDuplicate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var duplicateSent = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var commands = new List<string>();
+        var serverTask = Task.Run(async () =>
+        {
+            UdpReceiveResult first = await server.ReceiveAsync();
+            commands.Add(Encoding.ASCII.GetString(first.Buffer));
+            await server.SendAsync("FIRST\r"u8.ToArray(), first.RemoteEndPoint);
+            await releaseDuplicate.Task;
+            await server.SendAsync("EXTRA\r"u8.ToArray(), first.RemoteEndPoint);
+            duplicateSent.SetResult();
+
+            UdpReceiveResult second = await server.ReceiveAsync();
+            commands.Add(Encoding.ASCII.GetString(second.Buffer));
+            await server.SendAsync("THIRD\r"u8.ToArray(), second.RemoteEndPoint);
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Udp, "keyence:kv-8000");
+        await client.OpenAsync();
+
+        Assert.Equal("FIRST"u8.ToArray(), await client.SendRawAsync("ONE"));
+        releaseDuplicate.SetResult();
+        await duplicateSent.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(50);
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.SendRawAsync("TWO"));
+        Assert.True(client.IsOpen);
+        Assert.Equal("THIRD"u8.ToArray(), await client.SendRawAsync("THREE"));
+        await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(["ONE\r", "THREE\r"], commands);
+    }
+
+    [Fact]
+    public async Task UdpExtraResponseDatagramFailsCurrentExchangeAndSocketIsRecreated()
+    {
+        using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+        int port = ((IPEndPoint)server.Client.LocalEndPoint!).Port;
+        var serverTask = Task.Run(async () =>
+        {
+            UdpReceiveResult first = await server.ReceiveAsync();
+            await server.SendAsync("FIRST\r"u8.ToArray(), first.RemoteEndPoint);
+            await server.SendAsync("EXTRA\r"u8.ToArray(), first.RemoteEndPoint);
+
+            UdpReceiveResult recovered = await server.ReceiveAsync();
+            await server.SendAsync("RECOVERED\r"u8.ToArray(), recovered.RemoteEndPoint);
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Udp, "keyence:kv-8000");
+        client.TraceHook = frame =>
+        {
+            if (frame.Direction == HostLinkTraceDirection.Send)
+                Thread.Sleep(50);
+        };
+        await client.OpenAsync();
+
+        HostLinkOutcomeUnknownError error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(
+            () => client.SendRawAsync("ONE"));
+        Assert.Equal(HostLinkOutcomeUnknownReason.InvalidResponse, error.Reason);
+        Assert.True(client.IsOpen);
+        client.TraceHook = null;
+        Assert.Equal("RECOVERED"u8.ToArray(), await client.SendRawAsync("RECOVER"));
+        await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task UdpMalformedResponseDiscardsSocketButRetainsLogicalEndpoint()
+    {
+        using var server = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+        int port = ((IPEndPoint)server.Client.LocalEndPoint!).Port;
+        var serverTask = Task.Run(async () =>
+        {
+            UdpReceiveResult malformedRequest = await server.ReceiveAsync();
+            await server.SendAsync(new byte[] { 0xFF, (byte)'\r' }, malformedRequest.RemoteEndPoint);
+            UdpReceiveResult recoveredRequest = await server.ReceiveAsync();
+            await server.SendAsync("58\r"u8.ToArray(), recoveredRequest.RemoteEndPoint);
+        });
+
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", port, HostLinkTransportMode.Udp, "keyence:kv-8000");
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.QueryModelAsync());
+        Assert.True(client.IsOpen);
+        KvModelInfo recovered = await client.QueryModelAsync();
+
+        Assert.Equal("58", recovered.Code);
+        await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     [Fact]

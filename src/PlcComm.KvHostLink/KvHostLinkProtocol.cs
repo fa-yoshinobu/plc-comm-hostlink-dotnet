@@ -5,6 +5,8 @@ namespace PlcComm.KvHostLink;
 
 internal static class KvHostLinkProtocol
 {
+    internal const int MaxRequestFrameLength = 65_507;
+    internal const int MaxRequestBodyLength = MaxRequestFrameLength - 1;
     private static readonly Regex ErrorRegex = new(@"^E[0-9]$", RegexOptions.Compiled);
     private static readonly byte[] Cr = { (byte)'\r' };
     private static readonly Encoding Utf8Strict = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
@@ -37,6 +39,12 @@ internal static class KvHostLinkProtocol
         catch (EncoderFallbackException ex)
         {
             throw new HostLinkProtocolError("Command body must contain ASCII characters only", ex);
+        }
+
+        if (payload.Length > MaxRequestBodyLength)
+        {
+            throw new HostLinkProtocolError(
+                $"Command body exceeds {MaxRequestBodyLength} ASCII bytes");
         }
 
         var result = new byte[payload.Length + Cr.Length];

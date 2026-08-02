@@ -6,8 +6,9 @@
 
 .NET library for KEYENCE KV Host Link PLC communication.
 
-Connections are IPv4-only. Use an IPv4 literal or a hostname with an IPv4
-result. The ordinary `KvHostLinkClient` includes arrival-order FIFO admission,
+Connections are IPv4-only. Use an unbracketed IPv4 literal or a hostname with
+an IPv4 result; bracketed IPv4 such as `[192.168.250.100]` is invalid. The
+ordinary `KvHostLinkClient` includes arrival-order FIFO admission,
 so one instance can be shared by asynchronous callers without a wrapper.
 
 ## PLC Comm Family

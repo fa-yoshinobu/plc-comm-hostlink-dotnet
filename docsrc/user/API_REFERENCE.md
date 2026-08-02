@@ -763,7 +763,7 @@ public Task OpenAsync(CancellationToken cancellationToken = default)
 
 Opens the configured transport without retrying.
 
-Remarks: An internal connect timeout throws `HostLinkTimeoutError`; caller cancellation throws `OperationCanceledException`.
+Remarks: An internal connect timeout throws `HostLinkTimeoutError`; caller cancellation throws `OperationCanceledException`. UDP open resolves the IPv4 endpoint once and creates a connected socket. Successful requests reuse that socket. An anomalous exchange discards only the socket; the next request creates a replacement from the retained endpoint without DNS resolution or an automatic request retry.
 
 ##### Open
 
@@ -1088,7 +1088,7 @@ Gets or sets the operation timeout from 1 through `MaxValue` milliseconds.
 public bool IsOpen { get; }
 ```
 
-Gets whether the selected TCP or UDP transport is currently open.
+Gets whether TCP is connected or a resolved UDP logical endpoint remains open.
 
 ### KvHostLinkClientExtensions
 
@@ -1186,7 +1186,7 @@ public static Task<IReadOnlyDictionary<string, object>> ReadNamedAsync(KvHostLin
 
 Reads multiple independent named values as one read-only aggregate operation.
 
-Remarks: Address format examples: "DM100:U" -- unsigned 16-bit (ushort) "DM100:F" -- float "DM100:S" -- signed 16-bit (short) "DM100:D" -- unsigned 32-bit "DM100:L" -- signed 32-bit "DM100.3" -- bit 3 within word (bool) "DM100.A" -- bit 10 within word (bool); bits 10-15 use hex digits A-F "DM100:COMMENT" -- PLC device comment text (string) Bit-in-word indices use hexadecimal notation (0-F), matching the KEYENCE address format. Bits 0-9 can be written as decimal digits; bits 10-15 must be written as A-F. For example, bit 12 is addressed as `"DM100.C"`, not `"DM100.12"`. When all requested addresses are compatible with helper-layer batching, this method merges contiguous reads into one or more `RDS` operations. Mixed or non-optimizable address sets fall back to sequential helper reads with the same return shape. A multi-request result is non-atomic: separate requests can observe different PLC scan times. Each declared scalar, float32 value, or bit-in-word value remains wholly inside one request, but callers requiring one coherent point in time must use a single-request read or a PLC-side snapshot/handshake. The complete plan is validated and copied before the first send, and the client turn is retained until every internal read succeeds or the aggregate fails. Internal wire requests follow the declared input sequence; the planner never sorts entries by device or address. Contiguous entries may share one wire read without changing result mapping. Named keys must be semantically unique after device, number, data type, bit index, and scalar count normalization. Spelling-only variants are rejected before transport, while distinct data-type views, bit indices, and overlapping multiword spans remain valid. Returned dictionary keys preserve the original input strings. This overload accepts no implicit comment codec. If an address uses `:COMMENT`, the complete aggregate is rejected before transport; use the overload that requires `HostLinkCommentEncoding`.
+Remarks: Address format examples: "DM100:U" -- unsigned 16-bit (ushort) "DM100:F" -- float "DM100:S" -- signed 16-bit (short) "DM100:D" -- unsigned 32-bit "DM100:L" -- signed 32-bit "DM100.3" -- bit 3 within word (bool) "DM100.A" -- bit 10 within word (bool); bits 10-15 use hex digits A-F "DM100:COMMENT" -- PLC device comment text (string) Bit-in-word indices use hexadecimal notation (0-F), matching the KEYENCE address format. Bits 0-9 can be written as decimal digits; bits 10-15 must be written as A-F. For example, bit 12 is addressed as `"DM100.C"`, not `"DM100.12"`. A multi-request result is non-atomic: separate requests can observe different PLC scan times. Each declared scalar, float32 value, or bit-in-word value remains wholly inside one request, but callers requiring one coherent point in time must use a single-request read or a PLC-side snapshot/handshake. The complete plan is validated and copied before the first send, and the client turn is retained until every internal read succeeds or the aggregate fails. The planner groups wire-compatible device families in first-appearance order, sorts addresses within each group, and merges contiguous spans up to the request limit. A non-batchable entry uses its native single read without disabling batching for other groups. Named keys must be semantically unique after device, number, data type, bit index, and scalar count normalization. Spelling-only variants are rejected before transport, while distinct data-type views, bit indices, and overlapping multiword spans remain valid. Returned dictionary keys preserve the original input strings. This overload accepts no implicit comment codec. If an address uses `:COMMENT`, the complete aggregate is rejected before transport; use the overload that requires `HostLinkCommentEncoding`.
 
 Returns: A dictionary keyed by the original input address strings. No partial result is returned on failure.
 
@@ -1221,7 +1221,7 @@ public static IAsyncEnumerable<IReadOnlyDictionary<string, object>> PollAsync(Kv
 
 Continuously polls the specified addresses and yields one non-atomic aggregate result each cycle.
 
-Remarks: If the address set is batchable, the compiled read plan is reused on every iteration for lower per-cycle overhead. Every cycle has the same input-order, indivisible-value, no-interleaving, and no-partial-result contract as `ReadNamedAsync`. This overload accepts no implicit comment codec. A plan containing `:COMMENT` is rejected during complete preflight before its first send; use the overload that requires `HostLinkCommentEncoding`.
+Remarks: The validated compiled read plan is reused on every iteration for lower per-cycle overhead. Every cycle has the same input-order result, indivisible-value, no-interleaving, and no-partial-result contract as `ReadNamedAsync`. The interval is a completion delay outside the client FIFO turn; cycles never overlap or catch up. This overload accepts no implicit comment codec. A plan containing `:COMMENT` is rejected during complete preflight before its first send; use the overload that requires `HostLinkCommentEncoding`.
 
 Parameters:
 - `client`: The client to use.
@@ -1406,7 +1406,7 @@ Explicit connection options for a Host Link session.
 Remarks: This type is intended for the unified high-level connection flow so generated documentation can describe transport, timeout, profile, and framing behavior in one place.
 
 Parameters:
-- `Host`: PLC IPv4 address or hostname that resolves to IPv4. IPv6 is not supported.
+- `Host`: Unbracketed PLC IPv4 address or hostname that resolves to IPv4. IPv6 and bracketed IPv4 literals are not supported.
 - `Transport`: Transport protocol.
 - `PlcProfile`: Canonical KEYENCE KV PLC profile for the session.
 - `Port`: Host Link port number.
@@ -1418,7 +1418,7 @@ Parameters:
 public string Host { get; init; }
 ```
 
-Gets the validated PLC IPv4 address or hostname.
+Gets the validated unbracketed PLC IPv4 address or hostname.
 
 ##### Port
 

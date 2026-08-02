@@ -25,7 +25,6 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private TcpClient? _tcp;
     private NetworkStream? _tcpStream;
     private UdpClient? _udp;
-    private UdpClient? _udpPredecessor;
     private IPEndPoint? _udpRemoteEndPoint;
     private bool _udpSessionOpen;
     private readonly object _lifecycleSync = new();
@@ -136,7 +135,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Action<HostLinkTraceFrame>? TraceHook { get; set; }
 
-    /// <summary>Gets whether the selected TCP or UDP transport is currently open.</summary>
+    /// <summary>Gets whether TCP is connected or a resolved UDP logical endpoint remains open.</summary>
     public bool IsOpen
     {
         get
@@ -150,6 +149,9 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     /// <remarks>
     /// An internal connect timeout throws <see cref="HostLinkTimeoutError"/>;
     /// caller cancellation throws <see cref="OperationCanceledException"/>.
+    /// UDP open resolves the IPv4 endpoint once and creates a connected socket. Successful requests
+    /// reuse that socket. An anomalous exchange discards only the socket; the next request creates a
+    /// replacement from the retained endpoint without DNS resolution or an automatic request retry.
     /// </remarks>
     public Task OpenAsync(CancellationToken cancellationToken = default)
         => ExecuteExclusiveAsync(() => OpenCoreAsync(cancellationToken), cancellationToken);
@@ -197,6 +199,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             return;
         }
 
+        UdpClient? udp = null;
         try
         {
             IPAddress remoteAddress = await KvHostLinkNetwork.ResolveIpv4AddressAsync(
@@ -204,6 +207,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                 operationCancellation.Token).ConfigureAwait(false);
             operationCancellation.Token.ThrowIfCancellationRequested();
             var remoteEndPoint = new IPEndPoint(remoteAddress, _port);
+            udp = CreateConnectedUdpSocket(remoteEndPoint);
             lock (_lifecycleSync)
             {
                 if (_disposed != 0 || _closing != 0 ||
@@ -214,6 +218,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                         new OperationCanceledException(operationCancellation.Token),
                         "UDP connect");
                 }
+                _udp = udp;
                 _udpRemoteEndPoint = remoteEndPoint;
                 _udpSessionOpen = true;
                 ResetProtocolStateNoLock();
@@ -221,6 +226,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         }
         catch (Exception error)
         {
+            udp?.Dispose();
             throw operationCancellation.Translate(error, "UDP connect");
         }
     }
@@ -246,8 +252,6 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         _tcp = null;
         _udp?.Dispose();
         _udp = null;
-        _udpPredecessor?.Dispose();
-        _udpPredecessor = null;
         _udpRemoteEndPoint = null;
         _udpSessionOpen = false;
         ResetProtocolStateNoLock();
@@ -494,6 +498,8 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     /// This is a single-request operation. Because arbitrary raw commands cannot be classified as
     /// read-only, any post-send failure is conservatively reported as
     /// <see cref="HostLinkOutcomeUnknownError"/>.
+    /// The ASCII command body is limited to 65,506 bytes; the terminating CR makes the maximum
+    /// complete request frame 65,507 bytes. Oversized input is rejected before transport access.
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public Task<byte[]> SendRawAsync(string body, CancellationToken cancellationToken = default)
@@ -594,106 +600,88 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         }
 
         UdpClient? udp = null;
-        bool exchangeCompleted = false;
         try
         {
             operationCancellation.Token.ThrowIfCancellationRequested();
-            udp = CreateUdpRequestSocket(operationCancellation);
+            udp = GetOrCreateUdpSocket(operationCancellation);
+            RejectUnownedUdpResponse(udp);
             sendMayHaveStarted = true;
             await udp.SendAsync(frame, operationCancellation.Token).ConfigureAwait(false);
             RecordSend(frame.Length);
             FireTrace(HostLinkTraceDirection.Send, frame);
             var result = await udp.ReceiveAsync(operationCancellation.Token).ConfigureAwait(false);
+            RejectExtraUdpResponse(udp);
             RecordReceive(result.Buffer.Length);
             FireTrace(HostLinkTraceDirection.Receive, result.Buffer);
             byte[] responseBody = KvHostLinkProtocol.ExtractBody(result.Buffer);
             if (responseBody.Length > MaxResponseBodyLength)
                 throw new HostLinkProtocolError($"Response body exceeds {MaxResponseBodyLength} bytes");
-            exchangeCompleted = true;
             return responseBody;
         }
         catch (Exception error)
         {
             // Host Link has no transaction ID. A failed datagram exchange
             // must never leave a delayed response for the next request.
-            CloseTransport();
+            DiscardUdpSocket(udp);
             Exception translated = operationCancellation.Translate(error, "UDP exchange");
             throw stateChanging && sendMayHaveStarted
                 ? CreateOutcomeUnknown(translated)
                 : translated;
         }
-        finally
-        {
-            if (exchangeCompleted)
-                RetainCompletedUdpRequestSocket(udp!);
-        }
     }
 
-    private UdpClient CreateUdpRequestSocket(
+    private UdpClient GetOrCreateUdpSocket(
         KvHostLinkOperationCancellation operationCancellation)
     {
-        UdpClient? createdSocket = null;
-        UdpClient? predecessorToDispose = null;
         lock (_lifecycleSync)
         {
             operationCancellation.Token.ThrowIfCancellationRequested();
             if (!_udpSessionOpen || _udpRemoteEndPoint is null || _disposed != 0 || _closing != 0)
                 throw new HostLinkClosedError();
-
-            IPEndPoint? predecessorEndPoint = _udpPredecessor?.Client.LocalEndPoint as IPEndPoint;
-            for (int attempt = 0; attempt < 16; attempt++)
-            {
-                var udp = new UdpClient(AddressFamily.InterNetwork);
-                try
-                {
-                    udp.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
-                    var localEndPoint = (IPEndPoint)udp.Client.LocalEndPoint!;
-                    if (predecessorEndPoint is not null && localEndPoint.Port == predecessorEndPoint.Port)
-                    {
-                        udp.Dispose();
-                        continue;
-                    }
-
-                    udp.Connect(_udpRemoteEndPoint);
-                    _udp = udp;
-                    createdSocket = udp;
-                    predecessorToDispose = _udpPredecessor;
-                    _udpPredecessor = null;
-                    break;
-                }
-                catch
-                {
-                    udp.Dispose();
-                    throw;
-                }
-            }
-
-            if (createdSocket is null)
-                throw new HostLinkConnectionError(
-                    "UDP bind did not allocate a local endpoint distinct from the predecessor generation.");
+            _udp ??= CreateConnectedUdpSocket(_udpRemoteEndPoint);
+            return _udp;
         }
-
-        predecessorToDispose?.Dispose();
-        return createdSocket;
     }
 
-    private void RetainCompletedUdpRequestSocket(UdpClient udp)
+    private static UdpClient CreateConnectedUdpSocket(IPEndPoint remoteEndPoint)
     {
-        UdpClient? socketToDispose = null;
+        var udp = new UdpClient(AddressFamily.InterNetwork);
+        try
+        {
+            udp.Connect(remoteEndPoint);
+            return udp;
+        }
+        catch
+        {
+            udp.Dispose();
+            throw;
+        }
+    }
+
+    private void DiscardUdpSocket(UdpClient? udp)
+    {
+        if (udp is null)
+            return;
         lock (_lifecycleSync)
         {
-            if (_udpSessionOpen && ReferenceEquals(_udp, udp))
-            {
+            if (ReferenceEquals(_udp, udp))
                 _udp = null;
-                socketToDispose = _udpPredecessor;
-                _udpPredecessor = udp;
-            }
-            else
-            {
-                socketToDispose = udp;
-            }
         }
-        socketToDispose?.Dispose();
+        udp.Dispose();
+    }
+
+    private static void RejectUnownedUdpResponse(UdpClient udp)
+    {
+        if (udp.Client.Available > 0)
+            throw new HostLinkProtocolError(
+                "Received an unowned extra UDP response before sending the next request.");
+    }
+
+    private static void RejectExtraUdpResponse(UdpClient udp)
+    {
+        if (udp.Client.Available > 0)
+            throw new HostLinkProtocolError(
+                "Received more than one UDP response datagram for one request.");
     }
 
     private void RejectUnownedTcpResponse()
@@ -855,12 +843,12 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         }
         catch (HostLinkProtocolError error)
         {
-            CloseTransport();
+            InvalidateProtocolState();
             throw stateChanging ? CreateOutcomeUnknown(error) : error;
         }
         catch (OperationCanceledException error)
         {
-            CloseTransport();
+            InvalidateProtocolState();
             Exception translated = operationCancellation.Translate(error, "response decode");
             throw stateChanging ? CreateOutcomeUnknown(translated) : translated;
         }
@@ -877,7 +865,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             stateChanging: true).ConfigureAwait(false);
         if (response != "OK")
         {
-            CloseTransport();
+            InvalidateProtocolState();
             var error = new HostLinkProtocolError(
                 $"Expected 'OK' but received '{response}' for command '{body}'");
             throw CreateOutcomeUnknown(error);
@@ -885,7 +873,18 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     }
 
     private void InvalidateProtocolState()
-        => CloseTransport();
+    {
+        if (_transportMode == HostLinkTransportMode.Tcp)
+        {
+            CloseTransport();
+            return;
+        }
+
+        UdpClient? udp;
+        lock (_lifecycleSync)
+            udp = _udp;
+        DiscardUdpSocket(udp);
+    }
 
 
     // --- Commands ---
@@ -920,7 +919,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             if (response == "0") return KvPlcMode.Program;
             if (response == "1") return KvPlcMode.Run;
 
-            CloseTransport();
+            InvalidateProtocolState();
             throw new HostLinkProtocolError($"Unsupported PLC mode response: {response}");
         }, cancellationToken);
 
@@ -1491,7 +1490,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         }
         catch (HostLinkProtocolError)
         {
-            CloseTransport();
+            InvalidateProtocolState();
             throw;
         }
     }

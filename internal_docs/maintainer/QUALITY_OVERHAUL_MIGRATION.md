@@ -663,6 +663,10 @@ Acceptance criteria:
 
 ## GOAL-HL-AGGREGATE-DEFER-001: Safe read-only aggregate splitting
 
+Historical note: PERF-001 supersedes this record's declared wire-order target. Complete preflight,
+input-order results, indivisible values, one FIFO turn, non-atomicity, and no-partial-result behavior
+remain in force.
+
 Implementation scope: `ReadNamedAsync`, each `PollAsync` cycle, and removal of
 the multi-request state-changing `WriteBitInWordAsync` helper.
 
@@ -1092,3 +1096,211 @@ The cross-ecosystem artifact review additionally found incomplete negative
 coverage for repository-only NuGet material. The accepted correction now
 rejects CI, cache/build, source, maintainer, release-output, tools, and
 credential-like paths/files. The hardened 12-file NuGet consumer gate passed.
+
+## REAUDIT-004 — Reject bracketed IPv4 input
+
+Implementation scope: public client construction and
+`KvHostLinkConnectionOptions` host validation.
+
+Target contract: IPv4 literals must be unbracketed. Inputs such as
+`[127.0.0.1]` fail during construction before DNS resolution, socket creation,
+connection, or transmission. Existing unbracketed IPv4, hostname, and IPv6
+handling otherwise remains unchanged.
+
+Compatibility impact: remove brackets from IPv4 configuration values before
+constructing the client or connection options.
+
+Acceptance criteria:
+
+1. Bracketed IPv4 is rejected by both public construction paths.
+2. Rejection occurs before any network operation.
+3. Unbracketed IPv4 remains valid.
+4. User documentation and the changelog describe the migration.
+
+- [x] Implementation and boundary tests completed.
+- [x] Documentation and migration guidance updated.
+- [x] All repository verification and final self-review passed.
+- [x] Live PLC verification is not required because validation rejects the input before communication.
+
+## REAUDIT-006 — Treat test-listener shutdown as normal completion
+
+Implementation scope: the asynchronous Host Link test server only; runtime library behavior is
+unchanged.
+
+Target contract: disposing a newly created test server may race with the listener accept loop.
+`InvalidOperationException` is ignored only after the server cancellation source has been
+cancelled. The same exception outside shutdown continues to fail the test.
+
+Compatibility impact: none. This changes test infrastructure only.
+
+Acceptance criteria:
+
+1. Immediate construction and disposal completes repeatedly without an intermittent failure.
+2. Only shutdown-associated `InvalidOperationException` is ignored.
+3. Runtime transport and public API files are unchanged by this item.
+
+- [x] Test infrastructure correction and regression test completed.
+- [x] All repository verification and final self-review passed.
+- [x] Live PLC verification is not required because this item affects only the loopback test listener.
+
+## REAUDIT-008 — Uniform raw request frame limit
+
+Implementation scope: the shared raw frame builder used by TCP and UDP.
+
+Target contract: an ASCII raw command body is at most 65,506 bytes and the
+terminating CR makes the complete request frame at most 65,507 bytes. Larger
+input fails before connection-state checks, DNS, socket creation, or I/O.
+Smaller command-specific limits remain authoritative.
+
+Compatibility impact: raw callers sending larger bodies must split work into
+valid protocol commands rather than depending on transport failure.
+
+Acceptance criteria:
+
+1. A 65,506-byte body builds and sends as a 65,507-byte frame.
+2. A 65,507-byte body fails for both TCP and UDP configurations before network access.
+3. Rejected input does not change traffic statistics.
+4. XML documentation, user guidance, and the changelog use the same units and limits.
+
+- [x] Implementation and TCP/UDP boundary tests completed.
+- [x] Documentation and migration guidance updated.
+- [x] All repository verification and final self-review passed.
+- [x] Live PLC verification is not required because the absolute transport-frame bound is enforced before communication.
+
+## PERF-001 — Minimal named-read request plan
+
+Implementation scope: `ReadNamedAsync`, the shared poll read plan, typed result decoding,
+aggregate tests, user documentation, and generated API documentation. This target supersedes
+the declared-wire-order portion of `GOAL-HL-AGGREGATE-DEFER-001`; declared result order remains
+unchanged.
+
+Target contract: validate the complete aggregate before transport; group wire-compatible device
+families by first appearance; sort addresses inside each group; merge contiguous spans up to each
+request limit without tearing a declared multiword value; and retain native single reads for
+non-batchable entries without disabling batching elsewhere. Materialize the complete dictionary in
+declared input order or return only an error. Multiple requests are explicitly non-atomic.
+
+Compatibility impact: wire requests may no longer follow caller input order. Code must not depend
+on internal request order; use the returned input-order mapping. Hex word views may be satisfied by
+a `.U` batch and locally formatted as four uppercase digits.
+
+Acceptance criteria:
+
+1. A later invalid or duplicate entry produces zero sends.
+2. Groups execute by first appearance and addresses inside a group execute in ascending order.
+3. Contiguous compatible values use the minimum legal `RDS` segments, including capacity splits
+   that never tear DWord or Float values.
+4. COMMENT, native-32-bit, and direct-bit word views do not force unrelated compatible values to
+   use individual reads.
+5. Returned keys and values preserve declared input order, and any internal failure exposes no
+   partial dictionary.
+
+- [x] Implementation completed in this repository.
+- [x] Targeted grouping, sorting, mixed-native, capacity, failure, and result-order tests added or updated.
+- [x] Full static, unit, integration, sample, package, and current-worktree source-archive checks passed.
+- [x] Codex final self-review completed against the approved contract and Host Link family consistency.
+- [x] Live PLC verification is not required; planning and result mapping are deterministic loopback behavior.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+Self-review disposition for PERF-001/PERF-002/PERF-008B/PERF-008C:
+
+- Accepted and fixed: UDP framing failures discarded only the socket, but later semantic/shape/comment
+  decode failures still closed the complete logical session. All response-validation invalidation now
+  discards only the current UDP socket while retaining the resolved endpoint; TCP behavior is unchanged.
+- Accepted and fixed: queued duplicates were checked only before the following request. The receive
+  path now also rejects an already queued second datagram before accepting the current exchange; the
+  documented check-to-send and post-success arrival races remain because Host Link UDP has no request ID.
+- Rejected findings: none.
+- Duplicate findings: none.
+- Deferred findings: none. The final repository-wide static, test, sample, package, documentation,
+  and current-worktree source-archive gates passed for the accepted implementation.
+
+## PERF-002 — Healthy UDP socket reuse with anomaly retirement
+
+Implementation scope: UDP open, request send/receive, protocol invalidation, close, lifecycle tests,
+user guidance, and generated API documentation.
+
+Target contract: explicit UDP open resolves the IPv4 endpoint once and creates one connected
+socket. Fully valid exchanges reuse it. Timeout, caller cancellation, I/O failure, malformed or
+protocol-invalid response, and a pre-send unowned datagram discard the affected socket while
+retaining the logical session and resolved endpoint. The next request creates one replacement
+without DNS resolution and without retrying the failed request. Explicit close removes the socket,
+endpoint, and logical session. A duplicate arriving after the pre-send check and before send remains
+an unavoidable transaction-ID-free UDP race and is documented.
+
+Compatibility impact: `IsOpen` remains true after a UDP exchange anomaly and the next request may
+proceed without `OpenAsync`. Successful UDP requests reuse one local socket instead of selecting a
+new source port for every request.
+
+Acceptance criteria:
+
+1. Two successful exchanges use the same connected socket endpoint.
+2. Timeout and caller cancellation discard the affected socket, keep `IsOpen`, and allow a later
+   request through a replacement socket without another open.
+3. Malformed responses and queued pre-send datagrams follow the same discard-and-replace behavior.
+4. A pre-send unowned datagram causes no send; no failed exchange is retried automatically.
+5. Explicit close interrupts active UDP I/O and clears the complete logical session.
+
+- [x] Implementation completed in this repository.
+- [x] Targeted reuse, timeout, cancellation, malformed-response, unowned-datagram, recovery, and close tests added or updated.
+- [x] Full static, unit, integration, sample, package, and current-worktree source-archive checks passed.
+- [x] Codex final self-review completed against the approved contract and Host Link family consistency.
+- [x] Live PLC verification is not required; socket lifecycle and response ownership are deterministic loopback behavior.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## PERF-008B — One FIFO turn for a complete aggregate
+
+Implementation scope: named-read execution staging and FIFO integration.
+
+Target contract: snapshot, validate, and compile before FIFO admission. Once admitted, retain one
+FIFO turn through every planned request and the last response decode or all-or-error failure.
+Release the turn before pure dictionary materialization. Close may still interrupt the active turn;
+metadata-only getters remain outside admission.
+
+Compatibility impact: none to the returned data contract. A later same-client operation cannot
+interleave between batchable and native single segments of one aggregate.
+
+Acceptance criteria:
+
+1. A competing same-client operation cannot send until every aggregate segment and decode completes.
+2. Batchable and native single segments share the same FIFO turn.
+3. Failure or cancellation stops before later segments and returns no partial dictionary.
+4. Dictionary materialization occurs after the FIFO lease is released.
+
+- [x] Implementation completed in this repository.
+- [x] Targeted mixed-segment FIFO, failure, cancellation, and no-partial-result tests added or updated.
+- [x] Full static, unit, integration, sample, package, and current-worktree source-archive checks passed.
+- [x] Codex final self-review completed against the approved contract and Host Link family consistency.
+- [x] Live PLC verification is not required; admission ordering is deterministic loopback behavior.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+## PERF-008C — Compile-once non-overlapping polling
+
+Implementation scope: `PollAsync`, shared compiled named-read plan, polling tests, user guidance,
+and generated API documentation.
+
+Target contract: snapshot, validate, and compile the fixed address plan once when enumeration
+starts. Every cycle reuses exactly that plan, stages the complete all-or-error result in one FIFO
+turn, then releases the turn before its completion-delay interval. Cycles do not overlap and do not
+catch up after slow work.
+
+Compatibility impact: the interval is explicitly measured after each completed cycle rather than
+as a fixed-rate schedule. Other same-client operations can run during that delay.
+
+Acceptance criteria:
+
+1. Invalid interval or plan data fails before the first send.
+2. Every cycle emits the same compiled request plan and preserves input-order results.
+3. One cycle cannot overlap another and no missed interval causes catch-up sends.
+4. A competing same-client operation can use the FIFO during the completion delay.
+
+- [x] Implementation completed in this repository.
+- [x] Targeted plan-reuse, invalid-interval, input-order, and FIFO-release-during-delay tests added or updated.
+- [x] Full static, unit, integration, sample, package, and current-worktree source-archive checks passed.
+- [x] Codex final self-review completed against the approved contract and Host Link family consistency.
+- [x] Live PLC verification is not required; scheduling and plan reuse are deterministic loopback behavior.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.

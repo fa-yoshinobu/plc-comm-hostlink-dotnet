@@ -22,6 +22,32 @@ public sealed class OverhaulConcurrencyAndAggregateTests
     }
 
     [Fact]
+    public void EndpointContractRejectsBracketedIpv4DuringConstruction()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new KvHostLinkClient("[127.0.0.1]", 8501, HostLinkTransportMode.Tcp, TestProfile));
+        Assert.Throws<ArgumentException>(() =>
+            new KvHostLinkClient("[192.168.250.100]", 8501, HostLinkTransportMode.Udp, TestProfile));
+        Assert.Throws<ArgumentException>(() =>
+            new KvHostLinkConnectionOptions(
+                "[127.0.0.1]", 8501, HostLinkTransportMode.Tcp, TestProfile));
+
+        using var client = new KvHostLinkClient(
+            "127.0.0.1", 8501, HostLinkTransportMode.Tcp, TestProfile);
+        Assert.Equal(TestProfile, client.PlcProfile);
+    }
+
+    [Fact]
+    public async Task TestServerCanBeDisposedImmediatelyWithoutShutdownRace()
+    {
+        for (int iteration = 0; iteration < 50; iteration++)
+        {
+            var server = new AsyncHostLinkServer((_, _) => Task.FromResult("OK"));
+            await server.DisposeAsync();
+        }
+    }
+
+    [Fact]
     public void LiveClientHasNoPerCallProfileOverrideAndProfileIsImmutable()
     {
         PropertyInfo profile = typeof(KvHostLinkClient).GetProperty(nameof(KvHostLinkClient.PlcProfile))!;
@@ -184,27 +210,28 @@ public sealed class OverhaulConcurrencyAndAggregateTests
     }
 
     [Fact]
-    public async Task AggregatePreservesInputWireOrderAndBlocksLaterOperations()
+    public async Task AggregateSortsEachWireCompatibleGroupAndBlocksLaterOperations()
     {
         var firstSeen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var releaseFirst = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         await using var server = new AsyncHostLinkServer(async (command, _) =>
         {
-            if (command == "RDS DM5.U 1")
+            if (command == "RDS DM0.U 4")
             {
                 firstSeen.TrySetResult();
                 await releaseFirst.Task.ConfigureAwait(false);
-                return "5";
+                return "10 20 0 30";
             }
             return command switch
             {
-                "RDS DM0.U 4" => "10 20 0 30",
+                "RDS DM5.U 1" => "5",
+                "RD Z1.D" => "70000",
                 "RD DM9.U" => "9",
                 _ => "E1",
             };
         });
         await using var client = await OpenClientAsync(server.Port);
-        string[] addresses = ["DM5:U", "DM0:U", "DM1:D", "DM3:U"];
+        string[] addresses = ["DM5:U", "DM0:U", "DM1:D", "DM3:U", "Z1:D"];
         Task<IReadOnlyDictionary<string, object>> aggregate = client.ReadNamedAsync(addresses);
         await firstSeen.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Task<string[]> later = client.ReadAsync("DM9", ".U");
@@ -215,8 +242,11 @@ public sealed class OverhaulConcurrencyAndAggregateTests
         Assert.Equal((ushort)10, result["DM0:U"]);
         Assert.Equal((uint)20, result["DM1:D"]);
         Assert.Equal((ushort)30, result["DM3:U"]);
+        Assert.Equal((uint)70_000, result["Z1:D"]);
         Assert.Equal(["9"], await later);
-        Assert.Equal(["RDS DM5.U 1", "RDS DM0.U 4", "RD DM9.U"], server.Commands.ToArray());
+        Assert.Equal(
+            ["RDS DM0.U 4", "RDS DM5.U 1", "RD Z1.D", "RD DM9.U"],
+            server.Commands.ToArray());
     }
 
     [Fact]
@@ -415,6 +445,9 @@ public sealed class OverhaulConcurrencyAndAggregateTests
             try
             {
                 await _runTask.ConfigureAwait(false);
+            }
+            catch (InvalidOperationException) when (_cts.IsCancellationRequested)
+            {
             }
             catch (Exception error) when (error is OperationCanceledException or ObjectDisposedException or SocketException or IOException)
             {
