@@ -4,12 +4,12 @@ This document is the release checklist for `PlcComm.KvHostLink`.
 
 ## Scope
 
-Confirm that the release contains only public .NET assets:
+Confirm that the source archive contains the complete buildable and reviewable repository contract:
 
-- `src/PlcComm.KvHostLink`
-- `README.md`
-- `CHANGELOG.md`
-- `LICENSE`
+- solution and project manifests, `src/PlcComm.KvHostLink`, and every tracked `samples/` file
+- repository tests and the standard pages under `docsrc/user/`
+- tracked validation and maintainer material under `.github/`, `docsrc/maintainer/`, `internal_docs/`, `scripts/`, and `tools/`
+- `run_ci.bat`, `release_check.bat`, `README.md`, `CHANGELOG.md`, `LICENSE`, and repository instruction/TODO files when tracked
 
 Confirm that local output is excluded:
 
@@ -53,7 +53,7 @@ Before creating a release tag, confirm these review items:
 Repository workflows:
 
 - `.github/workflows/ci.yml`
-  - restore, build, and test on Windows for pushes and pull requests
+  - on `main` pushes and pull requests, checks no-auto-publish policy, source-archive completeness/build/test, generated-reference freshness, documented API differences, sample/docs/package gates, formatting, and a bounded Linux lifecycle smoke test
 - `.github/workflows/release.yml`
   - build release artifacts on tag pushes or an existing-tag manual dispatch
   - reject tag, `Directory.Build.props`, or package-version mismatches

@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Docs: Corrected generated `init` accessors, distinguished waiting cancellation from active-operation session retirement, and made general expansion-buffer and low-level examples read-only with explicit recovery guidance.
+- Tests: Added real mutable/init-only generator fixtures and documentation-contract checks for lifecycle, generated summaries, and state-changing example safety.
 - Library: TCP rejects and retires the connection when one receive already contains non-empty data after the first terminated response, preventing response misassociation.
 - Library: Successful UDP requests now retire their dedicated socket generation while keeping the logical client open, so a delayed datagram cannot satisfy the next request.
 - Library: The connected-client factory disposes a client whose open operation fails without replacing the original failure.

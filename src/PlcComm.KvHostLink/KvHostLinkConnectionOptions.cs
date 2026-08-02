@@ -46,7 +46,7 @@ public sealed record KvHostLinkConnectionOptions(
         init => _transport = ValidateTransport(value);
     }
 
-    /// <summary>Gets or sets the canonical KEYENCE KV PLC profile for the session.</summary>
+    /// <summary>Gets or initializes the canonical KEYENCE KV PLC profile for the session.</summary>
     public string PlcProfile
     {
         get => _plcProfile;

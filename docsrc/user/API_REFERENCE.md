@@ -289,19 +289,19 @@ Immutable lifetime traffic counters for one Host Link client. TCP receive bytes 
 ##### RequestCount
 
 ```csharp
-public ulong RequestCount { get; set; }
+public ulong RequestCount { get; init; }
 ```
 
 ##### TxBytes
 
 ```csharp
-public ulong TxBytes { get; set; }
+public ulong TxBytes { get; init; }
 ```
 
 ##### RxBytes
 
 ```csharp
-public ulong RxBytes { get; set; }
+public ulong RxBytes { get; init; }
 ```
 
 ### HostLinkTransportMode
@@ -349,19 +349,19 @@ public string ToText()
 ##### DeviceType
 
 ```csharp
-public string DeviceType { get; set; }
+public string DeviceType { get; init; }
 ```
 
 ##### Number
 
 ```csharp
-public int Number { get; set; }
+public int Number { get; init; }
 ```
 
 ##### Suffix
 
 ```csharp
-public string Suffix { get; set; }
+public string Suffix { get; init; }
 ```
 
 ### KvDeviceRangeCatalog
@@ -387,37 +387,37 @@ public KvDeviceRangeEntry Entry(string deviceType)
 ##### PlcProfile
 
 ```csharp
-public string PlcProfile { get; set; }
+public string PlcProfile { get; init; }
 ```
 
 ##### ModelCode
 
 ```csharp
-public string ModelCode { get; set; }
+public string ModelCode { get; init; }
 ```
 
 ##### HasModelCode
 
 ```csharp
-public bool HasModelCode { get; set; }
+public bool HasModelCode { get; init; }
 ```
 
 ##### RequestedPlcProfile
 
 ```csharp
-public string RequestedPlcProfile { get; set; }
+public string RequestedPlcProfile { get; init; }
 ```
 
 ##### ResolvedPlcProfile
 
 ```csharp
-public string ResolvedPlcProfile { get; set; }
+public string ResolvedPlcProfile { get; init; }
 ```
 
 ##### Entries
 
 ```csharp
-public IReadOnlyList<KvDeviceRangeEntry> Entries { get; set; }
+public IReadOnlyList<KvDeviceRangeEntry> Entries { get; init; }
 ```
 
 ### KvDeviceRangeCategory
@@ -475,79 +475,79 @@ public KvDeviceRangeEntry(string Device, string DeviceType, KvDeviceRangeCategor
 ##### Device
 
 ```csharp
-public string Device { get; set; }
+public string Device { get; init; }
 ```
 
 ##### DeviceType
 
 ```csharp
-public string DeviceType { get; set; }
+public string DeviceType { get; init; }
 ```
 
 ##### Category
 
 ```csharp
-public KvDeviceRangeCategory Category { get; set; }
+public KvDeviceRangeCategory Category { get; init; }
 ```
 
 ##### IsBitDevice
 
 ```csharp
-public bool IsBitDevice { get; set; }
+public bool IsBitDevice { get; init; }
 ```
 
 ##### Notation
 
 ```csharp
-public KvDeviceRangeNotation Notation { get; set; }
+public KvDeviceRangeNotation Notation { get; init; }
 ```
 
 ##### Supported
 
 ```csharp
-public bool Supported { get; set; }
+public bool Supported { get; init; }
 ```
 
 ##### LowerBound
 
 ```csharp
-public uint LowerBound { get; set; }
+public uint LowerBound { get; init; }
 ```
 
 ##### UpperBound
 
 ```csharp
-public uint? UpperBound { get; set; }
+public uint? UpperBound { get; init; }
 ```
 
 ##### PointCount
 
 ```csharp
-public uint? PointCount { get; set; }
+public uint? PointCount { get; init; }
 ```
 
 ##### AddressRange
 
 ```csharp
-public string AddressRange { get; set; }
+public string AddressRange { get; init; }
 ```
 
 ##### Source
 
 ```csharp
-public string Source { get; set; }
+public string Source { get; init; }
 ```
 
 ##### Notes
 
 ```csharp
-public string Notes { get; set; }
+public string Notes { get; init; }
 ```
 
 ##### Segments
 
 ```csharp
-public IReadOnlyList<KvDeviceRangeSegment> Segments { get; set; }
+public IReadOnlyList<KvDeviceRangeSegment> Segments { get; init; }
 ```
 
 ### KvDeviceRangeNotation
@@ -587,49 +587,49 @@ public KvDeviceRangeSegment(string Device, KvDeviceRangeCategory Category, bool 
 ##### Device
 
 ```csharp
-public string Device { get; set; }
+public string Device { get; init; }
 ```
 
 ##### Category
 
 ```csharp
-public KvDeviceRangeCategory Category { get; set; }
+public KvDeviceRangeCategory Category { get; init; }
 ```
 
 ##### IsBitDevice
 
 ```csharp
-public bool IsBitDevice { get; set; }
+public bool IsBitDevice { get; init; }
 ```
 
 ##### Notation
 
 ```csharp
-public KvDeviceRangeNotation Notation { get; set; }
+public KvDeviceRangeNotation Notation { get; init; }
 ```
 
 ##### LowerBound
 
 ```csharp
-public uint LowerBound { get; set; }
+public uint LowerBound { get; init; }
 ```
 
 ##### UpperBound
 
 ```csharp
-public uint? UpperBound { get; set; }
+public uint? UpperBound { get; init; }
 ```
 
 ##### PointCount
 
 ```csharp
-public uint? PointCount { get; set; }
+public uint? PointCount { get; init; }
 ```
 
 ##### AddressRange
 
 ```csharp
-public string AddressRange { get; set; }
+public string AddressRange { get; init; }
 ```
 
 ### KvHostLinkAddress
@@ -1415,7 +1415,7 @@ Parameters:
 ##### Host
 
 ```csharp
-public string Host { get; set; }
+public string Host { get; init; }
 ```
 
 Gets the validated PLC IPv4 address or hostname.
@@ -1423,7 +1423,7 @@ Gets the validated PLC IPv4 address or hostname.
 ##### Port
 
 ```csharp
-public int Port { get; set; }
+public int Port { get; init; }
 ```
 
 Gets the validated Host Link port.
@@ -1431,7 +1431,7 @@ Gets the validated Host Link port.
 ##### Transport
 
 ```csharp
-public HostLinkTransportMode Transport { get; set; }
+public HostLinkTransportMode Transport { get; init; }
 ```
 
 Gets the explicitly selected transport.
@@ -1439,15 +1439,15 @@ Gets the explicitly selected transport.
 ##### PlcProfile
 
 ```csharp
-public string PlcProfile { get; set; }
+public string PlcProfile { get; init; }
 ```
 
-Gets or sets the canonical KEYENCE KV PLC profile for the session.
+Gets or initializes the canonical KEYENCE KV PLC profile for the session.
 
 ##### Timeout
 
 ```csharp
-public TimeSpan? Timeout { get; set; }
+public TimeSpan? Timeout { get; init; }
 ```
 
 Gets the optional communication timeout in the supported 1 through `MaxValue` millisecond range.
@@ -1551,13 +1551,13 @@ public KvHostLinkPlcProfile(string Name, string DisplayName)
 ##### Name
 
 ```csharp
-public string Name { get; set; }
+public string Name { get; init; }
 ```
 
 ##### DisplayName
 
 ```csharp
-public string DisplayName { get; set; }
+public string DisplayName { get; init; }
 ```
 
 ### KvHostLinkPlcProfileDescriptor
@@ -1581,25 +1581,25 @@ Canonical metadata used to select and describe one KV Host Link PLC profile.
 ##### CanonicalName
 
 ```csharp
-public string CanonicalName { get; set; }
+public string CanonicalName { get; init; }
 ```
 
 ##### DisplayName
 
 ```csharp
-public string DisplayName { get; set; }
+public string DisplayName { get; init; }
 ```
 
 ##### Connectable
 
 ```csharp
-public bool Connectable { get; set; }
+public bool Connectable { get; init; }
 ```
 
 ##### BaseProfile
 
 ```csharp
-public string BaseProfile { get; set; }
+public string BaseProfile { get; init; }
 ```
 
 ### KvHostLinkPlcProfiles
@@ -1750,7 +1750,7 @@ Returns: Canonical helper text such as `DM100:U`, `DM100:F`, or `DM100.A`.
 ##### BaseAddress
 
 ```csharp
-public KvDeviceAddress BaseAddress { get; set; }
+public KvDeviceAddress BaseAddress { get; init; }
 ```
 
 Base word device address without a logical suffix.
@@ -1758,7 +1758,7 @@ Base word device address without a logical suffix.
 ##### DataType
 
 ```csharp
-public string DataType { get; set; }
+public string DataType { get; init; }
 ```
 
 Logical data type code such as `U`, `S`, `D`, `L`, `F`, `BIT`, or `COMMENT`.
@@ -1766,7 +1766,7 @@ Logical data type code such as `U`, `S`, `D`, `L`, `F`, `BIT`, or `COMMENT`.
 ##### BitIndex
 
 ```csharp
-public int? BitIndex { get; set; }
+public int? BitIndex { get; init; }
 ```
 
 Bit index inside the base word when the logical address targets a bit-in-word.
@@ -1800,13 +1800,13 @@ Information about a PLC model.
 ##### Code
 
 ```csharp
-public string Code { get; set; }
+public string Code { get; init; }
 ```
 
 ##### Model
 
 ```csharp
-public string Model { get; set; }
+public string Model { get; init; }
 ```
 
 ### KvMonitorWordTarget
@@ -1830,13 +1830,13 @@ One base device and explicit data format used by word monitoring.
 ##### Device
 
 ```csharp
-public string Device { get; set; }
+public string Device { get; init; }
 ```
 
 ##### DataFormat
 
 ```csharp
-public string DataFormat { get; set; }
+public string DataFormat { get; init; }
 ```
 
 ### KvPlcMode
@@ -1882,17 +1882,17 @@ Composite timer/counter value returned by Host Link T/C reads.
 ##### Status
 
 ```csharp
-public uint Status { get; set; }
+public uint Status { get; init; }
 ```
 
 ##### Current
 
 ```csharp
-public uint Current { get; set; }
+public uint Current { get; init; }
 ```
 
 ##### Preset
 
 ```csharp
-public uint Preset { get; set; }
+public uint Preset { get; init; }
 ```

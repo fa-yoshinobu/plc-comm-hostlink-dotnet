@@ -21,6 +21,8 @@ if %errorlevel% neq 0 (echo [ERROR] Documented API diff classification failed. &
 echo [4/13] Testing API reference generator helpers...
 python scripts\test_generate_api_reference.py
 if %errorlevel% neq 0 (echo [ERROR] API reference generator helper tests failed. & exit /b %errorlevel%)
+python scripts\test_documentation_examples.py
+if %errorlevel% neq 0 (echo [ERROR] Documentation example tests failed. & exit /b %errorlevel%)
 
 echo [5/13] Validating API reference...
 python scripts\generate_api_reference.py --assembly src\PlcComm.KvHostLink\bin\Debug\net8.0\PlcComm.KvHostLink.dll --xml src\PlcComm.KvHostLink\bin\Debug\net8.0\PlcComm.KvHostLink.xml --output docsrc\user\API_REFERENCE.md --title "KV Host Link .NET API Reference" --package PlcComm.KvHostLink --check

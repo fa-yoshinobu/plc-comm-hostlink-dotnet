@@ -88,12 +88,13 @@ non-atomic aggregate semantics are acceptable.
 Keep one `KvHostLinkClient` open for repeated reads, writes, and polling. Its
 built-in FIFO admits public operations in arrival order and permits only one
 active wire transaction. Cancelling a waiting operation sends nothing; its
-transaction timeout starts only when it becomes active. Recursive use of the
-same client from a callback is rejected with `HostLinkReentrancyError`. Separate
-client instances remain independent. Commands never open or reconnect
-implicitly. After `CloseAsync`, timeout, cancellation, EOF, or transport
-failure, call `OpenAsync` explicitly before a new command when it is safe to do
-so. A failed command is never retried automatically.
+transaction timeout starts only when it becomes active, and the open transport
+generation remains usable. Recursive use of the same client from a callback is
+rejected with `HostLinkReentrancyError`. Separate client instances remain
+independent. Commands never open or reconnect implicitly. After `CloseAsync`,
+timeout, active-operation cancellation, EOF, or transport failure, call
+`OpenAsync` explicitly before a new command when it is safe to do so. A failed
+command is never retried automatically.
 
 ## Read a single value
 
@@ -375,17 +376,16 @@ string[] bufferWords = await client.ReadExpansionUnitBufferAsync(
     count: 4,
     dataFormat: ".U");
 
-await client.WriteExpansionUnitBufferAsync(
-    unitNo: 0,
-    address: 10,
-    values: new ushort[] { 1, 2, 3, 4 },
-    dataFormat: ".U");
-
 Console.WriteLine($"Read {bufferWords.Length} expansion buffer values.");
 ```
 
 Expansion unit buffer methods access module buffer memory by unit number, buffer address, count, and data format.
 The data format is mandatory and must be `.U`, `.S`, `.D`, `.L`, or `.H`.
+The general example is intentionally read-only. Use
+`WriteExpansionUnitBufferAsync` only with a module buffer prepared for
+controlled testing. Save the original values first and restore them afterward.
+After an outcome-unknown failure, reopen and reconcile the actual PLC state
+before deciding whether restoration or any retry is safe.
 
 ## Low-level numeric addresses
 
@@ -393,8 +393,11 @@ Low-level numeric methods require a base device and a separate data format:
 
 ```csharp
 string[] values = await client.ReadConsecutiveAsync("DM100", 4, ".U");
-await client.WriteAsync("DM200", 123u, ".D");
 ```
+
+This example is also intentionally read-only. Use `WriteAsync` only with a
+controlled test address and the same save, restore, and outcome-reconciliation
+rules described above.
 
 Do not pass `DM100.U` or another suffix inside the device argument. Suffix input
 is rejected even when it matches the separate format. Direct bit devices are
