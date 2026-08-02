@@ -861,11 +861,19 @@ public Task ForcedResetAsync(string device, CancellationToken cancellationToken 
 public Task<string[]> ReadAsync(string device, CancellationToken cancellationToken = default)
 ```
 
+Reads one device using its canonical Host Link format.
+
+Remarks: Timer/counter reads return three tokens. The first token is the PLC's structural status and remains the exact `0` or `1`; numeric parsing applies only to the current and preset tokens.
+
 ##### ReadAsync
 
 ```csharp
 public Task<string[]> ReadAsync(string device, string dataFormat, CancellationToken cancellationToken = default)
 ```
+
+Reads one device with an explicit Host Link numeric format.
+
+Remarks: Timer/counter reads return three tokens. The first token is the PLC's structural status and remains the exact `0` or `1`; the selected numeric format applies only to the current and preset tokens. In particular, hexadecimal reads normalize only those two values to four uppercase digits and never synthesize `0000` or `0001` for the status.
 
 ##### ReadConsecutiveAsync
 
@@ -1815,17 +1823,21 @@ public string Model { get; init; }
 public sealed class KvMonitorWordTarget
 ```
 
-One base device and explicit data format used by word monitoring.
+One base device and optional data format used by word monitoring.
 
 #### Members
 
 ##### KvMonitorWordTarget
 
 ```csharp
-public KvMonitorWordTarget(string Device, string DataFormat)
+public KvMonitorWordTarget(string Device, string DataFormat = null)
 ```
 
-One base device and explicit data format used by word monitoring.
+One base device and optional data format used by word monitoring.
+
+Parameters:
+- `Device`: The base device without a data-format suffix.
+- `DataFormat`: The explicit numeric data format, or `null` only for a direct-bit device whose bare MWS/MWR representation is an unsigned packed 16-bit word.
 
 ##### Device
 
@@ -1833,11 +1845,15 @@ One base device and explicit data format used by word monitoring.
 public string Device { get; init; }
 ```
 
+The base device without a data-format suffix.
+
 ##### DataFormat
 
 ```csharp
 public string DataFormat { get; init; }
 ```
+
+The explicit numeric data format, or `null` only for a direct-bit device whose bare MWS/MWR representation is an unsigned packed 16-bit word.
 
 ### KvPlcMode
 

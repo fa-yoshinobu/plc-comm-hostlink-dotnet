@@ -122,8 +122,6 @@ public static class KvHostLinkClientExtensions
             throw new HostLinkProtocolError("dtype is required.");
 
         var parsedDevice = KvHostLinkDevice.RequireBaseDevice(device);
-        bool directBitDevice = KvHostLinkModels.DirectBitDeviceTypes.Contains(parsedDevice.DeviceType);
-
         if (normalized == "F")
         {
             KvHostLinkDevice.ValidateFloat32DeviceType(parsedDevice.DeviceType, device);
@@ -152,20 +150,6 @@ public static class KvHostLinkClientExtensions
         var tokens = operationAlreadyAdmitted
             ? await client.ReadCoreAsync(device, fmt, 1, false, ct).ConfigureAwait(false)
             : await client.ReadAsync(device, fmt, ct).ConfigureAwait(false);
-        if (directBitDevice)
-        {
-            uint packed = PackDirectBitTokens(tokens, normalized is "D" or "L" ? 32 : 16, device);
-            return normalized switch
-            {
-                "U" => (object)(ushort)packed,
-                "S" => (object)unchecked((short)packed),
-                "D" => packed,
-                "L" => (object)unchecked((int)packed),
-                "H" => ((ushort)packed).ToString("X4", CultureInfo.InvariantCulture),
-                _ => throw new HostLinkProtocolError($"Unsupported direct-bit word dtype '{dtype}'."),
-            };
-        }
-
         bool timerCounterComposite = (parsedDevice.DeviceType is "T" or "C") && (normalized is "U" or "S" or "D" or "L" or "H");
         var raw = timerCounterComposite
             ? RequireLastDataToken(tokens, device)
@@ -906,9 +890,7 @@ public static class KvHostLinkClientExtensions
         if (request.DataType == "BIT_IN_WORD")
         {
             string[] tokens = await client.ReadCoreAsync(baseAddress, ".U", 1, false, ct).ConfigureAwait(false);
-            int word = DirectBitDeviceTypes.Contains(request.BaseAddress.DeviceType)
-                ? (ushort)PackDirectBitTokens(tokens, 16, baseAddress)
-                : ushort.Parse(RequireDataToken(tokens, baseAddress), CultureInfo.InvariantCulture);
+            int word = ushort.Parse(RequireDataToken(tokens, baseAddress), CultureInfo.InvariantCulture);
             return ((word >> request.BitIndex) & 1) != 0;
         }
 
@@ -1069,21 +1051,6 @@ public static class KvHostLinkClientExtensions
             default:
                 throw new HostLinkProtocolError($"Invalid direct bit response token: {token}");
         }
-    }
-
-    private static uint PackDirectBitTokens(string[] tokens, int expectedCount, string context)
-    {
-        if (tokens.Length != expectedCount)
-            throw new HostLinkProtocolError(
-                $"Direct-bit word response for '{context}' contained {tokens.Length} tokens; expected {expectedCount}.");
-
-        uint value = 0;
-        for (int bit = 0; bit < tokens.Length; bit++)
-        {
-            if (ParseBoolToken(tokens[bit]))
-                value |= 1u << bit;
-        }
-        return value;
     }
 
     private static string RequireDataToken(string[] tokens, string context)

@@ -1026,9 +1026,22 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         await ExpectOkAsync($"RS {addr.ToText()}", cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Reads one device using its canonical Host Link format.</summary>
+    /// <remarks>
+    /// Timer/counter reads return three tokens. The first token is the PLC's structural status and
+    /// remains the exact <c>0</c> or <c>1</c>; numeric parsing applies only to the current and
+    /// preset tokens.
+    /// </remarks>
     public Task<string[]> ReadAsync(string device, CancellationToken cancellationToken = default)
         => ExecuteExclusiveAsync(() => ReadCoreAsync(device, null, 1, false, cancellationToken), cancellationToken);
 
+    /// <summary>Reads one device with an explicit Host Link numeric format.</summary>
+    /// <remarks>
+    /// Timer/counter reads return three tokens. The first token is the PLC's structural status and
+    /// remains the exact <c>0</c> or <c>1</c>; the selected numeric format applies only to the
+    /// current and preset tokens. In particular, hexadecimal reads normalize only those two values
+    /// to four uppercase digits and never synthesize <c>0000</c> or <c>0001</c> for the status.
+    /// </remarks>
     public Task<string[]> ReadAsync(string device, string dataFormat, CancellationToken cancellationToken = default)
         => ExecuteExclusiveAsync(() => ReadCoreAsync(device, dataFormat, 1, false, cancellationToken), cancellationToken);
 
@@ -1064,7 +1077,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         int expectedCount = consecutive
             ? count
             : KvHostLinkDevice.ReadResponseTokenCount(address.DeviceType, suffix);
-        string responseFormat = KvHostLinkModels.DirectBitDeviceTypes.Contains(address.DeviceType)
+        string responseFormat = KvHostLinkModels.DirectBitDeviceTypes.Contains(address.DeviceType) && suffix.Length == 0
             ? ""
             : suffix;
         try
@@ -1260,6 +1273,10 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         string[] formatSnapshot = formats.ToArray();
         return ExecuteExclusiveAsync(async () =>
         {
+            // Once a replacement registration reaches the active wire turn, the previous
+            // decoder metadata cannot safely be reused if the PLC rejects or ambiguously
+            // completes MWS.
+            _monitorWordFormats = [];
             await ExpectOkCoreAsync(commandSnapshot, cancellationToken).ConfigureAwait(false);
             _monitorWordFormats = formatSnapshot;
         }, cancellationToken);
@@ -1298,6 +1315,11 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
                         $"Response contained {tokens.Length} values; expected {_monitorWordFormats.Length}.");
                 for (int index = 0; index < tokens.Length; index++)
                 {
+                    if (_monitorWordFormats[index].Length == 0)
+                    {
+                        KvHostLinkProtocol.ValidateBareDirectBitMonitorWordResponse(tokens[index]);
+                        continue;
+                    }
                     string[] token = [tokens[index]];
                     KvHostLinkProtocol.ValidateAndNormalizeResponseTokens(token, _monitorWordFormats[index], 1);
                     tokens[index] = token[0];

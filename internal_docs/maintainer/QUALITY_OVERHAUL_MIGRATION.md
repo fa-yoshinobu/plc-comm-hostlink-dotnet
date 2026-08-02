@@ -369,9 +369,12 @@ Acceptance criteria:
    while internal logical parsing continues to work.
 4. Generated API reference, user guide, changelog, and migration describe the
    corrected surface and no library-local cross-vector runner/data remains.
-5. Single-device reads derive response counts from device type and explicit
-   format, including 16/32-point direct-bit numeric reads; direct BIT accepts
-   only `0`/`1`/`ON`/`OFF` and malformed response shapes invalidate the session.
+5. Single-device reads derive response counts from the issued command.
+   Direct-bit numeric reads accept exactly one packed scalar token whose
+   `.U`/`.S`/`.H` view spans 16 bits and whose `.D`/`.L` view spans 32 bits;
+   direct BIT accepts only `0`/`1`/`ON`/`OFF`. Malformed response shapes
+   invalidate the session. This supersedes the former 16/32-token assumption
+   using the KV-X500 live response vectors recorded by `LIVE-HL-001`.
 
 - [x] Implementation completed in this repository.
 - [x] Tests added or updated for every acceptance criterion.
@@ -382,6 +385,65 @@ Acceptance criteria:
 - [x] No additional live-PLC check is required for timeout representation, pre-send year validation, API surface, and test ownership.
 - [x] Documentation and migration notes agree with the implementation.
 - [x] Final acceptance criteria verified for this repository; HostLink family-level acceptance remains separate.
+
+## LIVE-HL-003 — Timer/counter structural status is not numeric data
+
+Implementation scope: low-level and high-level formatted `RD` reads for timer and counter
+devices, shared response validation/normalization, deterministic transport-retirement tests,
+and the generated/user-facing contract. Public signatures and request frames are unchanged.
+
+Target contract: a timer/counter response contains exactly three fields. The first is a
+structural status field and must be the exact raw token `0` or `1`; it is validated before and
+excluded from `.U`, `.S`, `.H`, `.D`, and `.L` parsing or normalization. Only current and preset
+use the selected numeric format and its bounds. Hexadecimal current/preset values are normalized
+to four uppercase digits. Any non-exact status, wrong token count, invalid data token, or numeric
+overflow is a protocol error and retires the supplying transport.
+
+Compatibility impact: high-level return types and all public signatures remain unchanged. The
+low-level formatted `ReadAsync` result intentionally changes only its first timer/counter token:
+`.H` no longer synthesizes `0000` or `0001` and instead exposes the PLC-semantic `0` or `1`.
+Reliance on the erroneous representation is not preserved. Current and preset representations
+remain governed by the requested format.
+
+Acceptance criteria:
+
+1. Timer and counter status is validated as exact raw `0` or `1` before numeric parsing.
+2. `.U`, `.S`, `.H`, `.D`, and `.L` apply only to current and preset, with status unchanged.
+3. Short `.H` current/preset values are padded to four uppercase digits without padding status.
+4. Missing/extra tokens, invalid current/preset data, each format's overflow, and non-exact status
+   produce `HostLinkProtocolError` and retire the transport.
+5. The live response vector `0,270F,270F` is accepted by low-level and high-level reads.
+6. User guide, changelog, XML documentation, generated API reference, and implementation agree.
+
+- [x] Implementation completed in this repository.
+- [x] Tests added or updated for every acceptance criterion.
+- [x] Relevant static checks, unit/integration tests, examples, package/build checks, and generated-document freshness passed.
+- [x] Codex self-review completed against validation order, error behavior, transport retirement, public API, compatibility, and cross-language contract.
+- [x] The separately approved .NET representative live row passed after the local correction and its evidence is preserved in the workspace.
+- [x] Documentation, migration notes, changelog, and generated API reference agree with the implementation.
+- [x] Final acceptance criteria verified for the .NET implementation.
+
+Acceptance evidence reverified on 2026-08-02:
+
+- The focused timer/counter suite passed 39 tests on each of .NET 8, .NET 9, and .NET 10.
+- `run_ci.bat` passed all 13 gates with 287 tests on each target framework, zero
+  failures/skips, generated API freshness, format, every sample, and isolated NuGet consumer checks.
+- Direct deterministic cases cover both exact status values for every numeric format, short
+  hexadecimal padding, missing and extra fields, invalid current and preset data, every format's
+  overflow, non-exact status spellings, the live `0,270F,270F` vector, and transport retirement.
+- The retained live result
+  `D:\APP\live-kvx500-20260802\dotnet_hl_kvx500_01_result.json` records
+  `status=pass`, `writes=false`, start `2026-08-02T11:11:30.7622588+00:00`,
+  finish `2026-08-02T11:11:30.8749583+00:00`, repository HEAD
+  `1f3d36638c1ed9877a4e73bfa775a68df30e8e63`, and working-tree diff SHA-256
+  `5BA4A835D39E17592C910BB5859E4CF93D360B03349B4AC454564CD1342C70CD`.
+- The single client completed all 12 requests without a connection error (`163`
+  transmitted and `139` received bytes). `R000.H` returned `0000`; `T0.H`
+  returned `[0, "270C", "270F"]`; direct reads returned
+  `[0, 0, "0000", 0, 0, 13]`; and the wire-preserved MWR fields
+  `["00000", "+00000", "0000", "0000000000", "+0000000000", "00013"]`
+  were semantically equivalent, including the final packed value `13`.
+- Accepted findings are corrected. Rejected, duplicate, deferred, and new live-PLC findings are none.
 
 ## Batch evidence
 
@@ -570,6 +632,46 @@ Acceptance criteria:
 - [x] Live PLC verification is not required; request counts and rejection are deterministic locally.
 - [x] Documentation, migration notes, changelog, and generated API reference agree.
 - [x] Final acceptance criteria verified.
+
+## REAUDIT-001 — TCP ownership acceptance revalidation
+
+Implementation scope: the existing persistent TCP ownership contract, its deterministic transport
+tests, and the user-facing residual-risk explanation. Runtime code and the public API are unchanged.
+
+Accepted self-review finding: the implementation and tests retired observable stale, additional,
+timed-out, cancelled, malformed, and failed TCP generations, but the user guide did not state that
+Host Link TCP has no request identifier. It also omitted the narrow residual race after the pre-send
+input check and the reason a one-request-per-connection policy was rejected. The user guide now
+records that such a policy would repeat connection setup and teardown latency without creating a
+request identifier; healthy connections remain serialized and reusable.
+
+Acceptance evidence:
+
+- [x] `TcpTrafficStatsAreIndependentOfCrLfSegmentation` proves two normal commands use one accepted TCP stream.
+- [x] `NormalClientIsFifoAndQueueWaitDoesNotConsumeTransactionTimeout` proves one active request per client.
+- [x] `TcpRejectsDelayedUnownedResponseBeforeSendingNextCommand` proves observable pre-send data causes zero later sends and retires the stream.
+- [x] Extra-response, EOF, timeout, cancellation, malformed-response, outcome-unknown, and monitor reconnect tests cover the remaining REAUDIT-001 lifecycle criteria.
+- [x] `run_ci.bat` passed all 13 gates with 254 tests on each of .NET 8, .NET 9, and .NET 10, all samples, format/API checks, package construction, and isolated consumer validation.
+- [x] Live PLC verification is not required: response ownership, connection reuse, FIFO admission, monitor reset, and anomaly retirement are deterministic local transport/lifecycle behavior and no PLC capability claim changed.
+- [x] The user guide, changelog, maintainer record, generated API reference, and implementation now agree; accepted findings are corrected and no rejected, duplicate, or deferred finding remains.
+
+## REAUDIT-005 — Empty raw cross-language acceptance
+
+Implementation scope: the existing .NET raw-frame preflight and new public API regression evidence.
+The runtime and public API are unchanged.
+
+Accepted self-review finding: `KvHostLinkProtocol.BuildFrame` already rejected an empty body and
+`SendRawAsync` builds the frame before FIFO admission, but the cross-language acceptance suite did
+not directly prove this through the public .NET API. TCP and UDP tests now use an unresolved host,
+invoke `SendRawAsync("")`, require `HostLinkProtocolError`, and prove the client remains closed with
+zero traffic and zero trace activity.
+
+- [x] Public raw empty input is rejected before FIFO, connection state, DNS, socket creation, connect, or send for TCP and UDP.
+- [x] The user guide and changelog state the non-empty raw contract and pre-transport boundary.
+- [x] The targeted test passed on .NET 8, .NET 9, and .NET 10.
+- [x] The final `run_ci.bat`, `git diff --check`, and Codex diff review passed after this correction.
+- [x] Live PLC verification is not required because the failure is deterministic before network or protocol traffic.
+- [x] Accepted findings are fixed; rejected, duplicate, and deferred findings are none.
 
 ## GOAL-HL-SERIAL-DEFER-002: One absolute active-transaction deadline
 
@@ -1143,6 +1245,25 @@ Acceptance criteria:
 - [x] All repository verification and final self-review passed.
 - [x] Live PLC verification is not required because this item affects only the loopback test listener.
 
+Acceptance evidence reverified on 2026-08-02:
+
+- The initial broad `DisposeAsync` exception filter was rejected during final
+  self-review because cancellation performed immediately before awaiting the
+  server task could misclassify an already-faulted handler
+  `InvalidOperationException` as shutdown-related.
+- The accepted correction handles expected shutdown exceptions only at the
+  listener accept and stream read/write operations that can produce them.
+  Handler execution remains outside those catches, so a pre-shutdown handler
+  failure propagates from both the server completion task and `DisposeAsync`.
+- Deterministic tests cover cancellation before accept begins, disposal after
+  accept waiting begins, and propagation of the same pre-shutdown handler
+  exception instance. Peer disconnects remain normal test-server termination.
+- `run_ci.bat` passed all 13 gates with 254 tests on each of .NET 8, .NET 9,
+  and .NET 10, zero build warnings/errors, format/API checks, all samples,
+  package construction, and isolated consumer validation.
+- Accepted findings are fixed. Rejected, duplicate, deferred, and live-PLC
+  findings are none; product runtime code and public API were not changed.
+
 ## REAUDIT-008 — Uniform raw request frame limit
 
 Implementation scope: the shared raw frame builder used by TCP and UDP.
@@ -1250,6 +1371,59 @@ Acceptance criteria:
 - [x] Documentation, migration notes, changelog, and generated API reference agree.
 - [x] Final acceptance criteria verified.
 
+Additional live acceptance — `HL-KVX500-02`:
+
+The separately approved read-only .NET UDP row passed against
+`keyence:kv-x500` at `192.168.250.100:8501`. The retained artifact
+`D:\APP\live-kvx500-20260802\dotnet_hl_kvx500_02_udp_final_result.json`
+has SHA-256
+`DEFC9AE43782A4823B1ED2F952DD28B8804663673B01FDB68E9443561C7229E5`
+and records `status=pass`, `writes=false`, start
+`2026-08-02T11:54:15.489401+00:00`, finish
+`2026-08-02T11:54:15.6103748+00:00`, repository HEAD
+`1f3d36638c1ed9877a4e73bfa775a68df30e8e63`, and working-tree diff
+SHA-256 `B39F955BC2F3645D95F358E0C6705810827F81F658F33D78389B932C6AFF2700`.
+
+Both 11-request cycles used one socket generation and the same local endpoint
+`192.168.250.110:60674`. All 22 requests completed with 44 raw trace frames,
+316 transmitted bytes, 246 received bytes, one socket create/bind-connect, and
+zero DNS resolutions. Direct and normalized monitor-word values were
+`[0, 0, "0000", 0, 0, 13]` in both cycles; consecutive and monitored bits were
+`["1", "0", "1"]`. Close removed the socket and logical session. The later
+same-client `DM120.U` read was rejected by the exact public
+`PlcComm.KvHostLink.HostLinkNotConnectedError` before send; raw-frame count,
+traffic counters, socket counters, and DNS count remained unchanged.
+
+The earlier .NET NG artifact retained by the central evidence set completed
+all 22 read-only PLC requests and closed the socket, then allowed the expected
+post-close `HostLinkNotConnectedError` to escape its evidence harness instead
+of recording it as a passing rejection. This was a runner-control-flow defect,
+not a PLC or library NG; the corrected final artifact above supersedes it for
+this live row.
+
+- [x] The `HL-KVX500-02` .NET live row passed and its final artifact, lifecycle evidence, and runner-only NG classification were verified.
+
+Additional controlled UDP failure acceptance — `HL-KVX500-02B`:
+
+The read-only .NET anomaly row passed against `keyence:kv-x500` at
+`192.168.250.100:8501`. The controlled failure path physically unplugged and
+reconnected the PLC cable between externally gated phases. The retained
+artifact
+`D:\APP\live-kvx500-20260802\dotnet_hl_kvx500_02b_udp_result.json` has
+SHA-256
+`153BB2854412B308557D99A7C989E6E5E9F25C38D770EDECF2749AE57A6CC57B`
+and records `status=pass` and `writes=false`.
+
+Phase A returned `DM120.U=0` on the original UDP socket. Phase B made exactly
+one request, timed out after approximately 2003 ms, performed no retry, and
+retired that physical socket while retaining the logical numeric endpoint.
+Phase C created exactly one replacement socket and returned `DM120.U=0`.
+Across all phases the artifact records exactly three requests, 33 transmitted
+bytes, and 14 received bytes. Final close left zero active sockets after two
+socket creates and two socket closes; DNS resolution count remained zero.
+
+- [x] The `HL-KVX500-02B` .NET controlled UDP timeout, retirement, one-shot replacement, and final-close live row passed.
+
 ## PERF-008B — One FIFO turn for a complete aggregate
 
 Implementation scope: named-read execution staging and FIFO integration.
@@ -1304,3 +1478,144 @@ Acceptance criteria:
 - [x] Live PLC verification is not required; scheduling and plan reuse are deterministic loopback behavior.
 - [x] Documentation, migration notes, changelog, and generated API reference agree.
 - [x] Final acceptance criteria verified.
+
+## LIVE-HL-004-DOTNET-API — Optional packed direct-bit monitor format
+
+Implementation scope: public `KvMonitorWordTarget` construction, MWS validation and exact wire
+generation, MWR response decoding, monitor metadata lifecycle, deterministic tests, generated API
+reference, user guidance, and migration notes in `plc-comm-hostlink-dotnet`.
+
+Target contract: `KvMonitorWordTarget.DataFormat` is nullable and defaults to `null`. Only a
+direct-bit MWS target may omit the format, and that target remains bare on the wire. Its MWR field
+is one through five ASCII decimal digits representing the unsigned packed 16-bit word beginning at
+the target bit, over the complete `0` through `65535` domain. Leading zeros are accepted. Empty,
+signed, whitespace-containing, non-decimal, over-five-digit, and overflowing fields are invalid.
+Explicit `.U`, `.S`, `.H`, `.D`, and `.L` monitoring is unchanged. Bare scalar RD and MBS/MBR
+remain strict bit operations.
+
+Compatibility impact: existing two-argument construction remains binary-compatible and remains
+source-compatible when a non-null format is supplied. One-argument construction is newly available,
+but `DataFormat` and the generated record deconstruction output are now annotated nullable, so code
+that reads either must handle `null`. Valid bare direct-bit MWR responses that older code rejected
+are now returned in the existing `string[]` representation. No compatibility alias or implicit
+`.U` wire suffix is introduced.
+
+Acceptance criteria:
+
+1. `new KvMonitorWordTarget("R5000")` emits exact `MWS R5000`; null on an ordinary word target and
+   empty or whitespace on every target fail before transport.
+2. Bare MWR accepts `0`, `2`, `13`, the independent live vectors `00002` and `00013`, plus `00000`
+   and `65535`, while empty, signed, whitespace-containing, overflow, non-decimal, and over-five-digit
+   fields are protocol errors that retire the supplying transport.
+3. Mixed monitor targets preserve registration order and independently apply packed unsigned,
+   explicit decimal, signed, hexadecimal, double-word, and long-word decoders.
+4. Scalar RD and MBS/MBR do not inherit packed-word semantics.
+5. Reopen and failed replacement registration cannot reuse stale monitor-word decoder metadata.
+6. Source XML, generated API reference, user guidance, changelog, and this migration record agree.
+
+Live evidence: the approved KV-X500 verification returned `00002` for the adjacent-bit probe and
+`00013` for the independently prepared bit pattern. After the exact guarded .NET program was
+completed, compiled, reviewed, and separately approved, the public API read `R5000`–`R5015`,
+calculated `13`, sent bare `MWS R5000`, and returned preserved monitor string `00013`. Evidence:
+`D:\APP\live-kvx500-20260802\dotnet_mwr_semantic_acceptance_result.json`.
+
+- [x] Implementation completed in this repository.
+- [x] Tests added or updated for every acceptance criterion.
+- [x] Relevant static checks, unit tests, examples, generated documentation, and build/package checks passed.
+- [x] Codex self-review completed against the approved contract and cross-language consistency requirements.
+- [x] Corrected .NET public-API live acceptance passed against the independently prepared bit pattern.
+- [x] Documentation, migration notes, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified.
+
+Acceptance evidence reverified on 2026-08-02:
+
+- `run_ci.bat` passed all 13 gates with 310 tests on each of .NET 8, .NET 9,
+  and .NET 10, zero failures/skips, format, API generation and exact diff
+  classification, all six samples, XML documentation, package construction,
+  package-content inspection, and the isolated net8.0 consumer.
+- The focused extension suite passed 114 tests independently on each target
+  framework. It includes `0`, `2`, `13`, `00000`, the live `00002` and `00013`
+  vectors, `65535`, every rejected response class, mixed ordering, preflight, strict bit
+  separation, failed registration, reconnect, and transport retirement.
+- Public API review confirmed that CLR constructor parameter types remain
+  `System.String,System.String`; the intentional differences are the null
+  default plus nullable constructor, property, and generated deconstruction
+  metadata, classified identically for all three target frameworks.
+- Final diff review found no validation-order, response-decoding, state,
+  cancellation/timeout, documentation, packaging, or cross-language contract
+  defect. Accepted, rejected, duplicate, and deferred findings are none.
+
+## Final non-live disposition recheck — `HL-001` and `HL-003`
+
+Final source-state recheck on 2026-08-02 passed without PLC communication.
+
+- `HL-001`: the net8.0 filtered test command selecting
+  `TcpRejectsExtraNonEmptyResponseBufferedAfterTerminator` and
+  `TcpRejectsDelayedUnownedResponseBeforeSendingNextCommand` passed 2/2. The
+  deterministic peers prove extra-response rejection, transport retirement,
+  and zero next-command send, so a response cannot be reassigned.
+- `HL-003`: the net8.0 filtered test command selecting
+  `Float32TypedNamedAndPollingEntriesRejectIneligibleFamiliesBeforeTransport`
+  and `Float32RejectionOccursBeforeWaitingForTheClientFifo` passed 6/6. The
+  parameterized direct, typed, named, polling, and FIFO-barrier cases reject
+  `Z:F` and the other ineligible families before transport.
+
+- [x] `HL-001` deterministic non-live disposition reverified on the final source state.
+- [x] `HL-003` deterministic non-live disposition reverified on the final source state.
+
+## HL-DOTNET-001 — Failed factory open disposes its owned client exactly once
+
+Decision status: complete on 2026-08-02. This closes the deterministic
+ownership-evidence gap; it does not change the public API or supported runtime
+behavior.
+
+Implementation scope: `KvHostLinkClientFactory` internal construction/open/
+dispose ownership boundary and direct deterministic factory tests. The public
+factory signature, connection options, transport behavior, and error types are
+unchanged.
+
+Target contract: successful factory open transfers the exact created client to
+the caller without factory disposal. Any failed open disposes that owned client
+exactly once and rethrows the exact original failure instance. A disposal-only
+failure cannot replace the primary open failure, and separate repeated calls
+own and dispose separate clients.
+
+Compatibility impact: none. The injection boundary and test-assembly access
+are internal; the generated public API surface is unchanged.
+
+Machine-verifiable acceptance criteria:
+
+1. Success returns the same created instance and the factory disposal count is zero.
+2. Injected connection refusal, DNS failure, internal timeout, and caller cancellation each rethrow the same exception object and dispose exactly once.
+3. Injected disposal failure is suppressed only while the original open failure is rethrown unchanged.
+4. Three repeated failures create three distinct clients and dispose each exactly once.
+5. Existing public factory success and cancellation behavior still pass, all target frameworks build warning-free, and the documented API-difference gate reports no new public surface.
+
+Verification evidence:
+
+- `dotnet test tests\PlcComm.KvHostLink.Tests\PlcComm.KvHostLink.Tests.csproj -c Release -f net8.0 --filter "FullyQualifiedName~KvHostLinkClientFactoryOwnershipTests"` passed 7/7.
+- The same net8.0 targeted run combined with `FactoryPreservesOpenFailure` and
+  `OpenAndConnectAsync_ReturnsNormalClientWithIntegratedFifo` passed 9/9.
+- `dotnet build src\PlcComm.KvHostLink\PlcComm.KvHostLink.csproj -c Debug`
+  passed net8.0, net9.0, and net10.0 with zero warnings and errors.
+- `scripts/check_documented_api_diff.py` passed all three target frameworks;
+  it found no unclassified or undocumented public difference.
+- `dotnet format PlcComm.KvHostLink.sln --verify-no-changes --no-restore` and
+  targeted `git diff --check` passed.
+
+Codex self-review inspected the actual diff, public surface, validation order,
+success ownership transfer, each error identity, disposal masking, repetition,
+cancellation token propagation, and existing public factory regressions.
+Accepted findings: the internal cancellation token parameter was moved last to
+satisfy CA1068. Rejected findings: no public factory hook or mutable global test
+override is needed. Duplicate and deferred findings: none. Live PLC verification
+is not required because the acceptance facts are injected object identity,
+exception identity, and exact disposal counts before any real network work.
+
+- [x] Implementation completed in this repository.
+- [x] Tests added for every acceptance criterion.
+- [x] Targeted tests, all-target library build, formatting, and public API checks passed.
+- [x] Codex self-review completed against ownership, error, lifecycle, and public-surface requirements.
+- [x] Live PLC is not required for this deterministic ownership contract.
+- [x] Maintainer evidence agrees with the implementation; no user migration or public changelog entry is required.
+- [x] Final acceptance criteria verified and `HL-DOTNET-001` marked complete.

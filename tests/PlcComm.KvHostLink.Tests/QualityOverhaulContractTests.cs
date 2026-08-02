@@ -101,6 +101,26 @@ public sealed class QualityOverhaulContractTests
         Assert.Equal([0x80], await client.SendRawAsync("NONASCII"));
     }
 
+    [Theory]
+    [InlineData(HostLinkTransportMode.Tcp)]
+    [InlineData(HostLinkTransportMode.Udp)]
+    public async Task EmptyRawCommandIsRejectedBeforeConnectionQueueStateOrSend(
+        HostLinkTransportMode transport)
+    {
+        await using var client = new KvHostLinkClient(
+            "invalid.invalid", 8501, transport, TestProfile);
+        int traceCalls = 0;
+        client.TraceHook = _ => traceCalls++;
+
+        HostLinkProtocolError error = await Assert.ThrowsAsync<HostLinkProtocolError>(
+            () => client.SendRawAsync(string.Empty));
+
+        Assert.Contains("empty", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.False(client.IsOpen);
+        Assert.Equal(default, client.TrafficStats);
+        Assert.Equal(0, traceCalls);
+    }
+
     [Fact]
     public async Task RawRequestFrameLimitIs65507BytesIncludingTerminatingCr()
     {

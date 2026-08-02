@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Library: **Breaking:** Low-level formatted timer/counter reads now preserve the structural first response token as exact `0` or `1` and apply `.U`, `.S`, `.H`, `.D`, or `.L` only to current and preset values. In particular, `.H` no longer exposes the erroneous synthesized status `0000` or `0001`; use `0` or `1`.
+- Library: Correct formatted single reads of direct-bit devices to accept the PLC's one packed scalar response token instead of expecting 16 or 32 separate bit tokens. Signed `.S` and `.L` responses accept the PLC's explicit leading `+`; bare bit reads remain strict `0`/`1`/`ON`/`OFF` reads. Public signatures are unchanged.
+- Library: **Breaking:** `KvMonitorWordTarget.DataFormat` is now nullable with a `null` default. Only bare direct-bit MWS targets may omit it; their MWR fields accept one through five ASCII decimal digits, including leading zeros, over the unsigned 16-bit range while the transmitted registration remains bare. Consumers that read or deconstruct `DataFormat` must now handle `null`. Empty or whitespace formats remain invalid, and scalar RD plus MBS/MBR retain strict bit semantics.
+- Library: A replacement MWS invalidates the previous monitor-word decoder metadata when its active wire turn begins, so a failed registration or later reconnect cannot reuse a stale response plan.
+- Tests: Added bare MWS/MWR live vectors, unsigned boundaries and invalid grammar, mixed-format ordering, preflight, strict scalar/bit-monitor separation, protocol-retirement, failed-registration, and reconnect coverage.
+- Docs: Documented that Host Link TCP has no request identifier, the residual pre-send-check-to-response association race, and the decision to preserve healthy connection reuse instead of adding per-request connection latency without improving correlation.
+- Docs: Clarified that the maintainer raw API requires one non-empty ASCII command and rejects an empty body before FIFO, connection state, DNS, socket work, or send.
+- Tests: Added TCP/UDP public raw empty-input preflight coverage with unchanged connection state, traffic counters, and trace activity.
+- Tests: Limited test-server shutdown exception handling to accept/read/write transport operations, preserved pre-shutdown handler failures, and added deterministic accept-start and failure-propagation coverage.
 - Library: Transport receive buffers are now allocated only for the selected transport after open admission, reused for the logical session, and released on explicit close. TCP framing scans incrementally, UDP receives into its session buffer, and tracing creates an owned receive snapshot only while a hook is installed.
 - Tests: Added deterministic transport-buffer allocation/reuse/release checks, maximum-size one-byte-fragment TCP scan/copy bounds, and hostile trace-callback ownership coverage.
 - Library: **Breaking:** Reject bracketed IPv4 host input such as `[127.0.0.1]` during construction; use an unbracketed IPv4 address.

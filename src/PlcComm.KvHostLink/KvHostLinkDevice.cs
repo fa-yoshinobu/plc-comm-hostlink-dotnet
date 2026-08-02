@@ -132,13 +132,7 @@ public static class KvHostLinkDevice
     internal static int ReadResponseTokenCount(string deviceType, string dataFormat)
     {
         if (deviceType is "T" or "C") return 3;
-        if (!KvHostLinkModels.DirectBitDeviceTypes.Contains(deviceType)) return 1;
-        return dataFormat switch
-        {
-            ".U" or ".S" or ".H" => 16,
-            ".D" or ".L" => 32,
-            _ => 1,
-        };
+        return 1;
     }
 
     public static string RequireExplicitFormat(KvDeviceAddress address, string? dataFormat)

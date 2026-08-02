@@ -208,8 +208,18 @@ internal static class KvHostLinkProtocol
         if (tokens.Count != expectedCount)
             throw new HostLinkProtocolError($"Response contained {tokens.Count} values; expected {expectedCount}.");
 
-        foreach (string token in tokens)
+        int valueStart = 0;
+        if (timerCounterComposite)
         {
+            if (tokens[0] is not ("0" or "1"))
+                throw new HostLinkProtocolError(
+                    $"Timer/counter response status '{tokens[0]}' is invalid; expected 0 or 1.");
+            valueStart = 1;
+        }
+
+        for (int index = valueStart; index < tokens.Count; index++)
+        {
+            string token = tokens[index];
             bool valid = dataFormat switch
             {
                 "" => token is "0" or "1" or "ON" or "OFF",
@@ -224,9 +234,6 @@ internal static class KvHostLinkProtocol
                 throw new HostLinkProtocolError($"Response value '{token}' is invalid for data format '{dataFormat}'.");
         }
 
-        if (timerCounterComposite && tokens[0] is not ("0" or "1"))
-            throw new HostLinkProtocolError(
-                $"Timer/counter response status '{tokens[0]}' is invalid; expected 0 or 1.");
     }
 
     public static void ValidateAndNormalizeResponseTokens(
@@ -239,13 +246,30 @@ internal static class KvHostLinkProtocol
         if (dataFormat != ".H")
             return;
 
-        for (int index = 0; index < tokens.Length; index++)
+        int valueStart = timerCounterComposite ? 1 : 0;
+        for (int index = valueStart; index < tokens.Length; index++)
         {
             ushort value = ushort.Parse(
                 tokens[index],
                 System.Globalization.NumberStyles.HexNumber,
                 System.Globalization.CultureInfo.InvariantCulture);
             tokens[index] = value.ToString("X4", System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
+    public static void ValidateBareDirectBitMonitorWordResponse(string token)
+    {
+        bool valid = token.Length is >= 1 and <= 5 &&
+            token.All(static character => character is >= '0' and <= '9') &&
+            ushort.TryParse(
+                token,
+                System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out _);
+        if (!valid)
+        {
+            throw new HostLinkProtocolError(
+                $"Bare direct-bit MWR value '{token}' is invalid; expected one to five ASCII decimal digits in the unsigned 16-bit range.");
         }
     }
 }

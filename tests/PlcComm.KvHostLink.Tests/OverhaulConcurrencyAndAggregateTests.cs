@@ -40,11 +40,44 @@ public sealed class OverhaulConcurrencyAndAggregateTests
     [Fact]
     public async Task TestServerCanBeDisposedImmediatelyWithoutShutdownRace()
     {
-        for (int iteration = 0; iteration < 50; iteration++)
-        {
-            var server = new AsyncHostLinkServer((_, _) => Task.FromResult("OK"));
-            await server.DisposeAsync();
-        }
+        var releaseAccept = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var server = new AsyncHostLinkServer(
+            (_, _) => Task.FromResult("OK"),
+            releaseAccept.Task);
+
+        await server.AcceptGateReached.WaitAsync(TimeSpan.FromSeconds(5));
+        Task disposal = server.DisposeAsync().AsTask();
+        releaseAccept.TrySetResult();
+
+        await disposal.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task TestServerCanBeDisposedAfterAcceptWaitStarts()
+    {
+        var server = new AsyncHostLinkServer((_, _) => Task.FromResult("OK"));
+
+        await server.AcceptStarted.WaitAsync(TimeSpan.FromSeconds(5));
+        await server.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task TestServerPropagatesHandlerFailureThatPredatesShutdown()
+    {
+        var failure = new InvalidOperationException("handler failed before shutdown");
+        var server = new AsyncHostLinkServer((_, _) => Task.FromException<string>(failure));
+        using var connection = new TcpClient();
+        await connection.ConnectAsync(IPAddress.Loopback, server.Port);
+        await connection.GetStream().WriteAsync(Encoding.ASCII.GetBytes("TRIGGER\r"));
+
+        InvalidOperationException runFailure = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => server.Completion.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Same(failure, runFailure);
+
+        InvalidOperationException disposeFailure = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await server.DisposeAsync());
+        Assert.Same(failure, disposeFailure);
     }
 
     [Fact]
@@ -426,16 +459,27 @@ public sealed class OverhaulConcurrencyAndAggregateTests
         private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
         private readonly Func<string, int, Task<string>> _handler;
         private readonly CancellationTokenSource _cts = new();
+        private readonly Task? _acceptGate;
+        private readonly TaskCompletionSource _acceptGateReached = new(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _acceptStarted = new(
+            TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly Task _runTask;
 
-        internal AsyncHostLinkServer(Func<string, int, Task<string>> handler)
+        internal AsyncHostLinkServer(
+            Func<string, int, Task<string>> handler,
+            Task? acceptGate = null)
         {
             _handler = handler;
+            _acceptGate = acceptGate;
             _listener.Start();
             _runTask = Task.Run(RunAsync);
         }
 
         internal int Port => ((IPEndPoint)_listener.LocalEndpoint).Port;
+        internal Task AcceptGateReached => _acceptGateReached.Task;
+        internal Task AcceptStarted => _acceptStarted.Task;
+        internal Task Completion => _runTask;
         internal ConcurrentQueue<string> Commands { get; } = new();
 
         public async ValueTask DisposeAsync()
@@ -446,25 +490,49 @@ public sealed class OverhaulConcurrencyAndAggregateTests
             {
                 await _runTask.ConfigureAwait(false);
             }
-            catch (InvalidOperationException) when (_cts.IsCancellationRequested)
+            finally
             {
+                _cts.Dispose();
             }
-            catch (Exception error) when (error is OperationCanceledException or ObjectDisposedException or SocketException or IOException)
-            {
-            }
-            _cts.Dispose();
         }
 
         private async Task RunAsync()
         {
-            using TcpClient connection = await _listener.AcceptTcpClientAsync(_cts.Token).ConfigureAwait(false);
+            _acceptGateReached.TrySetResult();
+            if (_acceptGate is not null)
+                await _acceptGate.ConfigureAwait(false);
+
+            TcpClient connection;
+            try
+            {
+                ValueTask<TcpClient> accept = _listener.AcceptTcpClientAsync(_cts.Token);
+                _acceptStarted.TrySetResult();
+                connection = await accept.ConfigureAwait(false);
+            }
+            catch (Exception error) when (
+                _cts.IsCancellationRequested && IsListenerShutdownException(error))
+            {
+                return;
+            }
+
+            using TcpClient ownedConnection = connection;
             using NetworkStream stream = connection.GetStream();
             var pending = new List<byte>();
             var buffer = new byte[4096];
             int index = 0;
             while (!_cts.IsCancellationRequested)
             {
-                int read = await stream.ReadAsync(buffer, _cts.Token).ConfigureAwait(false);
+                int read;
+                try
+                {
+                    read = await stream.ReadAsync(buffer, _cts.Token).ConfigureAwait(false);
+                }
+                catch (Exception error) when (
+                    IsConnectedTransportShutdownException(error))
+                {
+                    return;
+                }
+
                 if (read == 0)
                     return;
                 for (int offset = 0; offset < read; offset++)
@@ -478,9 +546,17 @@ public sealed class OverhaulConcurrencyAndAggregateTests
                         pending.Clear();
                         Commands.Enqueue(command);
                         string response = await _handler(command, index++).ConfigureAwait(false);
-                        await stream.WriteAsync(
-                            Encoding.ASCII.GetBytes(response + "\r"),
-                            _cts.Token).ConfigureAwait(false);
+                        try
+                        {
+                            await stream.WriteAsync(
+                                Encoding.ASCII.GetBytes(response + "\r"),
+                                _cts.Token).ConfigureAwait(false);
+                        }
+                        catch (Exception error) when (
+                            IsConnectedTransportShutdownException(error))
+                        {
+                            return;
+                        }
                     }
                     else
                     {
@@ -489,5 +565,14 @@ public sealed class OverhaulConcurrencyAndAggregateTests
                 }
             }
         }
+
+        private static bool IsListenerShutdownException(Exception error) =>
+            error is OperationCanceledException or ObjectDisposedException or
+                SocketException or IOException or InvalidOperationException;
+
+        private bool IsConnectedTransportShutdownException(Exception error) =>
+            error is SocketException or IOException ||
+                (_cts.IsCancellationRequested &&
+                    error is OperationCanceledException or ObjectDisposedException or InvalidOperationException);
     }
 }

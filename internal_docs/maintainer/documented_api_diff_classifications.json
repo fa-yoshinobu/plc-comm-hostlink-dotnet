@@ -73,6 +73,20 @@
         "docsrc/user/USAGE_GUIDE.md",
         "docsrc/user/API_REFERENCE.md"
       ]
+    },
+    "monitor-format-contract": {
+      "decision": "LIVE-HL-004-DOTNET-API",
+      "rationale": "The approved optional bare direct-bit monitor form makes DataFormat and its generated record deconstruction output nullable and adds a null constructor default without changing the CLR parameter types.",
+      "migrationPath": "internal_docs/maintainer/QUALITY_OVERHAUL_MIGRATION.md",
+      "changelogPath": "CHANGELOG.md",
+      "changelogNeedle": "**Breaking:** `KvMonitorWordTarget.DataFormat`",
+      "documentationEvidence": [
+        { "path": "docsrc/user/USAGE_GUIDE.md", "needle": "new KvMonitorWordTarget(\"R5000\")" },
+        { "path": "docsrc/user/API_REFERENCE.md", "needle": "public KvMonitorWordTarget(string Device, string DataFormat = null)" }
+      ],
+      "versionPolicy": "major-version-required-before-release",
+      "priorContractCommit": "19df212d9bbed545d137e1e6d71b8afb30237628",
+      "priorContractTerm": "KvMonitorWordTarget"
     }
   },
   "classifications": [
@@ -363,6 +377,33 @@
       "after": "access=public;return=System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{System.String}|addresses|required|read=NotNull|write=NotNull,value|PlcComm.KvHostLink.HostLinkCommentEncoding|commentEncoding|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
       "category": "additive",
       "evidence": "comment-additions"
+    },
+    {
+      "change": "changed",
+      "symbol": "M:PlcComm.KvHostLink.KvMonitorWordTarget.#ctor(System.String,System.String)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;params=value|System.String|Device|required|read=NotNull|write=NotNull,value|System.String|DataFormat|required|read=NotNull|write=NotNull",
+      "after": "access=public;params=value|System.String|Device|required|read=NotNull|write=NotNull,value|System.String|DataFormat|null|read=Nullable|write=Nullable",
+      "category": "documented-contract",
+      "evidence": "monitor-format-contract"
+    },
+    {
+      "change": "changed",
+      "symbol": "M:PlcComm.KvHostLink.KvMonitorWordTarget.Deconstruct(System.String@,System.String@)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Void;returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=out|System.String@|Device|required|read=NotNull|write=NotNull,out|System.String@|DataFormat|required|read=NotNull|write=NotNull;constraints=",
+      "after": "access=public;return=System.Void;returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=out|System.String@|Device|required|read=NotNull|write=NotNull,out|System.String@|DataFormat|required|read=Nullable|write=Nullable;constraints=",
+      "category": "documented-contract",
+      "evidence": "monitor-format-contract"
+    },
+    {
+      "change": "changed",
+      "symbol": "P:PlcComm.KvHostLink.KvMonitorWordTarget.DataFormat",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "type=System.String;readNullability=NotNull;writeNullability=NotNull;static=False;get=public;set=public;init=True;getAbstract=False;setAbstract=False;getVirtual=False;setVirtual=False;index=",
+      "after": "type=System.String;readNullability=Nullable;writeNullability=Nullable;static=False;get=public;set=public;init=True;getAbstract=False;setAbstract=False;getVirtual=False;setVirtual=False;index=",
+      "category": "documented-contract",
+      "evidence": "monitor-format-contract"
     }
   ]
 }

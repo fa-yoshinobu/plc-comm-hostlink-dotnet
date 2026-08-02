@@ -11,8 +11,13 @@ public readonly record struct HostLinkTrafficStats(ulong RequestCount, ulong TxB
 /// </summary>
 public record KvModelInfo(string Code, string Model);
 
-/// <summary>One base device and explicit data format used by word monitoring.</summary>
-public sealed record KvMonitorWordTarget(string Device, string DataFormat);
+/// <summary>One base device and optional data format used by word monitoring.</summary>
+/// <param name="Device">The base device without a data-format suffix.</param>
+/// <param name="DataFormat">
+/// The explicit numeric data format, or <see langword="null"/> only for a direct-bit device whose
+/// bare MWS/MWR representation is an unsigned packed 16-bit word.
+/// </param>
+public sealed record KvMonitorWordTarget(string Device, string? DataFormat = null);
 
 internal static class KvHostLinkModels
 {

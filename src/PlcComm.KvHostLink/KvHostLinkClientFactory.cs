@@ -25,28 +25,48 @@ public static class KvHostLinkClientFactory
     public static async Task<KvHostLinkClient> OpenAndConnectAsync(
         KvHostLinkConnectionOptions options,
         CancellationToken cancellationToken = default)
+        => await OpenAndConnectOwnedAsync(
+            options,
+            static value => new KvHostLinkClient(
+                value.Host,
+                value.Port,
+                value.Transport,
+                value.PlcProfile)
+            {
+                Timeout = value.EffectiveTimeout,
+            },
+            static (client, token) => client.OpenAsync(token),
+            static client => client.DisposeAsync(),
+            cancellationToken).ConfigureAwait(false);
+
+    internal static async Task<KvHostLinkClient> OpenAndConnectOwnedAsync(
+        KvHostLinkConnectionOptions options,
+        Func<KvHostLinkConnectionOptions, KvHostLinkClient> createClient,
+        Func<KvHostLinkClient, CancellationToken, Task> openClient,
+        Func<KvHostLinkClient, ValueTask> disposeClient,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(createClient);
+        ArgumentNullException.ThrowIfNull(openClient);
+        ArgumentNullException.ThrowIfNull(disposeClient);
         if (string.IsNullOrWhiteSpace(options.Host))
             throw new ArgumentException("Host must not be empty.", nameof(options));
         if (options.Port is < 1 or > 65535)
             throw new ArgumentOutOfRangeException(nameof(options), "Port must be in the range 1-65535.");
 
-        var inner = new KvHostLinkClient(options.Host, options.Port, options.Transport, options.PlcProfile)
-        {
-            Timeout = options.EffectiveTimeout,
-        };
+        KvHostLinkClient inner = createClient(options);
 
         try
         {
-            await inner.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await openClient(inner, cancellationToken).ConfigureAwait(false);
             return inner;
         }
         catch
         {
             try
             {
-                await inner.DisposeAsync().ConfigureAwait(false);
+                await disposeClient(inner).ConfigureAwait(false);
             }
             catch
             {

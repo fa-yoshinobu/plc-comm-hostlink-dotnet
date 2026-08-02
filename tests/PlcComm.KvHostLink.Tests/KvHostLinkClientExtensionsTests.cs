@@ -166,20 +166,15 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
-    public async Task DirectBitWordReadsPackEveryReturnedBitInProtocolOrder()
+    public async Task DirectBitWordReadsAcceptOnePackedScalarTokenInTheRequestedFormat()
     {
-        static string Bits(params int[] setBits) => string.Join(
-            ' ',
-            Enumerable.Range(0, setBits.Contains(31) ? 32 : 16)
-                .Select(bit => setBits.Contains(bit) ? "1" : "0"));
-
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
-            "RD R000.U" => Bits(0, 3, 15),
-            "RD R000.S" => Bits(0, 3, 15),
-            "RD R000.D" => Bits(0, 16, 31),
-            "RD R000.L" => Bits(0, 16, 31),
-            "RD R000.H" => Bits(0, 3, 15),
+            "RD R000.U" => "32777",
+            "RD R000.S" => "+00000",
+            "RD R000.D" => "2147549185",
+            "RD R000.L" => "+0000000000",
+            "RD R000.H" => "8009",
             _ => "E1",
         });
 
@@ -188,21 +183,18 @@ public sealed class KvHostLinkClientExtensionsTests
         await client.OpenAsync();
 
         Assert.Equal((ushort)0x8009, Assert.IsType<ushort>(await client.ReadTypedAsync("R0", "U")));
-        Assert.Equal(unchecked((short)0x8009), Assert.IsType<short>(await client.ReadTypedAsync("R0", "S")));
+        Assert.Equal((short)0, Assert.IsType<short>(await client.ReadTypedAsync("R0", "S")));
         Assert.Equal(0x8001_0001u, Assert.IsType<uint>(await client.ReadTypedAsync("R0", "D")));
-        Assert.Equal(unchecked((int)0x8001_0001u), Assert.IsType<int>(await client.ReadTypedAsync("R0", "L")));
+        Assert.Equal(0, Assert.IsType<int>(await client.ReadTypedAsync("R0", "L")));
         Assert.Equal("8009", Assert.IsType<string>(await client.ReadTypedAsync("R0", "H")));
     }
 
     [Fact]
     public async Task DirectBitBitInWordReadPreservesEveryOtherBit()
     {
-        string initialBits = string.Join(
-            ' ',
-            Enumerable.Range(0, 16).Select(bit => bit is 0 or 3 or 15 ? "1" : "0"));
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
-            "RD R000.U" => initialBits,
+            "RD R000.U" => "32777",
             _ => "E1",
         });
 
@@ -467,6 +459,184 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.Equal(["MWS DM0.U DM1.S DM2.H", "MWR"], server.ReceivedCommands.ToArray());
     }
 
+    [Theory]
+    [InlineData("0")]
+    [InlineData("2")]
+    [InlineData("13")]
+    [InlineData("00000")]
+    [InlineData("00002")]
+    [InlineData("00013")]
+    [InlineData("65535")]
+    public async Task BareDirectBitMonitorWordUsesExactWireAndPackedUnsigned16Response(string response)
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "MWS R5000" => "OK",
+            "MWR" => response,
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await client.RegisterMonitorWordsAsync([new KvMonitorWordTarget("R5000")]);
+
+        Assert.Equal([response], await client.ReadMonitorWordsAsync());
+        Assert.Equal(["MWS R5000", "MWR"], server.ReceivedCommands.ToArray());
+        Assert.True(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task MixedMonitorWordTargetsPreserveOrderAndIndependentFormats()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "MWS R5000 DM0.U DM1.S DM2.H DM3.D DM5.L R5100" => "OK",
+            "MWR" => "00002 2 +00002 000f 0000000002 +000000002 00013",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await client.RegisterMonitorWordsAsync(
+        [
+            new("R5000"),
+            new("DM0", ".U"),
+            new("DM1", ".S"),
+            new("DM2", ".H"),
+            new("DM3", ".D"),
+            new("DM5", ".L"),
+            new("R5100"),
+        ]);
+
+        Assert.Equal(
+            ["00002", "2", "+00002", "000F", "0000000002", "+000000002", "00013"],
+            await client.ReadMonitorWordsAsync());
+        Assert.True(client.IsOpen);
+    }
+
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("00\t02")]
+    [InlineData("00 02")]
+    [InlineData("-1")]
+    [InlineData("+1")]
+    [InlineData("65536")]
+    [InlineData("00A02")]
+    [InlineData("2.0")]
+    [InlineData("000000")]
+    public async Task InvalidBareDirectBitMonitorWordResponseRetiresConnection(string response)
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "MWS R5000" => "OK",
+            "MWR" => response,
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+        await client.RegisterMonitorWordsAsync([new("R5000")]);
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadMonitorWordsAsync());
+
+        Assert.False(client.IsOpen);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task OmittedOrBlankMonitorFormatIsRejectedExceptForDirectBitNull(string? dataFormat)
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        KvMonitorWordTarget target = dataFormat is null
+            ? new("DM0")
+            : new("R5000", dataFormat);
+        await Assert.ThrowsAsync<HostLinkProtocolError>(
+            () => client.RegisterMonitorWordsAsync([target]));
+
+        Assert.Empty(server.ReceivedCommands);
+        Assert.True(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task ScalarAndBitMonitorReadsRemainStrictBits()
+    {
+        await using var scalarServer = new ScriptedHostLinkServer(command =>
+            command == "RD R5000" ? "00002" : "E1");
+        await using var scalarClient = new KvHostLinkClient(
+            "127.0.0.1", scalarServer.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await scalarClient.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => scalarClient.ReadAsync("R5000"));
+        Assert.False(scalarClient.IsOpen);
+
+        await using var monitorServer = new ScriptedHostLinkServer(command => command switch
+        {
+            "MBS R5000" => "OK",
+            "MBR" => "00002",
+            _ => "E1",
+        });
+        await using var monitorClient = new KvHostLinkClient(
+            "127.0.0.1", monitorServer.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await monitorClient.OpenAsync();
+        await monitorClient.RegisterMonitorBitsAsync(["R5000"]);
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => monitorClient.ReadMonitorBitsAsync());
+        Assert.False(monitorClient.IsOpen);
+    }
+
+    [Fact]
+    public async Task FailedMonitorWordReregistrationDoesNotReuseOldDecoderMetadata()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "MWS R5000" => "OK",
+            "MWS R5100" => "E1",
+            "MWR" => "00002",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+        await client.RegisterMonitorWordsAsync([new("R5000")]);
+
+        await Assert.ThrowsAsync<HostLinkError>(
+            () => client.RegisterMonitorWordsAsync([new("R5100")]));
+        HostLinkProtocolError error = await Assert.ThrowsAsync<HostLinkProtocolError>(
+            () => client.ReadMonitorWordsAsync());
+
+        Assert.Contains("registered", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(["MWS R5000", "MWS R5100"], server.ReceivedCommands.ToArray());
+        Assert.True(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task ReopenDoesNotReuseMonitorWordDecoderMetadata()
+    {
+        await using var server = new ScriptedHostLinkServer(command =>
+            command == "MWS R5000" ? "OK" : "E1");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+        await client.RegisterMonitorWordsAsync([new("R5000")]);
+        client.Close();
+        await client.OpenAsync();
+
+        HostLinkProtocolError error = await Assert.ThrowsAsync<HostLinkProtocolError>(
+            () => client.ReadMonitorWordsAsync());
+
+        Assert.Contains("registered", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(["MWS R5000"], server.ReceivedCommands.ToArray());
+        Assert.True(client.IsOpen);
+    }
+
     [Fact]
     public async Task FactoryPreservesOpenFailure()
     {
@@ -576,8 +746,8 @@ public sealed class KvHostLinkClientExtensionsTests
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
-            "RD R000.U" => string.Join(' ', Enumerable.Repeat("0", 16)),
-            "RD R000.D" => string.Join(' ', Enumerable.Repeat("0", 32)),
+            "RD R000.U" => "00000",
+            "RD R000.D" => "0000000000",
             "RD DM0.U" => "123",
             "RD R001" => "ON",
             "RD R002" => "GARBAGE",
@@ -587,11 +757,25 @@ public sealed class KvHostLinkClientExtensionsTests
             "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
         await client.OpenAsync();
 
-        Assert.Equal(16, (await client.ReadAsync("R0", ".U")).Length);
-        Assert.Equal(32, (await client.ReadAsync("R0", ".D")).Length);
+        Assert.Equal(["00000"], await client.ReadAsync("R0", ".U"));
+        Assert.Equal(["0000000000"], await client.ReadAsync("R0", ".D"));
         Assert.Equal(["123"], await client.ReadAsync("DM0", ".U"));
         Assert.Equal(["ON"], await client.ReadAsync("R1"));
         await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadAsync("R2"));
+        Assert.False(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task DirectBitFormattedReadRejectsMultipleScalarTokensAndRetiresConnection()
+    {
+        await using var server = new ScriptedHostLinkServer(command =>
+            command == "RD R000.H" ? "0000 0000" : "E1");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadAsync("R0", ".H"));
+
         Assert.False(client.IsOpen);
     }
 
@@ -638,6 +822,7 @@ public sealed class KvHostLinkClientExtensionsTests
     [Theory]
     [InlineData("RD T0.D", "2,10,20", "D")]
     [InlineData("RD C0.L", "-1,10,20", "L")]
+    [InlineData("RD T0.H", "0000,270F,270F", "H")]
     public async Task TimerCounterStatusMustBeZeroOrOneInSharedReadParser(
         string command,
         string response,
@@ -650,6 +835,128 @@ public sealed class KvHostLinkClientExtensionsTests
 
         string device = command.Contains(" T", StringComparison.Ordinal) ? "T0" : "C0";
         await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadTypedAsync(device, dtype));
+        Assert.False(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task TimerCounterHexReadKeepsRawStatusAndFormatsOnlyCurrentAndPreset()
+    {
+        await using var server = new ScriptedHostLinkServer(command =>
+            command == "RD T0.H" ? "0,270F,270F" : "E1");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        Assert.Equal(["0", "270F", "270F"], await client.ReadAsync("T0", ".H"));
+        Assert.Equal("270F", Assert.IsType<string>(await client.ReadTypedAsync("T0", "H")));
+    }
+
+    [Theory]
+    [InlineData("T0", ".U", "0,1,65535", "0", "1", "65535")]
+    [InlineData("C0", ".U", "1,0,1", "1", "0", "1")]
+    [InlineData("C0", ".S", "1,+00001,-00002", "1", "+00001", "-00002")]
+    [InlineData("T0", ".S", "0,-00001,+00002", "0", "-00001", "+00002")]
+    [InlineData("T0", ".H", "0,f,a", "0", "000F", "000A")]
+    [InlineData("C0", ".H", "1,10,ff", "1", "0010", "00FF")]
+    [InlineData("C0", ".D", "1,1,4294967295", "1", "1", "4294967295")]
+    [InlineData("T0", ".D", "0,0,1", "0", "0", "1")]
+    [InlineData("T0", ".L", "0,+000000001,-000000002", "0", "+000000001", "-000000002")]
+    [InlineData("C0", ".L", "1,-000000001,+000000002", "1", "-000000001", "+000000002")]
+    public async Task TimerCounterAllFormatsKeepRawStatusAndFormatOnlyCurrentAndPreset(
+        string device,
+        string format,
+        string response,
+        string expectedStatus,
+        string expectedCurrent,
+        string expectedPreset)
+    {
+        await using var server = new ScriptedHostLinkServer(_ => response);
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        Assert.Equal(
+            [expectedStatus, expectedCurrent, expectedPreset],
+            await client.ReadAsync(device, format));
+        Assert.True(client.IsOpen);
+    }
+
+    [Theory]
+    [InlineData("T0", ".U", "0,1")]
+    [InlineData("C0", ".H", "1,F,10,20")]
+    public async Task TimerCounterMissingOrExtraTokensAreProtocolErrorsAndRetireTransport(
+        string device,
+        string format,
+        string response)
+    {
+        await using var server = new ScriptedHostLinkServer(_ => response);
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadAsync(device, format));
+        Assert.False(client.IsOpen);
+    }
+
+    [Theory]
+    [InlineData("T0", ".U", "0,INVALID,1")]
+    [InlineData("C0", ".S", "0,1,INVALID")]
+    [InlineData("T0", ".H", "0,G,0001")]
+    [InlineData("C0", ".D", "0,1,INVALID")]
+    [InlineData("T0", ".L", "0,INVALID,1")]
+    public async Task TimerCounterInvalidCurrentOrPresetIsProtocolErrorAndRetiresTransport(
+        string device,
+        string format,
+        string response)
+    {
+        await using var server = new ScriptedHostLinkServer(_ => response);
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadAsync(device, format));
+        Assert.False(client.IsOpen);
+    }
+
+    [Theory]
+    [InlineData("T0", ".U", "0,65536,0")]
+    [InlineData("C0", ".S", "0,0,-32769")]
+    [InlineData("T0", ".H", "0,10000,0")]
+    [InlineData("C0", ".D", "0,0,4294967296")]
+    [InlineData("T0", ".L", "0,-2147483649,0")]
+    public async Task TimerCounterEveryFormatRejectsOverflowAndRetiresTransport(
+        string device,
+        string format,
+        string response)
+    {
+        await using var server = new ScriptedHostLinkServer(_ => response);
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadAsync(device, format));
+        Assert.False(client.IsOpen);
+    }
+
+    [Theory]
+    [InlineData("T0", "00")]
+    [InlineData("C0", "01")]
+    [InlineData("T0", "+0")]
+    [InlineData("C0", "+1")]
+    [InlineData("T0", "ON")]
+    [InlineData("C0", "OFF")]
+    [InlineData("T0", "2")]
+    [InlineData("C0", "-1")]
+    public async Task TimerCounterNonExactStatusIsProtocolErrorAndRetiresTransport(
+        string device,
+        string status)
+    {
+        await using var server = new ScriptedHostLinkServer(_ => $"{status},000F,0010");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadAsync(device, ".H"));
         Assert.False(client.IsOpen);
     }
 

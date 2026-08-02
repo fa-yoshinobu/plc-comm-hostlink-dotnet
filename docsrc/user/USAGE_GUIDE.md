@@ -46,19 +46,23 @@ Connections are IPv4-only. IPv6 literals and bracketed IPv4 literals such as
 `[192.168.250.100]` are rejected before socket creation. Write IPv4 addresses
 without brackets; hostnames are resolved only to IPv4 and never fall back to IPv6.
 
-The maintainer `SendRawAsync` API accepts at most 65,506 ASCII bytes in the
-command body. The terminating CR makes the maximum complete request frame
-65,507 bytes. Larger input is rejected before connection-state checks or I/O;
-command-specific limits that are smaller still apply.
+The maintainer `SendRawAsync` API represents exactly one non-empty ASCII command
+body and accepts at most 65,506 bytes. An empty body is rejected before FIFO
+admission, connection-state checks, DNS, socket work, or send. The terminating
+CR makes the maximum complete request frame 65,507 bytes. Larger input is
+rejected at the same pre-transport boundary; command-specific limits that are
+smaller still apply.
 
 `SetTimeAsync` requires an explicit `DateTime` whose year is 2000 through
 2099. Years outside that PLC clock range are rejected before communication;
 the library never folds another century into a two-digit year.
 
 Read responses are validated against the issued command. Direct-bit responses
-accept only `0`, `1`, `OFF`, or `ON`; numeric reads of direct-bit devices require the
-corresponding 16- or 32-point response. A malformed response shape invalidates
-the session before another request.
+without a format accept only `0`, `1`, `OFF`, or `ON`. A formatted direct-bit
+single read returns one packed numeric token: `.U`, `.S`, and `.H` represent 16
+bits, while `.D` and `.L` represent 32 bits. Signed `.S` and `.L` tokens may
+include an explicit leading `+`. A malformed response shape invalidates the
+session before another request.
 
 The configured timeout is one absolute transaction deadline from the first
 send attempt through the complete response. FIFO queue waiting does not consume
@@ -89,6 +93,16 @@ request. Because Host Link UDP has no transaction ID, a duplicate datagram that
 arrives in the narrow interval after the pre-send check and before the new send
 cannot be distinguished from that request's response; choose TCP when strict
 response association is required.
+
+Host Link TCP responses also contain no request identifier. The client rejects
+data already visible before a send and retires the connection whenever stale,
+additional, malformed, timed-out, cancelled, or failed input becomes observable.
+A non-conforming peer can still deliver an unrelated line after that pre-send
+check but before the current response, and the library cannot prove that the
+line belongs to another request. Opening and closing TCP for every healthy
+request would not add an identifier, but would repeat connection setup and
+teardown latency. The supported contract therefore reuses a healthy TCP stream,
+serializes requests, and retires it immediately when ambiguity is observable.
 
 Reuse one connected client for repeated reads and writes. Prefer
 `ReadWordsSingleRequestAsync`, `ReadDWordsSingleRequestAsync`, or
@@ -178,6 +192,39 @@ Semantic `H` reads return exactly four uppercase hexadecimal digits, such as
 `000F`, through low-level, typed, named, monitor, and polling APIs. Raw response
 body APIs preserve the PLC bytes, and hexadecimal writes keep the minimal wire
 representation accepted by the PLC.
+
+## Monitor reads
+
+Word monitoring accepts explicit numeric formats and one intentional bare form:
+
+```csharp
+await client.RegisterMonitorWordsAsync(
+[
+    new KvMonitorWordTarget("R5000"),
+    new KvMonitorWordTarget("DM120", ".U"),
+]);
+
+string[] values = await client.ReadMonitorWordsAsync();
+Console.WriteLine($"R5000..R5015 packed = {values[0]}, DM120 = {values[1]}");
+```
+
+An omitted `KvMonitorWordTarget.DataFormat` is valid only for a direct-bit MWS
+target. It transmits the target exactly as written, such as `MWS R5000`, and
+the corresponding MWR field is one through five ASCII decimal digits for the
+unsigned packed 16-bit value beginning at that bit. Leading zeros are allowed,
+so `R5000=OFF` and `R5001=ON` may be represented as either `2` or `00002`.
+Accepted numeric values span `0` through `65535`. Empty or whitespace formats
+are invalid, and ordinary word devices still require `.U`, `.S`, `.H`, `.D`,
+or `.L` explicitly.
+
+This packed-word rule belongs only to bare MWS/MWR targets. A bare scalar `RD`
+and `MBS`/`MBR` remain strict bit operations that accept only `0`, `1`, `ON`,
+or `OFF`. Monitor response strings retain the PLC's decimal representation;
+explicit `.H` fields alone are normalized to four uppercase hexadecimal digits.
+An invalid monitor response is a protocol error and retires the supplying
+transport. Closing and reopening a client clears monitor registration metadata,
+and a failed replacement MWS does not make the client reuse an older decoder
+plan.
 
 ## Named aggregate read
 
@@ -351,6 +398,16 @@ Console.WriteLine($"Generic T0 preset={generic.Preset}");
 status must be exactly `0` or `1`; any other numeric value is treated as an
 invalid response and retires the connection. `ReadTimerAsync` accepts timer
 devices, and `ReadCounterAsync` accepts counter devices.
+
+The low-level formatted `ReadAsync` overload also returns timer/counter data as
+three strings. Its first string is the structural PLC status and remains exactly
+`0` or `1`; `.U`, `.S`, `.H`, `.D`, or `.L` applies only to the current and
+preset strings. Therefore `.H` returns, for example, `0,000F,0010`, not
+`0000,000F,0010`. Earlier builds exposed the synthesized `0000` or `0001` in
+that low-level first slot. Code that consumed that erroneous representation
+must use `0` or `1` instead. Missing or extra tokens, invalid status, invalid
+current/preset values, and numeric overflow are protocol errors and retire the
+supplying transport.
 
 > **Caution:** Timer/Counter preset writes (`WS`/`WSS`) are only supported on KV-8000/7000-series PLCs. Other models return error `E1`.
 
