@@ -1117,17 +1117,17 @@ Acceptance criteria:
 - [x] Changelog, migration records, user/generated docs, and version-policy disposition are linked from classification evidence.
 - [x] Three-TFM tests, all six net10.0 samples, package consumer, format, and extracted worktree source-archive validation passed.
 - [x] The release-major gate correctly rejected current version `3.2.1` because documented incompatible changes require a major above `3`.
-- [ ] Update the actual release version to major `4` or later and record final release acceptance.
+- [x] Actual candidate version is `4.0.0`; the complete repository release gate passed on 2026-08-07 with all three target frameworks, API-diff enforcement, samples, source archive, and isolated NuGet consumer validated.
 
 Current actual-diff disposition:
 
-- `documented-contract` (20): removal of the queued client/type-specific
-  overloads, removal of `WriteBitInWordAsync`, explicit comment-codec break,
-  and the two factory return-type changes. Each maps to
-  `GOAL-HL-SERIAL-DEFER-006`, `GOAL-HL-AGGREGATE-DEFER-001`, or
-  `HL-EVAL-TODO-006` and requires a major version before release.
-- `additive` (12): approved lifecycle/outcome errors, comment encoding/raw and
-  aggregate overloads, and Boolean-only direct-bit overloads.
+- `documented-contract` (22): removal of the queued client/type-specific
+  overloads, the explicit comment-codec break, the monitor-format contract,
+  and the two factory return-type changes. Each maps to its recorded approved
+  decision and requires a major version before release.
+- `additive` (13): approved lifecycle/outcome errors, comment encoding/raw and
+  aggregate overloads, Boolean-only direct-bit overloads, and the explicit
+  expansion-unit word-bit helper.
 - `undocumented-public` and `generated-or-noncontract` (0 current): supported
   and enforced by focused synthetic cases; no empty classification is invented.
 
