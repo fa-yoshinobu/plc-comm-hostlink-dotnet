@@ -1,5 +1,25 @@
 # HostLink .NET quality-overhaul migration
 
+## Superseding decision: explicit word-bit write (2026-08-07)
+
+The earlier removal decisions recorded below remain historical evidence but no
+longer describe the target public surface. `WriteBitInWordAsync` is restored as
+an explicit Boolean-only operation for every Host Link device family whose
+canonical default representation and `WR` command both provide one complete
+16-bit `.U` word. The selected device text remains unchanged across its one read
+and one write; there is no alternate route, fallback, resend, or readback.
+
+The full target contract and machine-verifiable acceptance criteria are
+GOAL-BIT-002 in `D:\APP\cross_library_bit_write_contract_goal_20260807.md`.
+The operation validates before FIFO admission, owns one FIFO turn, starts one
+absolute deadline on activation, always sends the write after a successful
+read, and remains explicitly non-PLC-atomic.
+
+GOAL-HOSTLINK-EXPANSION-RMW-001 extends the same approved contract to the
+existing URD/UWR route through `WriteBitInExpansionUnitBufferAsync`. The unit,
+buffer address, and `.U` format remain immutable across both requests; ordinary
+device and expansion-unit routes never fall back to one another.
+
 Branch: `quality/2026-07-overhaul`
 Scope: approved HostLink decisions D-052 through D-065
 Status: the user ran the authorized HostLink Claude review outside Codex on 2026-07-12; .NET findings are corrected and recorded below, with family-level final acceptance still separate.

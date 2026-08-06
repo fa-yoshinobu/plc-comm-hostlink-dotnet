@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-08-07
+
+- Release: Bumped .NET package metadata to `4.0.0` for the approved breaking-contract release.
+- Library: Restored the explicit Boolean-only `WriteBitInWordAsync` operation for ordinary 16-bit word devices. It validates the complete plan before FIFO admission, always performs one word read followed by one word write in one client turn, and uses one absolute deadline for both requests after activation. The operation is intentionally not PLC-atomic and performs no write fallback, retry, or success readback.
+- Library: Added `WriteBitInExpansionUnitBufferAsync` for the existing URD/UWR route. It fixes the route to one unit/address and `.U` word, applies the same Boolean-only preflight, FIFO, absolute-deadline, non-PLC-atomic, and outcome-unknown contract, and never falls back to another route.
+- Library: Made FIFO activation strongly exception-safe: cancellation/deadline setup failure now disposes every partially constructed registration/source and always releases the admitted lease so later operations cannot remain queued indefinitely.
+- Docs: Documented the bit-in-word write concurrency, cancellation, timeout, and outcome-unknown contract and the required migration from manual read/write sequences.
+
 - Library: **Breaking:** Low-level formatted timer/counter reads now preserve the structural first response token as exact `0` or `1` and apply `.U`, `.S`, `.H`, `.D`, or `.L` only to current and preset values. In particular, `.H` no longer exposes the erroneous synthesized status `0000` or `0001`; use `0` or `1`.
 - Library: Correct formatted single reads of direct-bit devices to accept the PLC's one packed scalar response token instead of expecting 16 or 32 separate bit tokens. Signed `.S` and `.L` responses accept the PLC's explicit leading `+`; bare bit reads remain strict `0`/`1`/`ON`/`OFF` reads. Public signatures are unchanged.
 - Library: **Breaking:** `KvMonitorWordTarget.DataFormat` is now nullable with a `null` default. Only bare direct-bit MWS targets may omit it; their MWR fields accept one through five ASCII decimal digits, including leading zeros, over the unsigned 16-bit range while the transmitted registration remains bare. Consumers that read or deconstruct `DataFormat` must now handle `null`. Empty or whitespace formats remain invalid, and scalar RD plus MBS/MBR retain strict bit semantics.

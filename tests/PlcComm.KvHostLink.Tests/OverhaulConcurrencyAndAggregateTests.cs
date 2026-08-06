@@ -141,6 +141,23 @@ public sealed class OverhaulConcurrencyAndAggregateTests
     }
 
     [Fact]
+    public async Task PostAdmissionCancellationSetupFailureAlwaysReleasesFifoLease()
+    {
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", 8501, HostLinkTransportMode.Tcp, TestProfile);
+        FieldInfo timeout = typeof(KvHostLinkClient).GetField(
+            "_timeout",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        timeout.SetValue(client, TimeSpan.MaxValue);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            client.ExecuteExclusiveAsync(() => Task.CompletedTask, CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            client.ExecuteExclusiveAsync(() => Task.CompletedTask, CancellationToken.None)
+                .WaitAsync(TimeSpan.FromSeconds(1)));
+    }
+
+    [Fact]
     public async Task QueuedWriteSnapshotsBooleanValuesAtAdmission()
     {
         var firstSeen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

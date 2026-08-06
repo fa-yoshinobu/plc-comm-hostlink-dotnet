@@ -29,29 +29,52 @@ internal sealed class KvHostLinkOperationCancellation : IDisposable
         _lifetimeToken = lifetimeToken;
         _timeout = timeout;
 
-        _callerRegistration = callerToken.Register(
-            static state => ((KvHostLinkOperationCancellation)state!).SetOrigin(KvHostLinkCancellationOrigin.Caller),
-            this);
-        _lifetimeRegistration = lifetimeToken.Register(
-            static state => ((KvHostLinkOperationCancellation)state!).SetOrigin(KvHostLinkCancellationOrigin.Lifetime),
-            this);
-
-        if (timeout.HasValue)
+        CancellationTokenRegistration callerRegistration = default;
+        CancellationTokenRegistration lifetimeRegistration = default;
+        CancellationTokenRegistration timeoutRegistration = default;
+        CancellationTokenSource? timeoutSource = null;
+        CancellationTokenSource? linkedSource = null;
+        try
         {
-            _timeoutSource = new CancellationTokenSource();
-            _timeoutRegistration = _timeoutSource.Token.Register(
-                static state => ((KvHostLinkOperationCancellation)state!).SetOrigin(KvHostLinkCancellationOrigin.Timeout),
+            callerRegistration = callerToken.Register(
+                static state => ((KvHostLinkOperationCancellation)state!).SetOrigin(KvHostLinkCancellationOrigin.Caller),
                 this);
-            _linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
-                callerToken,
-                lifetimeToken,
-                _timeoutSource.Token);
-            _timeoutSource.CancelAfter(timeout.Value);
+            lifetimeRegistration = lifetimeToken.Register(
+                static state => ((KvHostLinkOperationCancellation)state!).SetOrigin(KvHostLinkCancellationOrigin.Lifetime),
+                this);
+
+            if (timeout.HasValue)
+            {
+                timeoutSource = new CancellationTokenSource();
+                timeoutRegistration = timeoutSource.Token.Register(
+                    static state => ((KvHostLinkOperationCancellation)state!).SetOrigin(KvHostLinkCancellationOrigin.Timeout),
+                    this);
+                linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    callerToken,
+                    lifetimeToken,
+                    timeoutSource.Token);
+                timeoutSource.CancelAfter(timeout.Value);
+            }
+            else
+            {
+                linkedSource = CancellationTokenSource.CreateLinkedTokenSource(callerToken, lifetimeToken);
+            }
         }
-        else
+        catch
         {
-            _linkedSource = CancellationTokenSource.CreateLinkedTokenSource(callerToken, lifetimeToken);
+            linkedSource?.Dispose();
+            timeoutRegistration.Dispose();
+            timeoutSource?.Dispose();
+            lifetimeRegistration.Dispose();
+            callerRegistration.Dispose();
+            throw;
         }
+
+        _callerRegistration = callerRegistration;
+        _lifetimeRegistration = lifetimeRegistration;
+        _timeoutRegistration = timeoutRegistration;
+        _timeoutSource = timeoutSource;
+        _linkedSource = linkedSource;
     }
 
     internal CancellationToken Token => _linkedSource.Token;

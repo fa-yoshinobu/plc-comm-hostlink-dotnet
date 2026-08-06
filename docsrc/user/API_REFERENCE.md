@@ -1186,6 +1186,41 @@ Parameters:
 - `value`: Boolean bit value.
 - `ct`: Cancellation token.
 
+##### WriteBitInWordAsync
+
+```csharp
+public static Task WriteBitInWordAsync(KvHostLinkClient client, string device, int bitIndex, bool value, CancellationToken ct = default)
+```
+
+Sets or clears one bit in a 16-bit word through an explicit read-modify-write operation.
+
+Remarks: The complete target, index, and Boolean value are validated before FIFO admission. After activation, the helper always sends one word read followed by one word write under one local FIFO turn and one absolute deadline, even when the requested bit already has the desired value. Queue wait is outside that deadline. It performs no fallback, retry, or success readback. The operation is not PLC-atomic: PLC logic or another connection can update the word between the two requests, and that update can be lost. Use PLC-side logic, a handshake, or exclusive ownership of the complete word when that risk is unacceptable. Cancellation before the write begins sends no write; cancellation after write transmission may have begun reports an outcome-unknown failure and retires the connection.
+
+Parameters:
+- `client`: The client to use.
+- `device`: A base 16-bit word-device address such as `DM100`.
+- `bitIndex`: The bit index from 0 through 15.
+- `value`: The Boolean value to write.
+- `ct`: Cancellation token.
+
+##### WriteBitInExpansionUnitBufferAsync
+
+```csharp
+public static Task WriteBitInExpansionUnitBufferAsync(KvHostLinkClient client, int unitNo, int address, int bitIndex, bool value, CancellationToken ct = default)
+```
+
+Sets or clears one bit in one expansion-unit buffer word through explicit URD/UWR.
+
+Remarks: The route is fixed to the supplied unit and address and the data format is fixed to one 16-bit `.U` value. The complete plan is validated before FIFO admission. After activation, the helper always sends one URD followed by one UWR under one local FIFO turn and one absolute deadline, even when the requested bit is unchanged. It performs no route fallback, retry, or success readback and is not PLC-atomic against expansion-unit logic or another connection. Cancellation before UWR begins sends no write; a failure after UWR transmission may have begun reports outcome unknown and retires the connection.
+
+Parameters:
+- `client`: The client to use.
+- `unitNo`: Expansion unit number from 0 through 48.
+- `address`: Expansion-unit buffer address from 0 through 59999.
+- `bitIndex`: The bit index from 0 through 15.
+- `value`: The Boolean value to write.
+- `ct`: Cancellation token.
+
 ##### ReadNamedAsync
 
 ```csharp

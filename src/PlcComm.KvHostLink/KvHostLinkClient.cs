@@ -92,7 +92,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     private sealed record OperationContext(
         KvHostLinkClient Client,
         OperationGeneration Generation,
-        TimeSpan Timeout);
+        KvHostLinkOperationCancellation Cancellation);
 
     public KvHostLinkClient(
         string host,
@@ -166,10 +166,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         if (IsOpen) return;
 
         OperationContext context = RequireOperationContext();
-        using var operationCancellation = new KvHostLinkOperationCancellation(
-            cancellationToken,
-            context.Generation.Cancellation.Token,
-            context.Timeout);
+        KvHostLinkOperationCancellation operationCancellation = context.Cancellation;
         if (_transportMode == HostLinkTransportMode.Tcp)
         {
             byte[] rxBuffer = new byte[4096];
@@ -551,10 +548,15 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(operation);
         OperationLease lease = await EnterOperationAsync(cancellationToken).ConfigureAwait(false);
-        OperationContext? priorContext = _operationContext.Value;
-        _operationContext.Value = new OperationContext(this, lease.Generation, lease.Timeout);
+        OperationContext? priorContext = null;
         try
         {
+            priorContext = _operationContext.Value;
+            using var operationCancellation = new KvHostLinkOperationCancellation(
+                cancellationToken,
+                lease.Generation.Cancellation.Token,
+                lease.Timeout);
+            _operationContext.Value = new OperationContext(this, lease.Generation, operationCancellation);
             T result = await operation().ConfigureAwait(false);
             if (lease.Generation.IsRetired)
                 throw lease.Generation.CreateFailure(this);
@@ -562,8 +564,14 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         }
         finally
         {
-            _operationContext.Value = priorContext;
-            ExitOperation(lease);
+            try
+            {
+                _operationContext.Value = priorContext;
+            }
+            finally
+            {
+                ExitOperation(lease);
+            }
         }
     }
 
@@ -595,10 +603,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         if (!IsOpen)
             throw new HostLinkNotConnectedError();
 
-        using var operationCancellation = new KvHostLinkOperationCancellation(
-            cancellationToken,
-            context.Generation.Cancellation.Token,
-            context.Timeout);
+        KvHostLinkOperationCancellation operationCancellation = context.Cancellation;
         return await SendRawTransportCoreAsync(
             frame,
             stateChanging,
@@ -903,10 +908,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         if (!IsOpen)
             throw new HostLinkNotConnectedError();
 
-        using var operationCancellation = new KvHostLinkOperationCancellation(
-            cancellationToken,
-            context.Generation.Cancellation.Token,
-            context.Timeout);
+        KvHostLinkOperationCancellation operationCancellation = context.Cancellation;
         byte[] response = await SendRawTransportCoreAsync(
             frame,
             stateChanging,
@@ -948,7 +950,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         }
     }
 
-    private void InvalidateProtocolState()
+    internal void InvalidateProtocolState()
     {
         if (_transportMode == HostLinkTransportMode.Tcp)
         {
@@ -1130,7 +1132,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
             cancellationToken);
     }
 
-    private static string BuildWriteCommand<T>(
+    internal static string BuildWriteCommand<T>(
         string device,
         T value,
         string? dataFormat) where T : IFormattable

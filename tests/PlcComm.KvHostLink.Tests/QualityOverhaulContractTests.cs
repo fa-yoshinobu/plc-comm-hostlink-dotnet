@@ -563,11 +563,28 @@ public sealed class QualityOverhaulContractTests
     }
 
     [Fact]
-    public void PublicSurfaceRejectsMultiRequestStateChangingHelper()
+    public void PublicSurfaceExposesExplicitBooleanWordBitHelper()
     {
-        Assert.DoesNotContain(
+        MethodInfo method = Assert.Single(
             typeof(KvHostLinkClientExtensions).GetMethods(BindingFlags.Public | BindingFlags.Static),
-            method => method.Name == "WriteBitInWordAsync");
+            candidate => candidate.Name == "WriteBitInWordAsync");
+        ParameterInfo[] parameters = method.GetParameters();
+        Assert.Equal(typeof(KvHostLinkClient), parameters[0].ParameterType);
+        Assert.Equal(typeof(string), parameters[1].ParameterType);
+        Assert.Equal(typeof(int), parameters[2].ParameterType);
+        Assert.Equal(typeof(bool), parameters[3].ParameterType);
+        Assert.Equal(typeof(CancellationToken), parameters[4].ParameterType);
+
+        MethodInfo expansion = Assert.Single(
+            typeof(KvHostLinkClientExtensions).GetMethods(BindingFlags.Public | BindingFlags.Static),
+            candidate => candidate.Name == "WriteBitInExpansionUnitBufferAsync");
+        ParameterInfo[] expansionParameters = expansion.GetParameters();
+        Assert.Equal(typeof(KvHostLinkClient), expansionParameters[0].ParameterType);
+        Assert.Equal(typeof(int), expansionParameters[1].ParameterType);
+        Assert.Equal(typeof(int), expansionParameters[2].ParameterType);
+        Assert.Equal(typeof(int), expansionParameters[3].ParameterType);
+        Assert.Equal(typeof(bool), expansionParameters[4].ParameterType);
+        Assert.Equal(typeof(CancellationToken), expansionParameters[5].ParameterType);
     }
 
     [Fact]

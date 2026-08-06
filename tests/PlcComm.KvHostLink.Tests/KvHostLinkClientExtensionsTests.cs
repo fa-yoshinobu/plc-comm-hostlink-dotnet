@@ -10,6 +10,193 @@ public sealed class KvHostLinkClientExtensionsTests
 {
     private const string TestPlcProfile = "keyence:kv-8000";
 
+    [Theory]
+    [InlineData(true, "0", "WR DM100.U 8")]
+    [InlineData(true, "8", "WR DM100.U 8")]
+    [InlineData(false, "8", "WR DM100.U 0")]
+    public async Task WriteBitInWordAsync_AlwaysReadsThenWritesOneWord(
+        bool value,
+        string readValue,
+        string expectedWrite)
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD DM100.U" => readValue,
+            var write when write == expectedWrite => "OK",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await client.WriteBitInWordAsync("DM100", 3, value);
+
+        Assert.Equal(["RD DM100.U", expectedWrite], server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task WriteBitInWordAsync_CoversEveryExistingCompleteWordRouteWithoutFallback()
+    {
+        string[] devices = ["DM0", "EM0", "FM0", "ZF0", "W0", "TM0", "Z0", "CM0", "VM0", "D0", "E0", "F0"];
+        await using var server = new ScriptedHostLinkServer(command =>
+            command.StartsWith("RD ", StringComparison.Ordinal) ? "0" : "OK");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        foreach (string device in devices)
+            await client.WriteBitInWordAsync(device, 0, false);
+
+        Assert.Equal(
+            devices.SelectMany(device => new[] { $"RD {device}.U", $"WR {device}.U 0" }),
+            server.ReceivedCommands);
+    }
+
+    [Theory]
+    [InlineData("R0", 0)]
+    [InlineData("T0", 0)]
+    [InlineData("AT0", 0)]
+    [InlineData("DM100.0", 0)]
+    [InlineData("DM100", -1)]
+    [InlineData("DM100", 16)]
+    public async Task WriteBitInWordAsync_RejectsInvalidInputBeforeTransport(string device, int bitIndex)
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            client.WriteBitInWordAsync(device, bitIndex, true));
+
+        Assert.Empty(server.ReceivedCommands);
+    }
+
+    [Fact]
+    public async Task WriteBitInWordAsync_MalformedReadSendsNoWriteAndRetiresConnection()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "NOT_A_WORD");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.WriteBitInWordAsync("DM100", 3, true));
+
+        Assert.Equal(["RD DM100.U"], server.ReceivedCommands.ToArray());
+        Assert.False(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task WriteBitInWordAsync_CompletePlcWriteErrorIsDefinitiveAndConnectionRemainsReusable()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "RD DM100.U" => "0",
+            "WR DM100.U 1" => "E1",
+            "RD DM1.U" => "7",
+            _ => "E2",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        HostLinkError error = await Assert.ThrowsAsync<HostLinkError>(() =>
+            client.WriteBitInWordAsync("DM100", 0, true));
+
+        Assert.IsNotType<HostLinkOutcomeUnknownError>(error);
+        Assert.Equal(["7"], await client.ReadAsync("DM1", ".U"));
+        Assert.Equal(
+            ["RD DM100.U", "WR DM100.U 1", "RD DM1.U"],
+            server.ReceivedCommands.ToArray());
+    }
+
+    [Theory]
+    [InlineData(true, "0", "UWR 01 100.U 1 8")]
+    [InlineData(true, "8", "UWR 01 100.U 1 8")]
+    [InlineData(false, "8", "UWR 01 100.U 1 0")]
+    public async Task WriteBitInExpansionUnitBufferAsync_AlwaysUsesOneImmutableUrdUwrRoute(
+        bool value,
+        string readValue,
+        string expectedWrite)
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "URD 01 100.U 1" => readValue,
+            var write when write == expectedWrite => "OK",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await client.WriteBitInExpansionUnitBufferAsync(1, 100, 3, value);
+
+        Assert.Equal(["URD 01 100.U 1", expectedWrite], server.ReceivedCommands.ToArray());
+    }
+
+    [Theory]
+    [InlineData(-1, 0, 0)]
+    [InlineData(49, 0, 0)]
+    [InlineData(0, -1, 0)]
+    [InlineData(0, 60000, 0)]
+    [InlineData(0, 0, -1)]
+    [InlineData(0, 0, 16)]
+    public async Task WriteBitInExpansionUnitBufferAsync_RejectsInvalidPlanBeforeTransport(
+        int unitNo,
+        int address,
+        int bitIndex)
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            client.WriteBitInExpansionUnitBufferAsync(unitNo, address, bitIndex, true));
+
+        Assert.Empty(server.ReceivedCommands);
+    }
+
+    [Fact]
+    public async Task WriteBitInExpansionUnitBufferAsync_MalformedReadSendsNoWriteAndRetiresConnection()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "NOT_A_WORD");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.WriteBitInExpansionUnitBufferAsync(1, 100, 3, true));
+
+        Assert.Equal(["URD 01 100.U 1"], server.ReceivedCommands.ToArray());
+        Assert.False(client.IsOpen);
+    }
+
+    [Fact]
+    public async Task WriteBitInExpansionUnitBufferAsync_PlcWriteErrorIsDefinitiveAndReusable()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "URD 01 100.U 1" => "0",
+            "UWR 01 100.U 1 1" => "E1",
+            "RD DM1.U" => "7",
+            _ => "E2",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        HostLinkError error = await Assert.ThrowsAsync<HostLinkError>(() =>
+            client.WriteBitInExpansionUnitBufferAsync(1, 100, 0, true));
+
+        Assert.IsNotType<HostLinkOutcomeUnknownError>(error);
+        Assert.Equal(["7"], await client.ReadAsync("DM1", ".U"));
+        Assert.Equal(
+            ["URD 01 100.U 1", "UWR 01 100.U 1 1", "RD DM1.U"],
+            server.ReceivedCommands.ToArray());
+    }
+
     [Fact]
     public async Task ATWrites_AreRejectedBeforeSendingWrOrWrs()
     {

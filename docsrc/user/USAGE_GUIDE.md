@@ -291,7 +291,7 @@ values and native `.D` Dword requests accept at most 500 values. The library
 does not split larger operations: application code must make each request,
 timing boundary, retry decision, and partial-write consequence explicit.
 
-## Bit values and bit-in-word reads
+## Bit values and explicit bit-in-word writes
 
 ```csharp
 using System;
@@ -310,10 +310,46 @@ bit 10. Individual direct-bit writes accept only `bool`, including consecutive
 bit collections. Numeric `0`/`1` compatibility inputs are rejected before
 transport. Explicit low-level `.U`/`.D` operations on a direct-bit bank remain
 packed multi-bit representations; they are not individual bit-value inputs.
-The former read-modify-write bit-in-word helper was removed because
-one state-changing public call required two wire requests and could not provide
-a safe all-or-error result. Write the complete word explicitly only when your
-application owns that word and has chosen the concurrency semantics.
+Use `WriteBitInWordAsync` only when an explicit client-side read-modify-write is
+the intended policy:
+
+```csharp
+await client.WriteBitInWordAsync("DM50", 10, true);
+```
+
+The value is a `bool`, the bit index is `0..15`, and the target must be an
+ordinary 16-bit word device. The complete plan is rejected before FIFO
+admission if it is invalid. After activation, one absolute transaction deadline
+covers exactly one word read followed by one word write in the same client FIFO
+turn; queue wait is outside that deadline. The write is sent even when the bit
+already has the requested value. There is no fallback, resend, success
+readback, or implicit use by named writes.
+
+This operation is not PLC-atomic. PLC logic or another connection can change
+the word between the read and write, and its change can be lost. Prefer PLC-side
+logic, a handshake, or exclusive ownership of the complete word when that risk
+is unacceptable. Cancellation before the write starts sends no write.
+Cancellation, timeout, close, transport failure, or malformed response after
+write transmission may have started is outcome-unknown: do not retry
+automatically; reopen and reconcile PLC state deliberately. A complete PLC
+error response is definitive and does not by itself retire a healthy
+connection.
+
+Expansion-unit buffer memory uses its own explicit route-specific helper:
+
+```csharp
+await client.WriteBitInExpansionUnitBufferAsync(
+    unitNo: 1,
+    address: 100,
+    bitIndex: 3,
+    value: true);
+```
+
+This helper fixes both requests to the same unit/address and one `.U` word,
+then sends exactly `URD` for one point followed by `UWR` for one point. The
+normal `WriteBitInWordAsync` device route and the expansion-unit route never
+fall back to one another. The same shared-deadline, cancellation,
+outcome-unknown, no-readback, and non-PLC-atomic rules apply.
 
 ## Polling
 

@@ -291,6 +291,131 @@ public static class KvHostLinkClientExtensions
         return client.WriteAsync(device, value, ct);
     }
 
+    /// <summary>Sets or clears one bit in a 16-bit word through an explicit read-modify-write operation.</summary>
+    /// <param name="client">The client to use.</param>
+    /// <param name="device">A base 16-bit word-device address such as <c>DM100</c>.</param>
+    /// <param name="bitIndex">The bit index from 0 through 15.</param>
+    /// <param name="value">The Boolean value to write.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <remarks>
+    /// The complete target, index, and Boolean value are validated before FIFO admission. After
+    /// activation, the helper always sends one word read followed by one word write under one local
+    /// FIFO turn and one absolute deadline, even when the requested bit already has the desired
+    /// value. Queue wait is outside that deadline. It performs no fallback, retry, or success
+    /// readback. The operation is not PLC-atomic: PLC logic or another connection can update the
+    /// word between the two requests, and that update can be lost. Use PLC-side logic, a handshake,
+    /// or exclusive ownership of the complete word when that risk is unacceptable. Cancellation
+    /// before the write begins sends no write; cancellation after write transmission may have begun
+    /// reports an outcome-unknown failure and retires the connection.
+    /// </remarks>
+    public static Task WriteBitInWordAsync(
+        this KvHostLinkClient client,
+        string device,
+        int bitIndex,
+        bool value,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        if (bitIndex is < 0 or > 15)
+            throw new ArgumentOutOfRangeException(nameof(bitIndex), "bitIndex must be 0-15.");
+
+        KvDeviceAddress address = KvHostLinkDevice.RequireBaseDevice(device);
+        string defaultFormat = KvHostLinkDevice.ResolveEffectiveFormat(address.DeviceType, string.Empty);
+        if (!string.Equals(defaultFormat, ".U", StringComparison.Ordinal))
+        {
+            throw new HostLinkProtocolError(
+                $"WriteBitInWordAsync requires an ordinary 16-bit word device; '{device}' is not eligible.");
+        }
+
+        string normalizedDevice = address.ToText();
+        _ = KvHostLinkClient.BuildWriteCommand(normalizedDevice, (ushort)0, ".U");
+        return client.ExecuteExclusiveAsync(async () =>
+        {
+            string[] tokens = await client.ReadCoreAsync(normalizedDevice, ".U", 1, false, ct).ConfigureAwait(false);
+            ushort current;
+            try
+            {
+                string token = RequireDataToken(tokens, normalizedDevice);
+                if (!ushort.TryParse(token, NumberStyles.None, CultureInfo.InvariantCulture, out current))
+                    throw new HostLinkProtocolError($"Bit-in-word read for '{normalizedDevice}' did not return one unsigned word.");
+            }
+            catch (HostLinkProtocolError)
+            {
+                client.InvalidateProtocolState();
+                throw;
+            }
+            ushort mask = (ushort)(1 << bitIndex);
+            ushort updated = value ? (ushort)(current | mask) : (ushort)(current & ~mask);
+            string command = KvHostLinkClient.BuildWriteCommand(normalizedDevice, updated, ".U");
+            await client.ExpectOkCoreAsync(command, ct).ConfigureAwait(false);
+        }, ct);
+    }
+
+    /// <summary>Sets or clears one bit in one expansion-unit buffer word through explicit URD/UWR.</summary>
+    /// <param name="client">The client to use.</param>
+    /// <param name="unitNo">Expansion unit number from 0 through 48.</param>
+    /// <param name="address">Expansion-unit buffer address from 0 through 59999.</param>
+    /// <param name="bitIndex">The bit index from 0 through 15.</param>
+    /// <param name="value">The Boolean value to write.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <remarks>
+    /// The route is fixed to the supplied unit and address and the data format is fixed to one
+    /// 16-bit <c>.U</c> value. The complete plan is validated before FIFO admission. After
+    /// activation, the helper always sends one URD followed by one UWR under one local FIFO turn
+    /// and one absolute deadline, even when the requested bit is unchanged. It performs no route
+    /// fallback, retry, or success readback and is not PLC-atomic against expansion-unit logic or
+    /// another connection. Cancellation before UWR begins sends no write; a failure after UWR
+    /// transmission may have begun reports outcome unknown and retires the connection.
+    /// </remarks>
+    public static Task WriteBitInExpansionUnitBufferAsync(
+        this KvHostLinkClient client,
+        int unitNo,
+        int address,
+        int bitIndex,
+        bool value,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        if (unitNo is < 0 or > 48)
+            throw new ArgumentOutOfRangeException(nameof(unitNo), "unitNo must be 0-48.");
+        if (address is < 0 or > 59999)
+            throw new ArgumentOutOfRangeException(nameof(address), "address must be 0-59999.");
+        if (bitIndex is < 0 or > 15)
+            throw new ArgumentOutOfRangeException(nameof(bitIndex), "bitIndex must be 0-15.");
+
+        KvHostLinkDevice.ValidateExpansionBufferCount(".U", 1);
+        KvHostLinkDevice.ValidateExpansionBufferSpan(address, ".U", 1);
+        string readCommand = $"URD {unitNo:D2} {address}.U 1";
+        string writePrefix = $"UWR {unitNo:D2} {address}.U 1 ";
+        _ = KvHostLinkProtocol.BuildFrame(readCommand);
+        _ = KvHostLinkProtocol.BuildFrame(writePrefix + "65535");
+
+        return client.ExecuteExclusiveAsync(async () =>
+        {
+            string response = await client.SendSemanticCoreAsync(readCommand, ct).ConfigureAwait(false);
+            string[] tokens = KvHostLinkProtocol.SplitDataTokens(response);
+            ushort current;
+            try
+            {
+                KvHostLinkProtocol.ValidateAndNormalizeResponseTokens(tokens, ".U", 1);
+                string token = RequireDataToken(tokens, $"U{unitNo} buffer {address}");
+                if (!ushort.TryParse(token, NumberStyles.None, CultureInfo.InvariantCulture, out current))
+                    throw new HostLinkProtocolError("Expansion-unit bit read did not return one unsigned word.");
+            }
+            catch (HostLinkProtocolError)
+            {
+                client.InvalidateProtocolState();
+                throw;
+            }
+
+            ushort mask = (ushort)(1 << bitIndex);
+            ushort updated = value ? (ushort)(current | mask) : (ushort)(current & ~mask);
+            await client.ExpectOkCoreAsync(
+                writePrefix + updated.ToString(CultureInfo.InvariantCulture),
+                ct).ConfigureAwait(false);
+        }, ct);
+    }
+
     // -----------------------------------------------------------------------
     // Named-device read
     // -----------------------------------------------------------------------
