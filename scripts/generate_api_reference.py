@@ -256,7 +256,6 @@ var types = assembly.GetExportedTypes()
         DocId = MemberDocId(type),
         Members = type.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
             .Where(m => !IsCompilerGenerated(m) && !IsEditorHidden(m) && IsDeclaredPublic(m))
-            .OrderBy(m => m.MetadataToken)
             .Select(m => new
             {
                 Kind = m.MemberType.ToString(),
@@ -272,6 +271,9 @@ var types = assembly.GetExportedTypes()
                 },
                 DocId = MemberDocId(m),
             })
+            .OrderBy(m => m.DocId, StringComparer.Ordinal)
+            .ThenBy(m => m.Signature, StringComparer.Ordinal)
+            .ThenBy(m => m.Kind, StringComparer.Ordinal)
             .ToArray(),
     })
     .ToArray();

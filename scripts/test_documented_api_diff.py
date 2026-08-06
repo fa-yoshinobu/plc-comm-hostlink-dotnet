@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -21,6 +22,35 @@ SPEC.loader.exec_module(MODULE)
 
 FRAMEWORKS = {"net8.0", "net9.0", "net10.0"}
 COMMIT = "1" * 40
+
+
+def build_fixture(root: Path, source: str) -> Path:
+    root.mkdir()
+    (root / "ApiSurfaceFixture.csproj").write_text(
+        '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>'
+        "<TargetFramework>net10.0</TargetFramework>"
+        "<Nullable>enable</Nullable>"
+        "</PropertyGroup></Project>",
+        encoding="utf-8",
+    )
+    (root / "ApiSurfaceFixture.cs").write_text(source, encoding="utf-8")
+    subprocess.run(
+        [
+            "dotnet",
+            "build",
+            root / "ApiSurfaceFixture.csproj",
+            "-c",
+            "Release",
+            "--nologo",
+            "-p:UseSharedCompilation=false",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    return root / "bin" / "Release" / "net10.0" / "ApiSurfaceFixture.dll"
 
 
 def write(root: Path, relative: str, text: str = "evidence") -> None:
@@ -180,7 +210,67 @@ def main() -> int:
             if snippet not in MODULE.CSHARP_INSPECTOR:
                 raise AssertionError(f"API inspector coverage regressed: {snippet}")
 
-    print("validated 3-TFM exact signatures, prior-contract classification, duplicate IDs, special surface coverage, and major release enforcement")
+        if "MetadataToken" in MODULE.CSHARP_INSPECTOR:
+            raise AssertionError("API inspector must not treat metadata token order as contract")
+
+        stable_a = """
+using System.Threading.Tasks;
+namespace ApiFixture;
+public enum StableMode { Zebra = 2, Alpha = 1 }
+public sealed class StableSurface
+{
+    public string Zebra(int value) => value.ToString();
+    private async Task HiddenFirstAsync() { await Task.Yield(); }
+    public async Task<int> EchoAsync(int value) { await Task.Yield(); return (int)value; }
+    public int Alpha { get; init; }
+}
+"""
+        stable_b = """
+using System.Threading.Tasks;
+namespace ApiFixture;
+public enum StableMode { Alpha = 1, Zebra = 2 }
+public sealed class StableSurface
+{
+    private async Task HiddenSecondAsync() { await Task.Yield(); }
+    public int Alpha { get; init; }
+    public async Task<int> EchoAsync(int value) { await Task.Yield(); return (int)value; }
+    private async Task HiddenFirstAsync() { await Task.Yield(); }
+    public string Zebra(int value) => value.ToString();
+}
+"""
+        changed = stable_b.replace("Alpha = 1", "Alpha = 3").replace(
+            "EchoAsync(int value)", "EchoAsync(long value)"
+        )
+        inspector = MODULE.build_inspector(root)
+        before = MODULE.inspect(inspector, build_fixture(root / "fixture-a", stable_a))
+        reordered = MODULE.inspect(inspector, build_fixture(root / "fixture-b", stable_b))
+        semantic_change = MODULE.inspect(
+            inspector, build_fixture(root / "fixture-changed", changed)
+        )
+        if before != reordered:
+            raise AssertionError(
+                "API surface changed with declaration order or private async state machines"
+            )
+        if any("d__" in entry["Id"] or "DisplayClass" in entry["Id"] for entry in before):
+            raise AssertionError("compiler-generated state-machine identity leaked into API surface")
+        negative = MODULE.diff_surfaces("net10.0", before, semantic_change)
+        if not any(
+            difference.change == "changed"
+            and difference.symbol == "T:ApiFixture.StableMode"
+            for difference in negative
+        ):
+            raise AssertionError("an enum value contract change was normalized away")
+        if not any(
+            difference.symbol.startswith("M:ApiFixture.StableSurface.EchoAsync(")
+            for difference in negative
+        ):
+            raise AssertionError("a public parameter-type change was normalized away")
+
+    print(
+        "validated 3-TFM exact signatures, stable semantic ordering, compiler-generated "
+        "exclusion, public-signature negative controls, prior-contract classification, "
+        "duplicate IDs, special surface coverage, and major release enforcement"
+    )
     return 0
 
 

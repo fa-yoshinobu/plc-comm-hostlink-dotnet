@@ -179,7 +179,7 @@ static string TypeSignature(Type type)
     string interfaces = string.Join(",", DirectInterfaces(type).Select(TypeIdName).OrderBy(value => value));
     string enumValues = type.IsEnum
         ? string.Join(",", type.GetFields(BindingFlags.Public | BindingFlags.Static)
-            .OrderBy(field => field.MetadataToken)
+            .OrderBy(field => field.Name, StringComparer.Ordinal)
             .Select(field => field.Name + "=" + Convert.ToString(field.GetRawConstantValue(), CultureInfo.InvariantCulture)))
         : "";
     return string.Join(";",
@@ -234,7 +234,7 @@ foreach (Type type in assembly.GetTypes().Where(IsExternallyVisibleType).OrderBy
     entries.Add(new { Id = "T:" + declaringType, Kind = "type", DeclaringType = declaringType, Signature = TypeSignature(type) });
     foreach (MemberInfo member in type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
         .Where(IsVisible)
-        .OrderBy(member => member.MemberType).ThenBy(member => member.Name).ThenBy(member => member.MetadataToken))
+        .OrderBy(member => member.MemberType).ThenBy(member => member.Name, StringComparer.Ordinal))
     {
         string id;
         string signature;
@@ -313,7 +313,9 @@ foreach (Type type in assembly.GetTypes().Where(IsExternallyVisibleType).OrderBy
     }
 }
 
-Console.WriteLine(JsonSerializer.Serialize(entries.OrderBy(entry => entry.GetType().GetProperty("Id")!.GetValue(entry)),
+Console.WriteLine(JsonSerializer.Serialize(entries
+    .OrderBy(entry => entry.GetType().GetProperty("Id")!.GetValue(entry)?.ToString(), StringComparer.Ordinal)
+    .ThenBy(entry => entry.GetType().GetProperty("Signature")!.GetValue(entry)?.ToString(), StringComparer.Ordinal),
     new JsonSerializerOptions { WriteIndented = true }));
 '''
 

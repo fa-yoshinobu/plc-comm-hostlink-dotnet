@@ -280,7 +280,7 @@
       "symbol": "T:PlcComm.KvHostLink.HostLinkOutcomeUnknownReason",
       "frameworks": ["net8.0", "net9.0", "net10.0"],
       "before": null,
-      "after": "access=public;kind=enum;abstract=False;sealed=True;base=System.Enum;interfaces=;enumUnderlying=System.Int32;enumValues=Timeout=0,CallerCancellation=1,ConnectionClosed=2,TransportFailure=3,InvalidResponse=4;constraints=",
+      "after": "access=public;kind=enum;abstract=False;sealed=True;base=System.Enum;interfaces=;enumUnderlying=System.Int32;enumValues=CallerCancellation=1,ConnectionClosed=2,InvalidResponse=4,Timeout=0,TransportFailure=3;constraints=",
       "category": "additive",
       "evidence": "error-additions"
     },
@@ -307,7 +307,7 @@
       "symbol": "T:PlcComm.KvHostLink.HostLinkCommentEncoding",
       "frameworks": ["net8.0", "net9.0", "net10.0"],
       "before": null,
-      "after": "access=public;kind=enum;abstract=False;sealed=True;base=System.Enum;interfaces=;enumUnderlying=System.Int32;enumValues=Utf8=0,Cp932=1;constraints=",
+      "after": "access=public;kind=enum;abstract=False;sealed=True;base=System.Enum;interfaces=;enumUnderlying=System.Int32;enumValues=Cp932=1,Utf8=0;constraints=",
       "category": "additive",
       "evidence": "comment-additions"
     },
