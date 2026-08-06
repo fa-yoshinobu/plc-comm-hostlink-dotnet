@@ -17,20 +17,6 @@
       ,"priorContractCommit": "19df212d9bbed545d137e1e6d71b8afb30237628"
       ,"priorContractTerm": "QueuedKvHostLinkClient"
     },
-    "bit-helper-break": {
-      "decision": "GOAL-HL-AGGREGATE-DEFER-001",
-      "rationale": "The documented multi-request read-modify-write helper was intentionally removed because it cannot provide one-request state-changing semantics.",
-      "migrationPath": "internal_docs/maintainer/QUALITY_OVERHAUL_MIGRATION.md",
-      "changelogPath": "CHANGELOG.md",
-      "changelogNeedle": "**Breaking:** Removed the multi-request `WriteBitInWordAsync`",
-      "documentationEvidence": [
-        { "path": "docsrc/user/USAGE_GUIDE.md", "needle": "The former read-modify-write bit-in-word helper was removed" },
-        { "path": "docsrc/user/API_REFERENCE.md", "needle": "Direct bit device families cannot represent that two-word value" }
-      ],
-      "versionPolicy": "major-version-required-before-release"
-      ,"priorContractCommit": "19df212d9bbed545d137e1e6d71b8afb30237628"
-      ,"priorContractTerm": "WriteBitInWordAsync"
-    },
     "comment-codec-break": {
       "decision": "HL-EVAL-TODO-006",
       "rationale": "The documented implicit device-comment decoder was intentionally replaced by explicit strict UTF-8 or CP932 selection and raw-byte access.",
@@ -71,6 +57,16 @@
       "documentationDisposition": "documented",
       "documentationPaths": [
         "docsrc/user/USAGE_GUIDE.md",
+        "docsrc/user/API_REFERENCE.md"
+      ]
+    },
+    "expansion-word-bit-addition": {
+      "decision": "GOAL-HOSTLINK-EXPANSION-RMW-001",
+      "rationale": "The explicit Boolean expansion-unit word-bit helper is an approved additive route-specific counterpart to the ordinary word-bit helper.",
+      "documentationDisposition": "documented",
+      "documentationPaths": [
+        "docsrc/user/USAGE_GUIDE.md",
+        "docsrc/user/GOTCHAS.md",
         "docsrc/user/API_REFERENCE.md"
       ]
     },
@@ -119,21 +115,12 @@
     },
     {
       "change": "removed",
-      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)",
-      "frameworks": ["net8.0", "net9.0", "net10.0"],
-      "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Int32|bitIndex|required|read=NotNull|write=NotNull,value|System.Boolean|value|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
-      "after": null,
-      "category": "documented-contract",
-      "evidence": "bit-helper-break"
-    },
-    {
-      "change": "removed",
       "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInWordAsync(PlcComm.KvHostLink.QueuedKvHostLinkClient,System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)",
       "frameworks": ["net8.0", "net9.0", "net10.0"],
       "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.QueuedKvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Int32|bitIndex|required|read=NotNull|write=NotNull,value|System.Boolean|value|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
       "after": null,
       "category": "documented-contract",
-      "evidence": "bit-helper-break"
+      "evidence": "fifo-client-break"
     },
     {
       "change": "removed",
@@ -377,6 +364,15 @@
       "after": "access=public;return=System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object}};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{System.String}|addresses|required|read=NotNull|write=NotNull,value|PlcComm.KvHostLink.HostLinkCommentEncoding|commentEncoding|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
       "category": "additive",
       "evidence": "comment-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitInExpansionUnitBufferAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Int32,System.Int32,System.Int32,System.Boolean,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.Int32|unitNo|required|read=NotNull|write=NotNull,value|System.Int32|address|required|read=NotNull|write=NotNull,value|System.Int32|bitIndex|required|read=NotNull|write=NotNull,value|System.Boolean|value|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "expansion-word-bit-addition"
     },
     {
       "change": "changed",
