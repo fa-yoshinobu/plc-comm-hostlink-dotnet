@@ -83,6 +83,15 @@
       "versionPolicy": "major-version-required-before-release",
       "priorContractCommit": "19df212d9bbed545d137e1e6d71b8afb30237628",
       "priorContractTerm": "KvMonitorWordTarget"
+    },
+    "single-request-bit-additions": {
+      "decision": "RELEASE-HOSTLINK-4.1.0-20260827",
+      "rationale": "The canonical Boolean contiguous helpers are reviewed additive high-level APIs with an exact one-request-or-pre-transport-rejection contract.",
+      "documentationDisposition": "documented",
+      "documentationPaths": [
+        "docsrc/user/USAGE_GUIDE.md",
+        "docsrc/user/API_REFERENCE.md"
+      ]
     }
   },
   "classifications": [
@@ -400,6 +409,24 @@
       "after": "type=System.String;readNullability=Nullable;writeNullability=Nullable;static=False;get=public;set=public;init=True;getAbstract=False;setAbstract=False;getVirtual=False;setVirtual=False;index=",
       "category": "documented-contract",
       "evidence": "monitor-format-contract"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.ReadBitsSingleRequestAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Int32,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task{System.Boolean[]};returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Int32|count|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "single-request-bit-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteBitsSingleRequestAsync(PlcComm.KvHostLink.KvHostLinkClient,System.String,System.Collections.Generic.IReadOnlyList{System.Boolean},System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IReadOnlyList{System.Boolean}|values|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "single-request-bit-additions"
     }
   ]
 }

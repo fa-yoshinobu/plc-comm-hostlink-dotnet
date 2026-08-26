@@ -3,7 +3,7 @@
 // Demonstrates all high-level KEYENCE KV Host Link APIs:
 //   KvHostLinkClientFactory.OpenAndConnectAsync, ReadTypedAsync,
 //   WriteTypedAsync, ReadWordsSingleRequestAsync,
-//   ReadWordsAsync, ReadDWordsAsync,
+//   ReadDWordsSingleRequestAsync,
 //   ReadNamedAsync, PollAsync, and KvHostLinkAddress.Normalize.
 //
 // Usage:
@@ -109,7 +109,7 @@ try
     Console.WriteLine($"[ReadWordsSingleRequestAsync] DM0-DM9 = [{string.Join(", ", words)}]");
 
     // -------------------------------------------------------------------------
-    // 4. ReadWordsAsync / ReadDWordsAsync
+    // 4. ReadWordsSingleRequestAsync / ReadDWordsSingleRequestAsync
     //
     // Reads count consecutive DWord (32-bit unsigned) values starting at device.
     // DWord reads use the native .D Host Link request format. Both helpers send
@@ -120,9 +120,9 @@ try
     Console.WriteLine($"[ReadDWordsSingleRequestAsync] DM0-DM7 as uint32[4] = [{string.Join(", ", dwords)}]");
 
     ushort[] largeWords = await client.ReadWordsSingleRequestAsync("DM1000", 200);
-    uint[] largeDwords = await client.ReadDWordsAsync("DM2000", 40);
-    Console.WriteLine($"[ReadWordsAsync] DM1000 block words = {largeWords.Length}");
-    Console.WriteLine($"[ReadDWordsAsync] DM2000 block dwords = {largeDwords.Length}");
+    uint[] largeDwords = await client.ReadDWordsSingleRequestAsync("DM2000", 40);
+    Console.WriteLine($"[ReadWordsSingleRequestAsync] DM1000 block words = {largeWords.Length}");
+    Console.WriteLine($"[ReadDWordsSingleRequestAsync] DM2000 block dwords = {largeDwords.Length}");
 
     // -------------------------------------------------------------------------
     // 6. ReadNamedAsync
