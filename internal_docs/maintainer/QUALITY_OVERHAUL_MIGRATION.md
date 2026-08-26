@@ -1676,8 +1676,8 @@ same command is rerun against the eventual release commit before tagging.
 
 - [x] Implementation and package metadata completed in this repository.
 - [x] Tests cover every acceptance criterion.
-- [ ] Relevant static, unit, integration, sample, source-archive, API, and package gates passed.
+- [x] Relevant static, unit, integration, sample, source-archive, API, and package gates passed.
 - [x] Codex final self-review completed against the approved contract and actual diff.
 - [x] Live verification is not required under the disposition above.
 - [x] Documentation, migration notes, changelog, and generated API reference agree.
-- [ ] Final acceptance criteria verified and this item marked complete.
+- [x] Final acceptance criteria verified and this item marked complete.
