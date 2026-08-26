@@ -9,6 +9,8 @@
 | `WriteTypedAsync` | Write one typed value. |
 | `ReadNamedAsync` | Read a non-atomic mixed aggregate by address strings. |
 | `PollAsync` | Read repeated non-atomic aggregates on a fixed interval. |
+| `ReadBitsSingleRequestAsync` | Read contiguous direct bits in one PLC request. |
+| `WriteBitsSingleRequestAsync` | Write contiguous direct bits in one PLC request. |
 | `ReadWordsSingleRequestAsync` | Read contiguous 16-bit words in one PLC request. |
 | `ReadDWordsSingleRequestAsync` | Read contiguous 32-bit values in one PLC request. |
 | `WriteWordsSingleRequestAsync` | Write contiguous 16-bit words in one PLC request. |
@@ -20,6 +22,12 @@
 | `ReadCommentBytesAsync` | Read the exact undecoded PLC device-comment payload bytes. |
 | `ReadExpansionUnitBufferAsync` | Read expansion unit buffer memory. |
 | `WriteExpansionUnitBufferAsync` | Write expansion unit buffer memory. |
+
+The `SingleRequest` helpers either send exactly one PLC request or reject the
+complete input before sending. Bit helpers accept only direct bit device
+families and Boolean values, with 1 through 1,000 points subject to the device
+range. `ReadWordsAsync` is a deprecated compatibility alias; migrate to
+`ReadWordsSingleRequestAsync`.
 
 ## Connection
 

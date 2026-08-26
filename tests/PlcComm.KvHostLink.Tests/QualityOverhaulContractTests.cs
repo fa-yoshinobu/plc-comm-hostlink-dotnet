@@ -516,10 +516,50 @@ public sealed class QualityOverhaulContractTests
         await using var server = new RawContractServer(_ => "OK\r"u8.ToArray());
         await using var client = await OpenClientAsync(server.Port);
 
-        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadWordsAsync("DM0", 1001));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadWordsSingleRequestAsync("DM0", 1001));
         await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
             client.WriteWordsSingleRequestAsync("DM0", new ushort[1001]));
         Assert.Empty(server.Commands);
+    }
+
+    [Fact]
+    public async Task BitAndWordSingleRequestHelpersSendOneRequestOrRejectBeforeSend()
+    {
+        await using var server = new RawContractServer(command => command switch
+        {
+            "RDS R5000 3" => "0 1 1\r"u8.ToArray(),
+            "WRS R5000 3 0 1 1" => "OK\r"u8.ToArray(),
+            "RDS DM0.U 2" => "1 2\r"u8.ToArray(),
+            "WRS DM0.U 2 1 2" => "OK\r"u8.ToArray(),
+            _ => "E1\r"u8.ToArray(),
+        });
+        await using var client = await OpenClientAsync(server.Port);
+
+        bool[] actualBits = await client.ReadBitsSingleRequestAsync("R5000", 3);
+        Assert.Equal(3, actualBits.Length);
+        Assert.False(actualBits[0]);
+        Assert.True(actualBits[1]);
+        Assert.True(actualBits[2]);
+        await client.WriteBitsSingleRequestAsync("R5000", [false, true, true]);
+        ushort[] actualWords = await client.ReadWordsSingleRequestAsync("DM0", 2);
+        Assert.Equal([1, 2], actualWords);
+        await client.WriteWordsSingleRequestAsync("DM0", new ushort[] { 1, 2 });
+#pragma warning disable CS0618
+        ushort[] aliasWords = await client.ReadWordsAsync("DM0", 2);
+#pragma warning restore CS0618
+        Assert.Equal([1, 2], aliasWords);
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.ReadBitsSingleRequestAsync("DM0", 1));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.ReadBitsSingleRequestAsync("R5000", 1001));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.WriteBitsSingleRequestAsync("DM0", [true]));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
+            client.WriteBitsSingleRequestAsync("R5000", new bool[1001]));
+
+        Assert.Equal(
+            ["RDS R5000 3", "WRS R5000 3 0 1 1", "RDS DM0.U 2", "WRS DM0.U 2 1 2", "RDS DM0.U 2"],
+            server.Commands.ToArray());
     }
 
     [Fact]

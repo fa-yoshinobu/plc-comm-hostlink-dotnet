@@ -1164,6 +1164,22 @@ Parameters:
 - `interval`: Strictly positive time between polls.
 - `ct`: Cancellation token to stop polling.
 
+##### ReadBitsSingleRequestAsync
+
+```csharp
+public static Task<bool[]> ReadBitsSingleRequestAsync(KvHostLinkClient client, string device, int count, CancellationToken ct = default)
+```
+
+Reads contiguous direct-bit devices using exactly one protocol request or returns an error.
+
+Returns: Boolean bit values in PLC order.
+
+Parameters:
+- `client`: Connected Host Link client.
+- `device`: Start direct-bit device address.
+- `count`: Number of bit points to read.
+- `ct`: Cancellation token.
+
 ##### ReadCounterAsync
 
 ```csharp
@@ -1285,7 +1301,7 @@ public static Task<ushort[]> ReadWordsAsync(KvHostLinkClient client, string devi
 
 Reads contiguous unsigned 16-bit words starting at `device`.
 
-Remarks: This helper is the preferred user-facing block-read API for contiguous word devices. It preserves single-request semantics by delegating to `ReadWordsSingleRequestAsync`.
+Remarks: Deprecated compatibility alias. It preserves single-request semantics by delegating to `ReadWordsSingleRequestAsync`.
 
 Returns: Unsigned word values in PLC order.
 
@@ -1346,6 +1362,20 @@ Parameters:
 - `device`: A base 16-bit word-device address such as `DM100`.
 - `bitIndex`: The bit index from 0 through 15.
 - `value`: The Boolean value to write.
+- `ct`: Cancellation token.
+
+##### WriteBitsSingleRequestAsync
+
+```csharp
+public static Task WriteBitsSingleRequestAsync(KvHostLinkClient client, string device, IReadOnlyList<bool> values, CancellationToken ct = default)
+```
+
+Writes contiguous direct-bit devices using exactly one protocol request or returns an error.
+
+Parameters:
+- `client`: Connected Host Link client.
+- `device`: Start direct-bit device address.
+- `values`: Boolean bit values in PLC order.
 - `ct`: Cancellation token.
 
 ##### WriteDWordsSingleRequestAsync

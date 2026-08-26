@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Library: Added canonical `ReadBitsSingleRequestAsync` and `WriteBitsSingleRequestAsync` high-level helpers for direct bit families. They accept 1 through 1,000 Boolean points and either issue exactly one RDS/WRS request or reject the complete operation before send.
+- Library: Deprecated the high-level `ReadWordsAsync` compatibility alias in favor of `ReadWordsSingleRequestAsync`; the alias delegates directly and remains available for one compatibility release.
+- Docs: Documented the canonical bit/word single-request names and migration from `ReadWordsAsync`.
+
 ## [4.0.0] - 2026-08-07
 
 - Release: Bumped .NET package metadata to `4.0.0` for the approved breaking-contract release.

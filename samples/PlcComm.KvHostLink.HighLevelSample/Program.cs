@@ -119,7 +119,7 @@ try
     uint[] dwords = await client.ReadDWordsSingleRequestAsync("DM0", 4);
     Console.WriteLine($"[ReadDWordsSingleRequestAsync] DM0-DM7 as uint32[4] = [{string.Join(", ", dwords)}]");
 
-    ushort[] largeWords = await client.ReadWordsAsync("DM1000", 200);
+    ushort[] largeWords = await client.ReadWordsSingleRequestAsync("DM1000", 200);
     uint[] largeDwords = await client.ReadDWordsAsync("DM2000", 40);
     Console.WriteLine($"[ReadWordsAsync] DM1000 block words = {largeWords.Length}");
     Console.WriteLine($"[ReadDWordsAsync] DM2000 block dwords = {largeDwords.Length}");

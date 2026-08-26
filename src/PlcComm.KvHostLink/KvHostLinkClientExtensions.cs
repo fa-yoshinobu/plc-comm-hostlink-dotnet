@@ -600,6 +600,56 @@ public static class KvHostLinkClientExtensions
     // -----------------------------------------------------------------------
 
     /// <summary>
+    /// Reads contiguous direct-bit devices using exactly one protocol request or returns an error.
+    /// </summary>
+    /// <param name="client">Connected Host Link client.</param>
+    /// <param name="device">Start direct-bit device address.</param>
+    /// <param name="count">Number of bit points to read.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Boolean bit values in PLC order.</returns>
+    public static async Task<bool[]> ReadBitsSingleRequestAsync(
+        this KvHostLinkClient client,
+        string device,
+        int count,
+        CancellationToken ct = default)
+    {
+        KvDeviceAddress address = KvHostLinkDevice.RequireBaseDevice(device);
+        if (!KvHostLinkModels.DirectBitDeviceTypes.Contains(address.DeviceType))
+            throw new HostLinkProtocolError("Bit reads require a direct bit device.");
+        KvHostLinkDevice.ValidateDeviceCount(address.DeviceType, string.Empty, count);
+        KvHostLinkDevice.ValidateDeviceSpan(address.DeviceType, address.Number, string.Empty, count);
+
+        string[] tokens = await client.ReadConsecutiveAsync(device, count, ct).ConfigureAwait(false);
+        var result = new bool[tokens.Length];
+        for (int index = 0; index < tokens.Length; index++)
+            result[index] = ParseBoolToken(tokens[index]);
+        return result;
+    }
+
+    /// <summary>
+    /// Writes contiguous direct-bit devices using exactly one protocol request or returns an error.
+    /// </summary>
+    /// <param name="client">Connected Host Link client.</param>
+    /// <param name="device">Start direct-bit device address.</param>
+    /// <param name="values">Boolean bit values in PLC order.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public static Task WriteBitsSingleRequestAsync(
+        this KvHostLinkClient client,
+        string device,
+        IReadOnlyList<bool> values,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        bool[] snapshot = values.ToArray();
+        KvDeviceAddress address = KvHostLinkDevice.RequireBaseDevice(device);
+        if (!KvHostLinkModels.DirectBitDeviceTypes.Contains(address.DeviceType))
+            throw new HostLinkProtocolError("Bit writes require a direct bit device.");
+        KvHostLinkDevice.ValidateDeviceCount(address.DeviceType, string.Empty, snapshot.Length);
+        KvHostLinkDevice.ValidateDeviceSpan(address.DeviceType, address.Number, string.Empty, snapshot.Length);
+        return client.WriteConsecutiveAsync(device, snapshot, ct);
+    }
+
+    /// <summary>
     /// Reads contiguous unsigned 16-bit words using one protocol request or returns an error.
     /// </summary>
     /// <param name="client">Connected Host Link client.</param>
@@ -693,10 +743,10 @@ public static class KvHostLinkClientExtensions
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Unsigned word values in PLC order.</returns>
     /// <remarks>
-    /// This helper is the preferred user-facing block-read API for contiguous
-    /// word devices. It preserves single-request semantics by delegating to
+    /// Deprecated compatibility alias. It preserves single-request semantics by delegating to
     /// <see cref="ReadWordsSingleRequestAsync(KvHostLinkClient, string, int, CancellationToken)"/>.
     /// </remarks>
+    [Obsolete("Use ReadWordsSingleRequestAsync. This compatibility alias will be removed in the next breaking release.")]
     public static Task<ushort[]> ReadWordsAsync(
         this KvHostLinkClient client,
         string device,
