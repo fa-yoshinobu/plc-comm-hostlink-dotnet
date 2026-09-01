@@ -1681,3 +1681,44 @@ same command is rerun against the eventual release commit before tagging.
 - [x] Live verification is not required under the disposition above.
 - [x] Documentation, migration notes, changelog, and generated API reference agree.
 - [x] Final acceptance criteria verified and this item marked complete.
+
+## HL-REQ-001 — Remove unusable generic no-format writes
+
+Stable identifier: `HL-REQ-001`.
+
+Implementation scope: the following two `KvHostLinkClient` overloads, their exact public API
+classification, generated API reference, tests, and changelog entry:
+
+- `WriteAsync<T>(string, T, CancellationToken)`
+- `WriteConsecutiveAsync<T>(string, IEnumerable<T>, CancellationToken)`
+
+Target contract: remove both overloads without compatibility aliases or inferred default formats.
+Direct bit writes continue through the Boolean overloads. Generic word writes continue through the
+overloads that require an explicit data-format argument. No new command or wire behavior is added.
+
+Compatibility impact: source calls that selected either removed overload no longer compile. The
+retained Boolean and explicit-format overload identities, validation, results, errors, and wire
+commands are unchanged.
+
+Machine-verifiable acceptance criteria:
+
+1. Neither removed signature exists on all supported target frameworks.
+2. Exactly one generic scalar overload and one generic consecutive overload remain, and each has an
+   explicit `string dataFormat` parameter.
+3. The Boolean scalar and consecutive overloads remain public and execute their existing commands.
+4. The documented API-difference gate classifies both removals against the immutable `3.2.1`
+   baseline and has no unclassified difference.
+5. Generated API reference and changelog agree with the removed and retained signatures.
+
+The user approved removal without aliases on 2026-09-01. Focused public-surface tests, all three
+target-framework test suites, Release build, documentation generation/checks, and package consumer
+checks passed. This is a public-surface correction only; it adds no live PLC path, so additional
+live verification is not required.
+
+- [x] Implementation completed in this repository.
+- [x] Tests cover the retained and removed public-surface contract.
+- [x] Relevant build, unit, documentation, package, and exact API-difference checks passed.
+- [x] Codex self-review completed against the approved removal and retained overloads.
+- [x] Live PLC verification is not required because no accepted wire path changed.
+- [x] Migration note, changelog, and generated API reference agree.
+- [x] Final acceptance criteria verified and `HL-REQ-001` marked complete.

@@ -72,6 +72,48 @@ public sealed class QualityOverhaulContractTests
     }
 
     [Fact]
+    public void PublicWriteSurfaceRequiresBooleanOrExplicitDataFormat()
+    {
+        MethodInfo[] methods = typeof(KvHostLinkClient).GetMethods(
+            BindingFlags.Instance | BindingFlags.Public);
+
+        MethodInfo scalarGeneric = Assert.Single(
+            methods,
+            method => method.Name == nameof(KvHostLinkClient.WriteAsync)
+                && method.IsGenericMethodDefinition);
+        ParameterInfo[] scalarParameters = scalarGeneric.GetParameters();
+        Assert.Equal(4, scalarParameters.Length);
+        Assert.Equal(typeof(string), scalarParameters[0].ParameterType);
+        Assert.True(scalarParameters[1].ParameterType.IsGenericParameter);
+        Assert.Equal(typeof(string), scalarParameters[2].ParameterType);
+        Assert.Equal(typeof(CancellationToken), scalarParameters[3].ParameterType);
+
+        MethodInfo consecutiveGeneric = Assert.Single(
+            methods,
+            method => method.Name == nameof(KvHostLinkClient.WriteConsecutiveAsync)
+                && method.IsGenericMethodDefinition);
+        ParameterInfo[] consecutiveParameters = consecutiveGeneric.GetParameters();
+        Assert.Equal(4, consecutiveParameters.Length);
+        Assert.Equal(typeof(string), consecutiveParameters[0].ParameterType);
+        Assert.Equal(typeof(IEnumerable<>), consecutiveParameters[1].ParameterType.GetGenericTypeDefinition());
+        Assert.Equal(typeof(string), consecutiveParameters[2].ParameterType);
+        Assert.Equal(typeof(CancellationToken), consecutiveParameters[3].ParameterType);
+
+        Assert.Contains(
+            methods,
+            method => method.Name == nameof(KvHostLinkClient.WriteAsync)
+                && !method.IsGenericMethod
+                && method.GetParameters() is { Length: 3 } parameters
+                && parameters[1].ParameterType == typeof(bool));
+        Assert.Contains(
+            methods,
+            method => method.Name == nameof(KvHostLinkClient.WriteConsecutiveAsync)
+                && !method.IsGenericMethod
+                && method.GetParameters() is { Length: 3 } parameters
+                && parameters[1].ParameterType == typeof(IEnumerable<bool>));
+    }
+
+    [Fact]
     public async Task RawApiPreservesPlcErrorBytesWithoutSemanticTranslation()
     {
         await using var server = new RawContractServer(_ => "E1\r"u8.ToArray());

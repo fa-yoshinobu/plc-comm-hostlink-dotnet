@@ -60,6 +60,20 @@
         "docsrc/user/API_REFERENCE.md"
       ]
     },
+    "unusable-generic-write-removal": {
+      "decision": "HL-REQ-001",
+      "rationale": "The two generic no-format write overloads had no supported successful call path and were explicitly approved for removal without aliases; Boolean writes and explicit-format generic writes remain available.",
+      "migrationPath": "internal_docs/maintainer/QUALITY_OVERHAUL_MIGRATION.md",
+      "changelogPath": "CHANGELOG.md",
+      "changelogNeedle": "Removed `WriteAsync<T>(string, T, CancellationToken)`",
+      "documentationEvidence": [
+        { "path": "docsrc/user/API_REFERENCE.md", "needle": "public Task WriteAsync<T>(string device, T value, string dataFormat" },
+        { "path": "docsrc/user/API_REFERENCE.md", "needle": "public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat" }
+      ],
+      "versionPolicy": "major-version-required-before-release",
+      "priorContractCommit": "19df212d9bbed545d137e1e6d71b8afb30237628",
+      "priorContractTerm": "WriteAsync"
+    },
     "expansion-word-bit-addition": {
       "decision": "GOAL-HOSTLINK-EXPANSION-RMW-001",
       "rationale": "The explicit Boolean expansion-unit word-bit helper is an approved additive route-specific counterpart to the ordinary word-bit helper.",
@@ -95,6 +109,24 @@
     }
   },
   "classifications": [
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.WriteAsync``1(System.String,``0,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|``0|value|required|read=Unknown|write=Unknown,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=T:System.IFormattable",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "unusable-generic-write-removal"
+    },
+    {
+      "change": "removed",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.WriteConsecutiveAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{``0}|values|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=T:System.IFormattable",
+      "after": null,
+      "category": "documented-contract",
+      "evidence": "unusable-generic-write-removal"
+    },
     {
       "change": "removed",
       "symbol": "T:PlcComm.KvHostLink.QueuedKvHostLinkClient",

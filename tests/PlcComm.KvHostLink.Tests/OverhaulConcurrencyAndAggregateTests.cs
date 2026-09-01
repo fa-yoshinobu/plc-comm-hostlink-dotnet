@@ -192,9 +192,6 @@ public sealed class OverhaulConcurrencyAndAggregateTests
         await using var server = new AsyncHostLinkServer((_, _) => Task.FromResult("OK"));
         await using var client = await OpenClientAsync(server.Port);
 
-        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.WriteAsync("R0", 1));
-        int[] numericBits = [0, 1];
-        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.WriteConsecutiveAsync("R0", numericBits));
         await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.WriteTypedAsync("R0", "BIT", 1));
         Assert.Empty(server.Commands);
 

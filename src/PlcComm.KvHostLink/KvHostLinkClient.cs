@@ -1098,15 +1098,6 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         return tokens;
     }
 
-    public Task WriteAsync<T>(string device, T value, CancellationToken cancellationToken = default)
-        where T : IFormattable
-    {
-        string command = BuildWriteCommand(device, value, null);
-        return ExecuteExclusiveAsync(
-            () => ExpectOkCoreAsync(command, cancellationToken),
-            cancellationToken);
-    }
-
     /// <summary>Writes one direct bit in one request using the exact Boolean-only bit-value contract.</summary>
     public Task WriteAsync(
         string device,
@@ -1154,18 +1145,6 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         KvHostLinkDevice.ValidateDeviceType("WR", address.DeviceType, KvHostLinkModels.WrDeviceTypes);
         KvHostLinkDevice.ValidateDeviceSpan(address.DeviceType, address.Number, suffix);
         return $"WR {address.ToText()} {(value ? 1 : 0)}";
-    }
-
-    public Task WriteConsecutiveAsync<T>(
-        string device,
-        IEnumerable<T> values,
-        CancellationToken cancellationToken = default) where T : IFormattable
-    {
-        T[] valueSnapshot = values.ToArray();
-        string command = BuildWriteConsecutiveCommand(device, valueSnapshot, null);
-        return ExecuteExclusiveAsync(
-            () => ExpectOkCoreAsync(command, cancellationToken),
-            cancellationToken);
     }
 
     /// <summary>Writes consecutive direct bits in one request from an immutable Boolean-value snapshot.</summary>

@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Breaking: Removed `WriteAsync<T>(string, T, CancellationToken)` and `WriteConsecutiveAsync<T>(string, IEnumerable<T>, CancellationToken)`. Neither overload had a supported successful call path: direct bits require the retained Boolean overloads, while word devices require the retained overloads with an explicit data format.
+- Tests: Added a public-surface contract check proving that generic scalar and consecutive writes require an explicit data-format parameter and that the Boolean-only overloads remain available.
+
 ## [4.1.0] - 2026-08-27
 
 - Release: Bumped .NET package metadata to `4.1.0` for the additive canonical single-request APIs.

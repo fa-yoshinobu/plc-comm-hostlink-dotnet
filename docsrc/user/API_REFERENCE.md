@@ -1003,12 +1003,6 @@ Writes one direct bit in one request using the exact Boolean-only bit-value cont
 public Task WriteAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
-##### WriteAsync
-
-```csharp
-public Task WriteAsync<T>(string device, T value, CancellationToken cancellationToken = default)
-```
-
 ##### WriteConsecutiveAsync
 
 ```csharp
@@ -1021,12 +1015,6 @@ Writes consecutive direct bits in one request from an immutable Boolean-value sn
 
 ```csharp
 public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
-```
-
-##### WriteConsecutiveAsync
-
-```csharp
-public Task WriteConsecutiveAsync<T>(string device, IEnumerable<T> values, CancellationToken cancellationToken = default)
 ```
 
 ##### WriteConsecutiveLegacyAsync
