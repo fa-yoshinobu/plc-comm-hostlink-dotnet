@@ -1569,6 +1569,14 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     }
 
     /// <summary>Deprecated compatibility alias for <see cref="ReadCommentAsync"/>.</summary>
+    /// <param name="device">Device whose single comment is read.</param>
+    /// <param name="encoding">Explicit character encoding used for strict decoding.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The same decoded comment text returned by <see cref="ReadCommentAsync"/>.</returns>
+    /// <remarks>
+    /// This member directly forwards to <see cref="ReadCommentAsync"/> and does not change
+    /// validation, encoding, wire command, result, or error behavior.
+    /// </remarks>
     [Obsolete("Use ReadCommentAsync. This compatibility alias will be removed in the next breaking release.")]
     public Task<string> ReadCommentsAsync(
         string device,

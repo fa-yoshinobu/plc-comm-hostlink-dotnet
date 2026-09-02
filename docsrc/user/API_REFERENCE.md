@@ -926,6 +926,15 @@ public Task<string> ReadCommentsAsync(string device, HostLinkCommentEncoding enc
 
 Deprecated compatibility alias for `ReadCommentAsync`.
 
+Remarks: This member directly forwards to `ReadCommentAsync` and does not change validation, encoding, wire command, result, or error behavior.
+
+Returns: The same decoded comment text returned by `ReadCommentAsync`.
+
+Parameters:
+- `device`: Device whose single comment is read.
+- `encoding`: Explicit character encoding used for strict decoding.
+- `cancellationToken`: Cancellation token.
+
 ##### ReadConsecutiveAsync
 
 ```csharp
