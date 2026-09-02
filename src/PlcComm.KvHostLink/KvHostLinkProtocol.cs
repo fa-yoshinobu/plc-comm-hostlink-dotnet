@@ -106,6 +106,9 @@ internal static class KvHostLinkProtocol
 
         try
         {
+            // KEYENCE manuals do not specify an RDC character encoding, and no
+            // PLC-project setting identifies one. Decode only with the caller-selected
+            // encoding; never auto-detect or fall back to another codec.
             return encoding switch
             {
                 HostLinkCommentEncoding.Utf8 => Utf8Strict.GetString(body, 0, length),

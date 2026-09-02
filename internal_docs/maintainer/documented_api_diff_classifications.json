@@ -106,6 +106,16 @@
         "docsrc/user/USAGE_GUIDE.md",
         "docsrc/user/API_REFERENCE.md"
       ]
+    },
+    "hostlink-api-unification": {
+      "decision": "HL-NET-API-UNIFICATION-20260902",
+      "rationale": "The approved canonical names and ordered one-request named write are additive public APIs; former names remain direct deprecated aliases for the transition release.",
+      "documentationDisposition": "documented",
+      "documentationPaths": [
+        "docsrc/user/USAGE_GUIDE.md",
+        "docsrc/user/API_REFERENCE.md",
+        "internal_docs/maintainer/QUALITY_OVERHAUL_MIGRATION.md"
+      ]
     }
   },
   "classifications": [
@@ -459,6 +469,51 @@
       "after": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.String|device|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IReadOnlyList{System.Boolean}|values|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
       "category": "additive",
       "evidence": "single-request-bit-additions"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.ReadCommentAsync(System.String,PlcComm.KvHostLink.HostLinkCommentEncoding,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task{System.String};returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|PlcComm.KvHostLink.HostLinkCommentEncoding|encoding|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "hostlink-api-unification"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.ReadErrorNumberAsync(System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task{System.String};returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "hostlink-api-unification"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.WriteTimerCounterPresetAsync``1(System.String,``0,System.String,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|``0|value|required|read=Unknown|write=Unknown,value|System.String|dataFormat|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=T:System.IFormattable",
+      "category": "additive",
+      "evidence": "hostlink-api-unification"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClient.WriteTimerCounterPresetConsecutiveAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=False;abstract=False;virtual=False;final=False;params=value|System.String|device|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{``0}|values|required|read=NotNull|write=NotNull,value|System.String|dataFormat|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|cancellationToken|default|read=NotNull|write=NotNull;constraints=T:System.IFormattable",
+      "category": "additive",
+      "evidence": "hostlink-api-unification"
+    },
+    {
+      "change": "added",
+      "symbol": "M:PlcComm.KvHostLink.KvHostLinkClientExtensions.WriteNamedAsync(PlcComm.KvHostLink.KvHostLinkClient,System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.Object}},System.Threading.CancellationToken)",
+      "frameworks": ["net8.0", "net9.0", "net10.0"],
+      "before": null,
+      "after": "access=public;return=System.Threading.Tasks.Task;returnNullability=NotNull;static=True;abstract=False;virtual=False;final=False;params=value|PlcComm.KvHostLink.KvHostLinkClient|client|required|read=NotNull|write=NotNull,value|System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.Object}}|updates|required|read=NotNull|write=NotNull,value|System.Threading.CancellationToken|ct|default|read=NotNull|write=NotNull;constraints=",
+      "category": "additive",
+      "evidence": "hostlink-api-unification"
     }
   ]
 }

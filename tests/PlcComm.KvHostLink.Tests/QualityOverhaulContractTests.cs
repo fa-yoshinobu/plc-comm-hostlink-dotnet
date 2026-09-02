@@ -53,10 +53,10 @@ public sealed class QualityOverhaulContractTests
             [HostLinkCommentEncoding.Utf8, HostLinkCommentEncoding.Cp932],
             Enum.GetValues<HostLinkCommentEncoding>());
         Assert.Null(typeof(KvHostLinkClient).GetMethod(
-            nameof(KvHostLinkClient.ReadCommentsAsync),
+            nameof(KvHostLinkClient.ReadCommentAsync),
             [typeof(string), typeof(CancellationToken)]));
         Assert.NotNull(typeof(KvHostLinkClient).GetMethod(
-            nameof(KvHostLinkClient.ReadCommentsAsync),
+            nameof(KvHostLinkClient.ReadCommentAsync),
             [typeof(string), typeof(HostLinkCommentEncoding), typeof(CancellationToken)]));
         Assert.NotNull(typeof(KvHostLinkClient).GetMethod(
             nameof(KvHostLinkClient.ReadCommentBytesAsync),
@@ -257,8 +257,8 @@ public sealed class QualityOverhaulContractTests
         await using var server = new RawContractServer(_ => [0xC2, 0xA2, (byte)'\r']);
         await using var client = await OpenClientAsync(server.Port);
 
-        Assert.Equal("¢", await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
-        Assert.Equal("ﾂ｢", await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+        Assert.Equal("¢", await client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Utf8));
+        Assert.Equal("ﾂ｢", await client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Cp932));
     }
 
     [Fact]
@@ -270,9 +270,9 @@ public sealed class QualityOverhaulContractTests
 
         Assert.Equal(
             "\uFEFFA",
-            await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
+            await client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Utf8));
         await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
-            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+            client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Cp932));
         Assert.False(client.IsOpen);
     }
 
@@ -285,7 +285,7 @@ public sealed class QualityOverhaulContractTests
 
         Assert.Equal(
             new string(['\u001A', '\u001C', '\u007F', '\uFF61', '\uFF9F']),
-            await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+            await client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Cp932));
     }
 
     [Theory]
@@ -302,7 +302,7 @@ public sealed class QualityOverhaulContractTests
 
         Assert.Equal(
             expected,
-            await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+            await client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Cp932));
     }
 
     [Fact]
@@ -314,7 +314,7 @@ public sealed class QualityOverhaulContractTests
 
         Assert.Equal(
             "A B\t　",
-            await client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
+            await client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Utf8));
     }
 
     [Fact]
@@ -324,7 +324,7 @@ public sealed class QualityOverhaulContractTests
         await using var client = await OpenClientAsync(server.Port);
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
-            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
+            client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Utf8));
         Assert.False(client.IsOpen);
     }
 
@@ -335,7 +335,7 @@ public sealed class QualityOverhaulContractTests
         await using var client = await OpenClientAsync(server.Port);
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
-            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+            client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Cp932));
         Assert.False(client.IsOpen);
     }
 
@@ -356,7 +356,7 @@ public sealed class QualityOverhaulContractTests
         await using var client = await OpenClientAsync(server.Port);
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
-            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Cp932));
+            client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Cp932));
         Assert.False(client.IsOpen);
     }
 
@@ -368,7 +368,7 @@ public sealed class QualityOverhaulContractTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            _ = client.ReadCommentsAsync("DM100", (HostLinkCommentEncoding)99);
+            _ = client.ReadCommentAsync("DM100", (HostLinkCommentEncoding)99);
         });
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
@@ -422,7 +422,7 @@ public sealed class QualityOverhaulContractTests
 
         await Assert.ThrowsAsync<HostLinkError>(() => client.ReadCommentBytesAsync("DM100"));
         await Assert.ThrowsAsync<HostLinkError>(() =>
-            client.ReadCommentsAsync("DM100", HostLinkCommentEncoding.Utf8));
+            client.ReadCommentAsync("DM100", HostLinkCommentEncoding.Utf8));
         Assert.True(client.IsOpen);
     }
 
@@ -543,9 +543,9 @@ public sealed class QualityOverhaulContractTests
         });
         await using var client = await OpenClientAsync(server.Port);
 
-        Assert.Equal(new uint[] { 1, 2, 3 }, await client.ReadDWordsAsync("DM200", 3));
+        Assert.Equal(new uint[] { 1, 2, 3 }, await client.ReadDWordsSingleRequestAsync("DM200", 3));
         await client.WriteDWordsSingleRequestAsync("DM200", new uint[] { 1, 2, 3 });
-        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadDWordsAsync("DM200", 501));
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.ReadDWordsSingleRequestAsync("DM200", 501));
         await Assert.ThrowsAsync<HostLinkProtocolError>(() =>
             client.WriteDWordsSingleRequestAsync("DM200", new uint[501]));
 

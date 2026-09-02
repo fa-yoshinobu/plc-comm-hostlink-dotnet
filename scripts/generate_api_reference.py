@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -375,10 +376,34 @@ def run_inspector(assembly_path: Path) -> list[dict[str, object]]:
             encoding="utf-8",
         )
         (temp / "Program.cs").write_text(CSHARP_INSPECTOR, encoding="utf-8")
-        result = subprocess.run(
-            ["dotnet", "run", "--project", str(temp / "ApiInspector.csproj"), "--", str(assembly_path.resolve())],
+        build_environment = os.environ.copy()
+        build_environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"
+        subprocess.run(
+            [
+                "dotnet",
+                "build",
+                str(temp / "ApiInspector.csproj"),
+                "-c",
+                "Release",
+                "--nologo",
+                "-p:UseSharedCompilation=false",
+            ],
             check=True,
             capture_output=True,
+            encoding="utf-8",
+            env=build_environment,
+            errors="replace",
+            text=True,
+        )
+        result = subprocess.run(
+            [
+                "dotnet",
+                str(temp / "bin" / "Release" / "net8.0" / "ApiInspector.dll"),
+                str(assembly_path.resolve()),
+            ],
+            check=True,
+            capture_output=True,
+            encoding="utf-8",
             text=True,
         )
     return json.loads(result.stdout)

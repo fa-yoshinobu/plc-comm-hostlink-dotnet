@@ -1722,3 +1722,56 @@ live verification is not required.
 - [x] Live PLC verification is not required because no accepted wire path changed.
 - [x] Migration note, changelog, and generated API reference agree.
 - [x] Final acceptance criteria verified and `HL-REQ-001` marked complete.
+
+## HL-NET-API-UNIFICATION-20260902 — Canonical names and one-request named write
+
+Stable identifier: `HL-NET-API-UNIFICATION-20260902`.
+
+Implementation scope: `ReadDWordsSingleRequestAsync`, `ReadCommentAsync`,
+`ReadErrorNumberAsync`, `WriteTimerCounterPresetAsync`,
+`WriteTimerCounterPresetConsecutiveAsync`, their former-name compatibility aliases, and
+`WriteNamedAsync` in the .NET Host Link library.
+
+Target contract: canonical names directly own the existing behavior. Former names are deprecated
+direct forwarding aliases for this transition release and are removed in the next breaking release.
+`WriteNamedAsync` snapshots an ordered `IEnumerable<KeyValuePair<string, object>>`, preserves caller
+order without sorting, and sends only when the complete update set compiles to exactly one existing
+`WR`, `WRS`, or `WSS` request. It performs no automatic split, retry, partial send, or
+read-modify-write.
+
+Compatibility impact: canonical names and `WriteNamedAsync` are additive. Existing calls through
+former names continue to compile for this release with an obsolete diagnostic and retain identical
+input, result, exception, and wire behavior. The former names are scheduled for removal in the next
+breaking release.
+
+Machine-verifiable acceptance criteria:
+
+1. Every canonical/alias pair produces the same result, exception, and exact command.
+2. Valid ordered named updates produce exactly one `WR`, `WRS`, or `WSS` command through existing
+   client paths.
+3. Empty, mixed, non-contiguous, reverse, semantically duplicate, read-only, bit-in-word, invalid,
+   or over-limit named plans fail before transport.
+4. The named-write planner snapshots enumeration order and does not sort or silently deduplicate.
+5. Generated API reference, usage guide, changelog, and migration record agree with the public API.
+
+Verification evidence: all 346 tests passed independently on net8.0, net9.0, and net10.0;
+the warning-free Release solution build, formatting check, generated API freshness/coverage tests,
+documentation examples, and exact documented-API classification passed. Deterministic scripted
+transport tests prove canonical/alias command identity and that each accepted named update emits
+one existing command while every rejected plan emits none.
+
+Codex self-review inspected the actual diff, public identity, insertion-order snapshot, validation
+before transport, numeric conversion, direct-bit bank continuity, DWord/Float low-word/high-word
+packing, timer/counter WSS selection, request limits, cancellation propagation, and existing client
+error/outcome behavior. Accepted findings corrected Float32 family validation, ordinary DWord/Long
+packing to the shared `.U` representation, and integer-overflow normalization before final
+verification. No new wire command or supported-device claim is introduced; accepted calls reuse
+the already verified WR/WRS/WSS client paths, so additional live PLC communication is not required.
+
+- [x] Implementation completed in this repository.
+- [x] Focused and regression tests passed on all supported target frameworks.
+- [x] Release build, formatting, generated documentation, and public API checks passed.
+- [x] Codex self-review completed against the approved contract and actual diff.
+- [x] Live PLC disposition recorded; no additional live communication is required for reused wire paths.
+- [x] Documentation and migration notes agree with the implementation.
+- [x] Final acceptance criteria verified and the item marked complete.

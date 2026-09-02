@@ -979,10 +979,16 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         await ExpectOkAsync("ER", cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<string> CheckErrorNoAsync(CancellationToken cancellationToken = default)
+    /// <summary>Reads the current PLC error number using the <c>?E</c> command.</summary>
+    public async Task<string> ReadErrorNumberAsync(CancellationToken cancellationToken = default)
     {
         return await SendSemanticAsync("?E", cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>Deprecated compatibility alias for <see cref="ReadErrorNumberAsync"/>.</summary>
+    [Obsolete("Use ReadErrorNumberAsync. This compatibility alias will be removed in the next breaking release.")]
+    public Task<string> CheckErrorNoAsync(CancellationToken cancellationToken = default)
+        => ReadErrorNumberAsync(cancellationToken);
 
     public async Task<KvModelInfo> QueryModelAsync(CancellationToken cancellationToken = default)
     {
@@ -1389,7 +1395,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     /// Writes a set-value (preset) for a timer or counter device (WS command).
     /// Supported device types: T, C.
     /// </summary>
-    public async Task WriteSetValueAsync<T>(
+    public async Task WriteTimerCounterPresetAsync<T>(
         string device, T value, string dataFormat,
         CancellationToken cancellationToken = default) where T : IFormattable
     {
@@ -1403,11 +1409,18 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         await ExpectOkAsync($"WS {target.ToText()} {valStr}", cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Deprecated compatibility alias for <see cref="WriteTimerCounterPresetAsync{T}"/>.</summary>
+    [Obsolete("Use WriteTimerCounterPresetAsync. This compatibility alias will be removed in the next breaking release.")]
+    public Task WriteSetValueAsync<T>(
+        string device, T value, string dataFormat,
+        CancellationToken cancellationToken = default) where T : IFormattable
+        => WriteTimerCounterPresetAsync(device, value, dataFormat, cancellationToken);
+
     /// <summary>
     /// Writes set-values (presets) for consecutive timer or counter devices (WSS command).
     /// Supported device types: T, C.
     /// </summary>
-    public async Task WriteSetValueConsecutiveAsync<T>(
+    public async Task WriteTimerCounterPresetConsecutiveAsync<T>(
         string device, IEnumerable<T> values, string dataFormat,
         CancellationToken cancellationToken = default) where T : IFormattable
     {
@@ -1423,6 +1436,13 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         await ExpectOkAsync($"WSS {target.ToText()} {valList.Count} {payload}", cancellationToken)
             .ConfigureAwait(false);
     }
+
+    /// <summary>Deprecated compatibility alias for <see cref="WriteTimerCounterPresetConsecutiveAsync{T}"/>.</summary>
+    [Obsolete("Use WriteTimerCounterPresetConsecutiveAsync. This compatibility alias will be removed in the next breaking release.")]
+    public Task WriteSetValueConsecutiveAsync<T>(
+        string device, IEnumerable<T> values, string dataFormat,
+        CancellationToken cancellationToken = default) where T : IFormattable
+        => WriteTimerCounterPresetConsecutiveAsync(device, values, dataFormat, cancellationToken);
 
     /// <summary>Switches the active data bank (BE command). Valid range: 0–15.</summary>
     public async Task SwitchBankAsync(int bankNo, CancellationToken cancellationToken = default)
@@ -1510,6 +1530,10 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     /// The exact RDC payload after the Host Link CR/LF frame terminator is removed.
     /// Trailing ASCII padding spaces are retained.
     /// </returns>
+    /// <remarks>
+    /// This raw API performs no text decoding, encoding detection, replacement, or
+    /// fallback; it returns the comment bytes unchanged for caller-controlled handling.
+    /// </remarks>
     public Task<byte[]> ReadCommentBytesAsync(
         string device,
         CancellationToken cancellationToken = default)
@@ -1527,19 +1551,30 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Decoded comment text with trailing ASCII padding spaces removed.</returns>
     /// <remarks>
+    /// KEYENCE manuals do not specify the RDC character encoding, and there is no
+    /// PLC-project setting that identifies it.
     /// Decoding is strict. Malformed input raises <see cref="HostLinkProtocolError"/>
-    /// and retires the connection; the library never guesses or falls back to another encoding.
+    /// and retires the connection. The library uses only the caller-selected
+    /// <paramref name="encoding"/> and never auto-detects or falls back to another encoding.
     /// </remarks>
-    public Task<string> ReadCommentsAsync(
+    public Task<string> ReadCommentAsync(
         string device,
         HostLinkCommentEncoding encoding,
         CancellationToken cancellationToken = default)
     {
         KvHostLinkProtocol.ValidateCommentEncoding(encoding);
         return ExecuteExclusiveAsync(
-            () => ReadCommentsCoreAsync(device, encoding, cancellationToken),
+            () => ReadCommentCoreAsync(device, encoding, cancellationToken),
             cancellationToken);
     }
+
+    /// <summary>Deprecated compatibility alias for <see cref="ReadCommentAsync"/>.</summary>
+    [Obsolete("Use ReadCommentAsync. This compatibility alias will be removed in the next breaking release.")]
+    public Task<string> ReadCommentsAsync(
+        string device,
+        HostLinkCommentEncoding encoding,
+        CancellationToken cancellationToken = default)
+        => ReadCommentAsync(device, encoding, cancellationToken);
 
     internal async Task<byte[]> ReadCommentBytesCoreAsync(
         string device,
@@ -1556,7 +1591,7 @@ public sealed class KvHostLinkClient : IDisposable, IAsyncDisposable
         return response;
     }
 
-    internal async Task<string> ReadCommentsCoreAsync(
+    internal async Task<string> ReadCommentCoreAsync(
         string device,
         HostLinkCommentEncoding encoding,
         CancellationToken cancellationToken)

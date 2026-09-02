@@ -17,8 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.0] - 2026-09-02
+
+- Release: Bumped .NET package metadata to `4.2.0` for the approved Host Link API unification.
+- Library: Added canonical `ReadCommentAsync`, `ReadErrorNumberAsync`, `WriteTimerCounterPresetAsync`, and `WriteTimerCounterPresetConsecutiveAsync` names. The former names remain deprecated direct forwarding aliases for this transition release and are scheduled for removal in the next breaking release.
+- Library: Deprecated `ReadDWordsAsync` in favor of the existing `ReadDWordsSingleRequestAsync` canonical name; both names use the same exact one-request path during the transition release.
+- Library: Added `WriteNamedAsync`. It snapshots and validates the ordered update enumeration before transport, accepts only a plan representable by exactly one existing `WR`, `WRS`, or `WSS` request, and never sorts, auto-splits, retries, or performs read-modify-write.
+- Tests: Added canonical/alias wire-equivalence and named-write one-request/preflight/order coverage.
 - Breaking: Removed `WriteAsync<T>(string, T, CancellationToken)` and `WriteConsecutiveAsync<T>(string, IEnumerable<T>, CancellationToken)`. Neither overload had a supported successful call path: direct bits require the retained Boolean overloads, while word devices require the retained overloads with an explicit data format.
 - Tests: Added a public-surface contract check proving that generic scalar and consecutive writes require an explicit data-format parameter and that the Boolean-only overloads remain available.
+- Tooling: Disabled persistent .NET build-server use for generated API-reference fixtures so Windows release validation can remove its temporary directories deterministically.
 
 ## [4.1.0] - 2026-08-27
 

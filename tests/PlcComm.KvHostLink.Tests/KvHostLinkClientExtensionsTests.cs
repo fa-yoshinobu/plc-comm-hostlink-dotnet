@@ -1165,7 +1165,7 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
-    public async Task NormalClient_ReadCommentsAsync_UsesRdcCommand()
+    public async Task NormalClient_ReadCommentAsync_UsesRdcCommand()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
@@ -1174,14 +1174,14 @@ public sealed class KvHostLinkClientExtensionsTests
         });
 
         await using var client = await KvHostLinkClientExtensions.OpenAndConnectAsync("127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
-        var comment = await client.ReadCommentsAsync("DM10", HostLinkCommentEncoding.Utf8);
+        var comment = await client.ReadCommentAsync("DM10", HostLinkCommentEncoding.Utf8);
 
         Assert.Equal("ALARM TEXT", comment);
         Assert.Equal(["RDC DM10"], server.ReceivedCommands.ToArray());
     }
 
     [Fact]
-    public async Task ReadCommentsAsync_AcceptsXymAliasDeviceTypes()
+    public async Task ReadCommentAsync_AcceptsXymAliasDeviceTypes()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
@@ -1192,8 +1192,8 @@ public sealed class KvHostLinkClientExtensionsTests
 
         await using var client = new KvHostLinkClient("127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
         await client.OpenAsync();
-        var dataMemoryComment = await client.ReadCommentsAsync("D10", HostLinkCommentEncoding.Utf8);
-        var auxiliaryRelayComment = await client.ReadCommentsAsync("M20", HostLinkCommentEncoding.Utf8);
+        var dataMemoryComment = await client.ReadCommentAsync("D10", HostLinkCommentEncoding.Utf8);
+        var auxiliaryRelayComment = await client.ReadCommentAsync("M20", HostLinkCommentEncoding.Utf8);
 
         Assert.Equal("DM COMMENT", dataMemoryComment);
         Assert.Equal("MR COMMENT", auxiliaryRelayComment);
@@ -1245,7 +1245,7 @@ public sealed class KvHostLinkClientExtensionsTests
         await client.OpenAsync();
 
         await Assert.ThrowsAsync<HostLinkProtocolError>(
-            () => client.WriteSetValueConsecutiveAsync("T0", Enumerable.Repeat(0, 121), ".D"));
+            () => client.WriteTimerCounterPresetConsecutiveAsync("T0", Enumerable.Repeat(0, 121), ".D"));
 
         Assert.Empty(server.ReceivedCommands);
     }
@@ -1400,7 +1400,7 @@ public sealed class KvHostLinkClientExtensionsTests
     }
 
     [Fact]
-    public async Task ReadDWordsAsync_UsesOneNativeDwordRequest()
+    public async Task ReadDWordsSingleRequestAsync_UsesOneNativeDwordRequest()
     {
         await using var server = new ScriptedHostLinkServer(command => command switch
         {
@@ -1410,7 +1410,7 @@ public sealed class KvHostLinkClientExtensionsTests
 
         await using var client = new KvHostLinkClient("127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
         await client.OpenAsync();
-        var values = await client.ReadDWordsAsync("DM200", 3);
+        var values = await client.ReadDWordsSingleRequestAsync("DM200", 3);
 
         Assert.Equal(new uint[] { 65537, 131074, 196611 }, values);
         Assert.Equal(
@@ -1434,6 +1434,120 @@ public sealed class KvHostLinkClientExtensionsTests
         Assert.Equal(
             ["WRS DM200.D 3 65537 131074 196611"],
             server.ReceivedCommands.ToArray());
+    }
+
+    [Fact]
+    public async Task CanonicalNamesAndDeprecatedAliasesUseTheSameWireBehavior()
+    {
+        await using var server = new ScriptedHostLinkServer(command => command switch
+        {
+            "?E" => "17",
+            "RDC DM10" => "LABEL",
+            "RDS DM20.D 1" => "123",
+            var write when write.StartsWith("WS ", StringComparison.Ordinal) => "OK",
+            var write when write.StartsWith("WSS ", StringComparison.Ordinal) => "OK",
+            _ => "E1",
+        });
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        Assert.Equal("17", await client.ReadErrorNumberAsync());
+        Assert.Equal("LABEL", await client.ReadCommentAsync("DM10", HostLinkCommentEncoding.Utf8));
+        await client.WriteTimerCounterPresetAsync("T0", 10u, ".D");
+        await client.WriteTimerCounterPresetConsecutiveAsync("C0", new uint[] { 20, 30 }, ".D");
+        Assert.Equal(123u, Assert.Single(await client.ReadDWordsSingleRequestAsync("DM20", 1)));
+
+#pragma warning disable CS0618
+        Assert.Equal("17", await client.CheckErrorNoAsync());
+        Assert.Equal("LABEL", await client.ReadCommentsAsync("DM10", HostLinkCommentEncoding.Utf8));
+        await client.WriteSetValueAsync("T0", 10u, ".D");
+        await client.WriteSetValueConsecutiveAsync("C0", new uint[] { 20, 30 }, ".D");
+        Assert.Equal(123u, Assert.Single(await client.ReadDWordsAsync("DM20", 1)));
+#pragma warning restore CS0618
+
+        Assert.Equal(10, server.ReceivedCommands.Count);
+        Assert.Equal(server.ReceivedCommands.Take(5), server.ReceivedCommands.Skip(5));
+    }
+
+    [Fact]
+    public async Task WriteNamedAsyncUsesExactlyOneExistingWriteRequestInCallerOrder()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        await client.WriteNamedAsync(new Dictionary<string, object>
+        {
+            ["DM100:U"] = 123,
+            ["DM101:U"] = 456,
+        });
+        await client.WriteNamedAsync(new Dictionary<string, object>
+        {
+            ["DM200:F"] = 1.0,
+            ["DM202:F"] = 2.0,
+        });
+        await client.WriteNamedAsync(new Dictionary<string, object>
+        {
+            ["DM300:D"] = 0x0001_0002u,
+            ["DM302:D"] = 0x0003_0004u,
+        });
+        await client.WriteNamedAsync(new Dictionary<string, object>
+        {
+            ["R115:BIT"] = true,
+            ["R200:BIT"] = false,
+        });
+        await client.WriteNamedAsync(new Dictionary<string, object>
+        {
+            ["T10:D"] = 100u,
+            ["T11:D"] = 200u,
+        });
+        await client.WriteNamedAsync(new Dictionary<string, object>
+        {
+            ["R115:U"] = 321,
+        });
+
+        string[] commands = server.ReceivedCommands.ToArray();
+        Assert.Equal(6, commands.Length);
+        Assert.Equal("WRS DM100.U 2 123 456", commands[0]);
+        Assert.Equal("WRS DM200.U 4 0 16256 0 16384", commands[1]);
+        Assert.Equal("WRS DM300.U 4 2 1 4 3", commands[2]);
+        Assert.Equal("WRS R115 2 1 0", commands[3]);
+        Assert.Equal("WSS T10.D 2 100 200", commands[4]);
+        Assert.Equal("WR R115.U 321", commands[5]);
+    }
+
+    [Fact]
+    public async Task WriteNamedAsyncRejectsTheCompleteInvalidPlanBeforeSend()
+    {
+        await using var server = new ScriptedHostLinkServer(_ => "OK");
+        await using var client = new KvHostLinkClient(
+            "127.0.0.1", server.Port, HostLinkTransportMode.Tcp, TestPlcProfile);
+        await client.OpenAsync();
+
+        IEnumerable<KeyValuePair<string, object>>[] invalidPlans =
+        [
+            new Dictionary<string, object>(),
+            new Dictionary<string, object> { ["DM0:U"] = 1, ["DM1:S"] = 2 },
+            new Dictionary<string, object> { ["DM0:U"] = 1, ["DM2:U"] = 2 },
+            new Dictionary<string, object> { ["DM1:U"] = 1, ["DM0:U"] = 2 },
+            new Dictionary<string, object> { ["DM0:U"] = 1, ["dm0000:u"] = 2 },
+            new Dictionary<string, object> { ["DM0:U"] = 1, ["AT0:U"] = 2 },
+            new Dictionary<string, object> { ["DM0.0"] = true },
+            new Dictionary<string, object> { ["DM0:COMMENT"] = "x" },
+            new Dictionary<string, object> { ["T0:F"] = 1.0 },
+            new Dictionary<string, object> { ["Z0:F"] = 1.0 },
+        ];
+        foreach (IEnumerable<KeyValuePair<string, object>> plan in invalidPlans)
+            await Assert.ThrowsAnyAsync<Exception>(() => client.WriteNamedAsync(plan));
+
+        var tooMany = new Dictionary<string, object>();
+        for (int index = 0; index < 1001; index++)
+            tooMany.Add($"DM{index}:U", index & 0xFFFF);
+        await Assert.ThrowsAsync<HostLinkProtocolError>(() => client.WriteNamedAsync(tooMany));
+
+        Assert.Empty(server.ReceivedCommands);
     }
 
     [Fact]

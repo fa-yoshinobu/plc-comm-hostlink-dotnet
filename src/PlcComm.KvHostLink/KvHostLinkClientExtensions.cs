@@ -79,6 +79,31 @@ public static class KvHostLinkClientExtensions
         public required List<ReadPlanRequest> Requests { get; init; }
     }
 
+    private enum NamedWriteMode
+    {
+        Single,
+        DirectBits,
+        Words,
+        PackedWords,
+        TimerCounterPresets,
+    }
+
+    private readonly record struct NamedWriteEntry(
+        KvDeviceAddress Address,
+        string DataType,
+        NamedWriteMode Mode,
+        int LogicalNumber,
+        int Step,
+        object Value);
+
+    private sealed class CompiledNamedWrite
+    {
+        public required string StartDevice { get; init; }
+        public required string DataType { get; init; }
+        public required NamedWriteMode Mode { get; init; }
+        public required object[] Values { get; init; }
+    }
+
     /// <summary>
     /// Reads a single device value and converts it to a high-level CLR type.
     /// </summary>
@@ -518,6 +543,36 @@ public static class KvHostLinkClientExtensions
         return MaterializeReadNamedResult(plan, resolved);
     }
 
+    /// <summary>
+    /// Writes one non-empty named update set when the complete set fits exactly one Host Link
+    /// <c>WR</c>, <c>WRS</c>, or <c>WSS</c> request.
+    /// </summary>
+    /// <param name="client">Connected Host Link client.</param>
+    /// <param name="updates">
+    /// Address/value pairs in insertion order. Addresses use the same logical dtype syntax as
+    /// <see cref="ReadNamedAsync(KvHostLinkClient, IEnumerable{string}, CancellationToken)"/>.
+    /// </param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <remarks>
+    /// The complete input is snapshotted and validated before transport. Mixed, non-contiguous,
+    /// duplicate, reverse-order, bit-in-word, read-only, or over-limit updates are rejected without
+    /// sending. This method never auto-splits, retries, or performs read-modify-write.
+    /// </remarks>
+    public static Task WriteNamedAsync(
+        this KvHostLinkClient client,
+        IEnumerable<KeyValuePair<string, object>> updates,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(updates);
+        KeyValuePair<string, object>[] snapshot = updates.ToArray();
+        if (snapshot.Length == 0)
+            throw new HostLinkProtocolError("WriteNamedAsync updates must not be empty.");
+
+        CompiledNamedWrite plan = CompileNamedWrite(snapshot);
+        return ExecuteNamedWriteAsync(client, plan, ct);
+    }
+
     // -----------------------------------------------------------------------
     // Polling
     // -----------------------------------------------------------------------
@@ -766,6 +821,7 @@ public static class KvHostLinkClientExtensions
     /// This helper preserves single-request semantics by delegating to
     /// <see cref="ReadDWordsSingleRequestAsync(KvHostLinkClient, string, int, CancellationToken)"/>.
     /// </remarks>
+    [Obsolete("Use ReadDWordsSingleRequestAsync. This compatibility alias will be removed in the next breaking release.")]
     public static Task<uint[]> ReadDWordsAsync(
         this KvHostLinkClient client,
         string device,
@@ -795,6 +851,230 @@ public static class KvHostLinkClientExtensions
         CancellationToken ct = default)
         => KvHostLinkClientFactory.OpenAndConnectAsync(
             new KvHostLinkConnectionOptions(host, port, transport, plcProfile), ct);
+
+    private static CompiledNamedWrite CompileNamedWrite(
+        KeyValuePair<string, object>[] updates)
+    {
+        var entries = new NamedWriteEntry[updates.Length];
+        var identities = new HashSet<(string DeviceType, int Number, string DataType)>();
+        for (int index = 0; index < updates.Length; index++)
+        {
+            KeyValuePair<string, object> update = updates[index];
+            NamedWriteEntry entry = CompileNamedWriteEntry(update.Key, update.Value);
+            if (!identities.Add((entry.Address.DeviceType, entry.Address.Number, entry.DataType)))
+                throw new HostLinkProtocolError($"Named write address '{update.Key}' is semantically duplicated.");
+            entries[index] = entry;
+        }
+
+        NamedWriteEntry first = entries[0];
+        if (first.Mode == NamedWriteMode.Single && entries.Length != 1)
+            throw NamedWriteMultiRequestError();
+
+        int expectedNumber = first.LogicalNumber;
+        for (int index = 0; index < entries.Length; index++)
+        {
+            NamedWriteEntry entry = entries[index];
+            if (entry.Mode != first.Mode ||
+                entry.Address.DeviceType != first.Address.DeviceType ||
+                entry.DataType != first.DataType ||
+                entry.LogicalNumber != expectedNumber)
+            {
+                throw NamedWriteMultiRequestError();
+            }
+            if (index + 1 < entries.Length)
+            {
+                try
+                {
+                    expectedNumber = checked(expectedNumber + entry.Step);
+                }
+                catch (OverflowException ex)
+                {
+                    throw new HostLinkProtocolError(
+                        "Named write device sequence exceeds the supported numeric representation.", ex);
+                }
+            }
+        }
+
+        string suffix = first.DataType == "BIT" ? string.Empty : "." + first.DataType;
+        int protocolCount = first.Mode == NamedWriteMode.PackedWords
+            ? checked(entries.Length * 2)
+            : entries.Length;
+        string validationSuffix = first.Mode == NamedWriteMode.PackedWords ? ".U" : suffix;
+        KvHostLinkDevice.ValidateDeviceCount(first.Address.DeviceType, validationSuffix, protocolCount);
+        KvHostLinkDevice.ValidateDeviceSpan(
+            first.Address.DeviceType,
+            first.Address.Number,
+            validationSuffix,
+            protocolCount);
+
+        return new CompiledNamedWrite
+        {
+            StartDevice = KvHostLinkAddress.Format(first.Address),
+            DataType = first.DataType,
+            Mode = first.Mode,
+            Values = entries.Select(static entry => entry.Value).ToArray(),
+        };
+    }
+
+    private static NamedWriteEntry CompileNamedWriteEntry(string address, object value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(address);
+        if (value is null)
+            throw new HostLinkProtocolError($"Named write address '{address}' has a null value.");
+
+        KvLogicalAddress logical = KvHostLinkAddress.ParseLogical(address);
+        KvDeviceAddress device = logical.BaseAddress with { Suffix = string.Empty };
+        string dtype = logical.DataType;
+        if (dtype == "COMMENT")
+            throw new HostLinkProtocolError($"Named write address '{address}' is read-only.");
+        if (logical.IsBitInWord)
+        {
+            throw new HostLinkProtocolError(
+                $"Named write address '{address}' requires read-modify-write and cannot fit one write request.");
+        }
+
+        NamedWriteMode mode;
+        object normalizedValue;
+        int step;
+        if (dtype == "BIT")
+        {
+            if (!DirectBitDeviceTypes.Contains(device.DeviceType))
+                throw new HostLinkProtocolError($"Named BIT write '{address}' requires a direct bit device.");
+            if (value is not bool bitValue)
+                throw new HostLinkProtocolError($"Named BIT write '{address}' requires a Boolean value.");
+            KvHostLinkDevice.ValidateDeviceType("WR", device.DeviceType, KvHostLinkModels.WrDeviceTypes);
+            KvHostLinkDevice.ValidateDeviceSpan(device.DeviceType, device.Number, string.Empty);
+            mode = NamedWriteMode.DirectBits;
+            normalizedValue = bitValue;
+            step = 1;
+        }
+        else
+        {
+            if (dtype == "F")
+                KvHostLinkDevice.ValidateFloat32DeviceType(device.DeviceType, address);
+            if (DirectBitDeviceTypes.Contains(device.DeviceType))
+                mode = NamedWriteMode.Single;
+            else if (device.DeviceType is "T" or "C")
+                mode = NamedWriteMode.TimerCounterPresets;
+            else if (dtype == "F" ||
+                     (dtype is "D" or "L" && !KvHostLinkModels.Native32BitDeviceTypes.Contains(device.DeviceType)))
+                mode = NamedWriteMode.PackedWords;
+            else
+                mode = NamedWriteMode.Words;
+
+            normalizedValue = NormalizeNamedWriteValue(address, dtype, value);
+            string suffix = mode == NamedWriteMode.PackedWords ? ".U" : "." + dtype;
+            int count = mode == NamedWriteMode.PackedWords ? 2 : 1;
+            if (mode == NamedWriteMode.TimerCounterPresets)
+                KvHostLinkDevice.ValidateDeviceType("WS", device.DeviceType, KvHostLinkModels.WsDeviceTypes);
+            else
+                KvHostLinkDevice.ValidateDeviceType("WR", device.DeviceType, KvHostLinkModels.WrDeviceTypes);
+            KvHostLinkDevice.ValidateDeviceCount(device.DeviceType, suffix, count);
+            KvHostLinkDevice.ValidateDeviceSpan(device.DeviceType, device.Number, suffix, count);
+            step = dtype is "D" or "L"
+                ? (KvHostLinkModels.Native32BitDeviceTypes.Contains(device.DeviceType) ? 1 : 2)
+                : dtype == "F" ? 2 : 1;
+        }
+
+        int logicalNumber = dtype == "BIT" && KvHostLinkDevice.UsesBitBankAddress(device.DeviceType)
+            ? KvHostLinkDevice.BitBankLogicalNumber(device.Number)
+            : device.Number;
+        return new NamedWriteEntry(device, dtype, mode, logicalNumber, step, normalizedValue);
+    }
+
+    private static object NormalizeNamedWriteValue(string address, string dtype, object value)
+    {
+        try
+        {
+            if (dtype == "F")
+            {
+                if (value is bool or char or string || value is not IConvertible)
+                    throw new HostLinkProtocolError($"Named Float32 write '{address}' requires a numeric value.");
+                float single = Convert.ToSingle(value, CultureInfo.InvariantCulture);
+                if (!float.IsFinite(single))
+                    throw new HostLinkProtocolError($"Named Float32 write '{address}' must be finite.");
+                int bits = BitConverter.SingleToInt32Bits(single);
+                return new ushort[]
+                {
+                    unchecked((ushort)(bits & 0xFFFF)),
+                    unchecked((ushort)((bits >> 16) & 0xFFFF)),
+                };
+            }
+
+            if (value is not (byte or sbyte or short or ushort or int or uint or long or ulong))
+                throw new HostLinkProtocolError($"Named write '{address}' requires an integral CLR value.");
+            return dtype switch
+            {
+                "U" or "H" => Convert.ToUInt16(value, CultureInfo.InvariantCulture),
+                "S" => Convert.ToInt16(value, CultureInfo.InvariantCulture),
+                "D" => Convert.ToUInt32(value, CultureInfo.InvariantCulture),
+                "L" => Convert.ToInt32(value, CultureInfo.InvariantCulture),
+                _ => throw new HostLinkProtocolError($"Named write '{address}' uses unsupported dtype '{dtype}'."),
+            };
+        }
+        catch (Exception ex) when (ex is OverflowException or FormatException or InvalidCastException)
+        {
+            throw new HostLinkProtocolError(
+                $"Named write value for '{address}' is out of range for dtype '{dtype}'.", ex);
+        }
+    }
+
+    private static Task ExecuteNamedWriteAsync(
+        KvHostLinkClient client,
+        CompiledNamedWrite plan,
+        CancellationToken ct)
+    {
+        if (plan.Mode == NamedWriteMode.DirectBits)
+            return client.WriteConsecutiveAsync(plan.StartDevice, plan.Values.Cast<bool>().ToArray(), ct);
+        if (plan.Mode == NamedWriteMode.PackedWords)
+        {
+            ushort[] words = plan.Values.SelectMany(value => PackNamedWriteWords(plan.DataType, value)).ToArray();
+            return client.WriteConsecutiveAsync(plan.StartDevice, words, ".U", ct);
+        }
+
+        return plan.DataType switch
+        {
+            "U" or "H" => ExecuteIntegralNamedWriteAsync(
+                client, plan, plan.Values.Cast<ushort>().ToArray(), "." + plan.DataType, ct),
+            "S" => ExecuteIntegralNamedWriteAsync(
+                client, plan, plan.Values.Cast<short>().ToArray(), ".S", ct),
+            "D" => ExecuteIntegralNamedWriteAsync(
+                client, plan, plan.Values.Cast<uint>().ToArray(), ".D", ct),
+            "L" => ExecuteIntegralNamedWriteAsync(
+                client, plan, plan.Values.Cast<int>().ToArray(), ".L", ct),
+            _ => throw new HostLinkProtocolError($"Unsupported compiled named-write dtype '{plan.DataType}'."),
+        };
+    }
+
+    private static ushort[] PackNamedWriteWords(string dataType, object value)
+    {
+        if (dataType == "F")
+            return (ushort[])value;
+        uint bits = dataType == "D" ? (uint)value : unchecked((uint)(int)value);
+        return
+        [
+            unchecked((ushort)(bits & 0xFFFF)),
+            unchecked((ushort)((bits >> 16) & 0xFFFF)),
+        ];
+    }
+
+    private static Task ExecuteIntegralNamedWriteAsync<T>(
+        KvHostLinkClient client,
+        CompiledNamedWrite plan,
+        T[] values,
+        string dataFormat,
+        CancellationToken ct) where T : IFormattable
+    {
+        if (plan.Mode == NamedWriteMode.TimerCounterPresets)
+            return client.WriteTimerCounterPresetConsecutiveAsync(plan.StartDevice, values, dataFormat, ct);
+        if (plan.Mode == NamedWriteMode.Single)
+            return client.WriteAsync(plan.StartDevice, values[0], dataFormat, ct);
+        return client.WriteConsecutiveAsync(plan.StartDevice, values, dataFormat, ct);
+    }
+
+    private static HostLinkProtocolError NamedWriteMultiRequestError() => new(
+        "WriteNamedAsync updates must fit exactly one Host Link request; " +
+        "issue separate explicit writes for multi-request updates.");
 
     private static void ValidateReadNamedAggregate(
         IReadOnlyList<string> addresses,
@@ -1073,7 +1353,7 @@ public static class KvHostLinkClientExtensions
         {
             HostLinkCommentEncoding selectedEncoding = commentEncoding
                 ?? throw new InvalidOperationException("COMMENT was not rejected during aggregate preflight.");
-            return await client.ReadCommentsCoreAsync(baseAddress, selectedEncoding, ct).ConfigureAwait(false);
+            return await client.ReadCommentCoreAsync(baseAddress, selectedEncoding, ct).ConfigureAwait(false);
         }
 
         return await ReadTypedCoreAsync(

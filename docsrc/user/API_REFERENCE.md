@@ -767,6 +767,8 @@ public Task ChangeModeAsync(KvPlcMode mode, CancellationToken cancellationToken 
 public Task<string> CheckErrorNoAsync(CancellationToken cancellationToken = default)
 ```
 
+Deprecated compatibility alias for `ReadErrorNumberAsync`.
+
 ##### ClearErrorAsync
 
 ```csharp
@@ -883,6 +885,23 @@ Reads one device using its canonical Host Link format.
 
 Remarks: Timer/counter reads return three tokens. The first token is the PLC's structural status and remains the exact `0` or `1`; numeric parsing applies only to the current and preset tokens.
 
+##### ReadCommentAsync
+
+```csharp
+public Task<string> ReadCommentAsync(string device, HostLinkCommentEncoding encoding, CancellationToken cancellationToken = default)
+```
+
+Reads and strictly decodes one RDC device comment.
+
+Remarks: KEYENCE manuals do not specify the RDC character encoding, and there is no PLC-project setting that identifies it. Decoding is strict. Malformed input raises `HostLinkProtocolError` and retires the connection. The library uses only the caller-selected `encoding` and never auto-detects or falls back to another encoding.
+
+Returns: Decoded comment text with trailing ASCII padding spaces removed.
+
+Parameters:
+- `device`: Base device whose comment is read.
+- `encoding`: Explicit text encoding. `Cp932` is CP932/Windows-31J and is the compatibility selection for KEYENCE material that describes text as Shift_JIS.
+- `cancellationToken`: Cancellation token.
+
 ##### ReadCommentBytesAsync
 
 ```csharp
@@ -890,6 +909,8 @@ public Task<byte[]> ReadCommentBytesAsync(string device, CancellationToken cance
 ```
 
 Reads one RDC device comment as exact response-body bytes.
+
+Remarks: This raw API performs no text decoding, encoding detection, replacement, or fallback; it returns the comment bytes unchanged for caller-controlled handling.
 
 Returns: The exact RDC payload after the Host Link CR/LF frame terminator is removed. Trailing ASCII padding spaces are retained.
 
@@ -903,16 +924,7 @@ Parameters:
 public Task<string> ReadCommentsAsync(string device, HostLinkCommentEncoding encoding, CancellationToken cancellationToken = default)
 ```
 
-Reads and strictly decodes one RDC device comment.
-
-Remarks: Decoding is strict. Malformed input raises `HostLinkProtocolError` and retires the connection; the library never guesses or falls back to another encoding.
-
-Returns: Decoded comment text with trailing ASCII padding spaces removed.
-
-Parameters:
-- `device`: Base device whose comment is read.
-- `encoding`: Explicit text encoding. `Cp932` is CP932/Windows-31J and is the compatibility selection for KEYENCE material that describes text as Shift_JIS.
-- `cancellationToken`: Cancellation token.
+Deprecated compatibility alias for `ReadCommentAsync`.
 
 ##### ReadConsecutiveAsync
 
@@ -933,6 +945,14 @@ public Task<string[]> ReadConsecutiveLegacyAsync(string device, int count, strin
 ```
 
 Reads consecutive devices using the legacy RDE command. Prefer `ReadConsecutiveAsync` on current models.
+
+##### ReadErrorNumberAsync
+
+```csharp
+public Task<string> ReadErrorNumberAsync(CancellationToken cancellationToken = default)
+```
+
+Reads the current PLC error number using the `?E` command.
 
 ##### ReadExpansionUnitBufferAsync
 
@@ -1046,12 +1066,28 @@ Parameters:
 public Task WriteSetValueAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
-Writes a set-value (preset) for a timer or counter device (WS command). Supported device types: T, C.
+Deprecated compatibility alias for `WriteTimerCounterPresetAsync`.
 
 ##### WriteSetValueConsecutiveAsync
 
 ```csharp
 public Task WriteSetValueConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
+```
+
+Deprecated compatibility alias for `WriteTimerCounterPresetConsecutiveAsync`.
+
+##### WriteTimerCounterPresetAsync
+
+```csharp
+public Task WriteTimerCounterPresetAsync<T>(string device, T value, string dataFormat, CancellationToken cancellationToken = default)
+```
+
+Writes a set-value (preset) for a timer or counter device (WS command). Supported device types: T, C.
+
+##### WriteTimerCounterPresetConsecutiveAsync
+
+```csharp
+public Task WriteTimerCounterPresetConsecutiveAsync<T>(string device, IEnumerable<T> values, string dataFormat, CancellationToken cancellationToken = default)
 ```
 
 Writes set-values (presets) for consecutive timer or counter devices (WSS command). Supported device types: T, C.
@@ -1373,6 +1409,21 @@ public static Task WriteDWordsSingleRequestAsync(KvHostLinkClient client, string
 ```
 
 Writes contiguous unsigned 32-bit values using one protocol request or returns an error.
+
+##### WriteNamedAsync
+
+```csharp
+public static Task WriteNamedAsync(KvHostLinkClient client, IEnumerable<KeyValuePair<string, object>> updates, CancellationToken ct = default)
+```
+
+Writes one non-empty named update set when the complete set fits exactly one Host Link `WR`, `WRS`, or `WSS` request.
+
+Remarks: The complete input is snapshotted and validated before transport. Mixed, non-contiguous, duplicate, reverse-order, bit-in-word, read-only, or over-limit updates are rejected without sending. This method never auto-splits, retries, or performs read-modify-write.
+
+Parameters:
+- `client`: Connected Host Link client.
+- `updates`: Address/value pairs in insertion order. Addresses use the same logical dtype syntax as `ReadNamedAsync`.
+- `ct`: Cancellation token.
 
 ##### WriteTypedAsync
 

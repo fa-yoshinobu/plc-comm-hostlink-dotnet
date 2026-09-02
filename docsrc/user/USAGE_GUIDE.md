@@ -8,6 +8,7 @@
 | `ReadTypedAsync` | Read one typed value. |
 | `WriteTypedAsync` | Write one typed value. |
 | `ReadNamedAsync` | Read a non-atomic mixed aggregate by address strings. |
+| `WriteNamedAsync` | Write one ordered named update set that fits one request. |
 | `PollAsync` | Read repeated non-atomic aggregates on a fixed interval. |
 | `ReadBitsSingleRequestAsync` | Read contiguous direct bits in one PLC request. |
 | `WriteBitsSingleRequestAsync` | Write contiguous direct bits in one PLC request. |
@@ -18,7 +19,7 @@
 | `ReadTimerCounterAsync` | Read timer or counter status, current value, and preset. |
 | `ReadTimerAsync` | Read a timer as status, current value, and preset. |
 | `ReadCounterAsync` | Read a counter as status, current value, and preset. |
-| `ReadCommentsAsync` | Decode a PLC device comment with an explicit UTF-8 or CP932 selection. |
+| `ReadCommentAsync` | Decode one PLC device comment with an explicit UTF-8 or CP932 selection. |
 | `ReadCommentBytesAsync` | Read the exact undecoded PLC device-comment payload bytes. |
 | `ReadExpansionUnitBufferAsync` | Read expansion unit buffer memory. |
 | `WriteExpansionUnitBufferAsync` | Write expansion unit buffer memory. |
@@ -27,7 +28,10 @@ The `SingleRequest` helpers either send exactly one PLC request or reject the
 complete input before sending. Bit helpers accept only direct bit device
 families and Boolean values, with 1 through 1,000 points subject to the device
 range. `ReadWordsAsync` is a deprecated compatibility alias; migrate to
-`ReadWordsSingleRequestAsync`.
+`ReadWordsSingleRequestAsync`. The former names `ReadDWordsAsync`,
+`ReadCommentsAsync`, `CheckErrorNoAsync`, `WriteSetValueAsync`, and
+`WriteSetValueConsecutiveAsync` are also deprecated direct aliases for one
+transition release.
 
 ## Connection
 
@@ -279,6 +283,27 @@ complete aggregate before sending anything. Aggregates without comments do not
 need an encoding selection and must use the overload without one; supplying an
 unused comment encoding is an argument error before transport.
 
+## Named single-request write
+
+```csharp
+var updates = new Dictionary<string, object>
+{
+    ["DM100:U"] = 123,
+    ["DM101:U"] = 456,
+};
+
+await client.WriteNamedAsync(updates);
+```
+
+`WriteNamedAsync` snapshots and validates the complete enumeration in caller
+order. It sends exactly one compatible `WR`, `WRS`, or `WSS` request. Mixed
+device families or dtypes, gaps, reverse order, semantic duplicates,
+bit-in-word updates, read-only addresses, invalid values, and request-limit
+overflow are rejected before transport. It never sorts, auto-splits, retries,
+or performs an implicit read-modify-write. Submit separate explicit calls only
+when the application intentionally owns the resulting partial-success and
+outcome-unknown boundaries.
+
 ## Contiguous block reads
 
 ```csharp
@@ -457,15 +482,16 @@ supplying transport.
 
 ## Device comments
 
-An `RDC` response does not carry an encoding identifier. Select the encoding
-explicitly when requesting text:
+KEYENCE manuals do not specify the `RDC` character encoding, and there is no
+PLC-project encoding setting. An `RDC` response also carries no encoding
+identifier. Select the encoding explicitly when requesting text:
 
 ```csharp
-string utf8Label = await client.ReadCommentsAsync(
+string utf8Label = await client.ReadCommentAsync(
     "DM0",
     HostLinkCommentEncoding.Utf8);
 
-string cp932Label = await client.ReadCommentsAsync(
+string cp932Label = await client.ReadCommentAsync(
     "DM1",
     HostLinkCommentEncoding.Cp932);
 

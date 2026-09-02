@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -18,6 +19,10 @@ if SPEC is None or SPEC.loader is None:
 MODULE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)
+
+
+BUILD_ENVIRONMENT = os.environ.copy()
+BUILD_ENVIRONMENT["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0"
 
 
 def build_fixture(root: Path, source: str) -> Path:
@@ -44,6 +49,7 @@ def build_fixture(root: Path, source: str) -> Path:
         ],
         check=True,
         capture_output=True,
+        env=BUILD_ENVIRONMENT,
         text=True,
         encoding="utf-8",
         errors="replace",
@@ -98,9 +104,11 @@ def main() -> int:
                 "-c",
                 "Release",
                 "--nologo",
+                "-p:UseSharedCompilation=false",
             ],
             check=True,
             capture_output=True,
+            env=BUILD_ENVIRONMENT,
             text=True,
             encoding="utf-8",
             errors="replace",
