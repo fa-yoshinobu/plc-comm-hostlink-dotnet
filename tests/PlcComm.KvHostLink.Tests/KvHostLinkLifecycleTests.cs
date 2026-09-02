@@ -184,11 +184,13 @@ public sealed class KvHostLinkLifecycleTests
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var received = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var serverTask = Task.Run(async () =>
         {
             using TcpClient accepted = await listener.AcceptTcpClientAsync();
             NetworkStream stream = accepted.GetStream();
             while (stream.ReadByte() is int value && value >= 0 && value != '\r') { }
+            received.SetResult();
             int trailingBytes = await stream.ReadAsync(new byte[1]);
             Assert.Equal(0, trailingBytes);
         });
@@ -196,13 +198,16 @@ public sealed class KvHostLinkLifecycleTests
         await using var client = new KvHostLinkClient(
             "127.0.0.1", port, HostLinkTransportMode.Tcp, TestProfile)
         {
-            Timeout = TimeSpan.FromMilliseconds(50),
+            Timeout = TimeSpan.FromSeconds(5),
         };
         using var callerCancellation = new CancellationTokenSource();
         await client.OpenAsync();
+        client.Timeout = TimeSpan.FromSeconds(1);
 
+        Task<byte[]> request = client.SendRawAsync("TIMEOUT", callerCancellation.Token);
+        await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
         var error = await Assert.ThrowsAsync<HostLinkOutcomeUnknownError>(
-            () => client.SendRawAsync("TIMEOUT", callerCancellation.Token));
+            () => request);
         Assert.Equal(HostLinkOutcomeUnknownReason.Timeout, error.Reason);
         Assert.IsType<HostLinkTimeoutError>(error.InnerException);
 
