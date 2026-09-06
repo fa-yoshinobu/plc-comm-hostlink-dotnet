@@ -13,7 +13,7 @@ shared [KEYENCE KV Host Link profile catalog](https://github.com/fa-yoshinobu/pl
 
 ## Device families and ranges
 
-Device-family notation, type suffixes, XYM aliases, and static range tables are shared across the KV Host Link libraries. Use the common [KV Host Link Device Ranges](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/device-ranges/) page for those details.
+Device-family notation, type suffixes, XYM aliases, and static range tables are shared across the KV Host Link libraries. Use the common [KV Host Link Device Ranges](https://plc-comm-docs-site.fa-labo.com/plc-setup/kv/device-ranges/) page for those details.
 
 The table below identifies the canonical profile names, intended hardware, and
 address notation. Device ranges remain in the shared reference above.
@@ -65,4 +65,4 @@ KV-3000 and KV-5000 profiles include `AT`, but timer/counter preset writes (`WS`
 
 KV-7000 and KV-8000 profiles are the documented profiles for timer/counter preset writes (`WS`/`WSS`). They do not include `CTH` or `CTC`.
 
-KV-X500 profiles do not include `AT`, `VM`, `VB`, `CTH`, or `CTC`. Use the shared [KV Host Link Troubleshooting & Codes](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/troubleshooting-codes/) page for common address-shape and unsupported-device symptoms.
+KV-X500 profiles do not include `AT`, `VM`, `VB`, `CTH`, or `CTC`. Use the shared [KV Host Link Troubleshooting & Codes](https://plc-comm-docs-site.fa-labo.com/plc-setup/kv/troubleshooting-codes/) page for common address-shape and unsupported-device symptoms.

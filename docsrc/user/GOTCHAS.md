@@ -3,7 +3,7 @@
 Use this page only for library-specific caveats.
 
 Use the shared
-[KV Host Link Troubleshooting & Codes](https://fa-yoshinobu.github.io/plc-comm-docs-site/plc-setup/kv/troubleshooting-codes/)
+[KV Host Link Troubleshooting & Codes](https://plc-comm-docs-site.fa-labo.com/plc-setup/kv/troubleshooting-codes/)
 page for common connection, profile, address-shape, write-permission, and PLC
 error-code symptoms.
 
