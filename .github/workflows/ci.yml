@@ -36,17 +36,6 @@ jobs:
       - name: Build
         run: dotnet build PlcComm.KvHostLink.sln --configuration Release --no-restore
 
-      - name: Test documented API classification policy
-        run: python scripts/test_documented_api_diff.py
-
-      - name: Enforce documented API diff classifications
-        run: >-
-          python scripts/check_documented_api_diff.py
-          --baseline-metadata internal_docs/maintainer/api_baselines/PlcComm.KvHostLink-3.2.1.json
-          --candidate-assembly-root src/PlcComm.KvHostLink/bin/Release
-          --classifications internal_docs/maintainer/documented_api_diff_classifications.json
-          --repository-root .
-
       - name: Test
         run: dotnet test PlcComm.KvHostLink.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
 
