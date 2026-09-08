@@ -167,6 +167,8 @@ Console.WriteLine($"{unsignedWord}, {signedWord}, {unsignedDWord}, {signedDWord}
 
 ## Write a single value
 
+These controlled-test examples restore only confirmed writes, in reverse order. An outcome-unknown write stops further writes and propagates its original error; inspect and reconcile the PLC state before proceeding. A readback failure after a confirmed write still attempts restoration. A restoration failure is reported and stops the remaining restoration steps.
+
 ```csharp
 using System;
 using PlcComm.KvHostLink;
@@ -177,15 +179,29 @@ await using var client = await KvHostLinkClientFactory.OpenAndConnectAsync(optio
 const string address = "DM100";
 ushort original = (ushort)await client.ReadTypedAsync(address, "U");
 
+bool write1Confirmed = false;
+bool outcomeUnknown1 = false;
 try
 {
     await client.WriteTypedAsync(address, "U", (ushort)42);
+    write1Confirmed = true;
     ushort readback = (ushort)await client.ReadTypedAsync(address, "U");
     Console.WriteLine($"{address} readback = {readback}");
 }
+catch (HostLinkOutcomeUnknownError)
+{
+    outcomeUnknown1 = true;
+    throw;
+}
 finally
 {
-    await client.WriteTypedAsync(address, "U", original);
+    if (!outcomeUnknown1)
+    {
+        if (write1Confirmed)
+        {
+            await client.WriteTypedAsync(address, "U", original);
+        }
+    }
 }
 ```
 

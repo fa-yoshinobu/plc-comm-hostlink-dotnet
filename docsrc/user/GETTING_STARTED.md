@@ -58,6 +58,8 @@ Your number will match the current value stored in `DM0` on your PLC.
 
 ## First write
 
+These controlled-test examples restore only confirmed writes, in reverse order. An outcome-unknown write stops further writes and propagates its original error; inspect and reconcile the PLC state before proceeding. A readback failure after a confirmed write still attempts restoration. A restoration failure is reported and stops the remaining restoration steps.
+
 ```csharp
 using System;
 using PlcComm.KvHostLink;
@@ -69,15 +71,29 @@ const string testAddress = "DM100";
 ushort original = (ushort)await client.ReadTypedAsync(testAddress, "U");
 ushort testValue = (ushort)Random.Shared.Next(0, ushort.MaxValue + 1);
 
+bool write1Confirmed = false;
+bool outcomeUnknown1 = false;
 try
 {
     await client.WriteTypedAsync(testAddress, "U", testValue);
+    write1Confirmed = true;
     ushort readback = (ushort)await client.ReadTypedAsync(testAddress, "U");
     Console.WriteLine($"{testAddress} = {readback}");
 }
+catch (HostLinkOutcomeUnknownError)
+{
+    outcomeUnknown1 = true;
+    throw;
+}
 finally
 {
-    await client.WriteTypedAsync(testAddress, "U", original);
+    if (!outcomeUnknown1)
+    {
+        if (write1Confirmed)
+        {
+            await client.WriteTypedAsync(testAddress, "U", original);
+        }
+    }
 }
 ```
 
@@ -88,7 +104,7 @@ Only write to a test address that is safe for your machine and program.
 1. The connection opens without a timeout.
 2. The first read prints a value for `DM0`.
 3. The write example prints the value written to `DM100`.
-4. The `finally` block restores the original test-register value.
+4. After a confirmed write, the `finally` block attempts to restore the original test-register value; check any restoration error.
 
 ## If it does not work
 

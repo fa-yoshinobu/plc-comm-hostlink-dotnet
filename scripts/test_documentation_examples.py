@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import unittest
+import runpy
 from pathlib import Path
 
 
@@ -16,6 +17,9 @@ API_REFERENCE = (ROOT / "docsrc/user/API_REFERENCE.md").read_text(encoding="utf-
 
 
 class DocumentationExamplesTests(unittest.TestCase):
+    def test_sample_cleanup_outcomes(self) -> None:
+        runpy.run_path(str(ROOT / "scripts/test_sample_cleanup.py"), run_name="__main__")
+
     def test_waiting_and_active_cancellation_have_distinct_lifecycle_text(self) -> None:
         self.assertIn("Cancelling a waiting operation sends nothing", USAGE)
         self.assertIn("open transport\ngeneration remains usable", USAGE)

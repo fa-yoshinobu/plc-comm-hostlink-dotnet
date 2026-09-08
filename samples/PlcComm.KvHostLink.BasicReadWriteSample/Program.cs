@@ -49,13 +49,22 @@ if (allowWrites)
     uint testU32 = (uint)Random.Shared.NextInt64(0, (long)uint.MaxValue + 1);
     float testF32 = (Random.Shared.NextSingle() * 20_000f) - 10_000f;
 
+    bool write1Confirmed = false;
+    bool write2Confirmed = false;
+    bool write3Confirmed = false;
+    bool write4Confirmed = false;
+    bool outcomeUnknown1 = false;
     try
     {
         // Use only DM addresses that are safe in a controlled PLC test program.
         await client.WriteTypedAsync(targetU16, "U", testU16);
+        write1Confirmed = true;
         await client.WriteTypedAsync(targetI16, "S", testI16);
+        write2Confirmed = true;
         await client.WriteTypedAsync(targetU32, "D", testU32);
+        write3Confirmed = true;
         await client.WriteTypedAsync(targetF32, "F", testF32);
+        write4Confirmed = true;
 
         // Read back each test address with the matching type suffix.
         ushort readbackU16 = (ushort)await client.ReadTypedAsync(targetU16, "U");
@@ -75,14 +84,36 @@ if (allowWrites)
         Console.WriteLine($"Wrote random test values into {targetU16}/{targetI16}/{targetU32}/{targetF32}");
         Console.WriteLine("Readback verified");
     }
+    catch (HostLinkOutcomeUnknownError)
+    {
+        outcomeUnknown1 = true;
+        throw;
+    }
     finally
     {
-        // Restore the original values even if a readback check fails.
-        await client.WriteTypedAsync(targetU16, "U", originalU16);
-        await client.WriteTypedAsync(targetI16, "S", originalI16);
-        await client.WriteTypedAsync(targetU32, "D", originalU32);
-        await client.WriteTypedAsync(targetF32, "F", originalF32);
-        Console.WriteLine($"Restored {targetU16}/{targetI16}/{targetU32}/{targetF32}");
+        if (!outcomeUnknown1)
+        {
+            if (write4Confirmed)
+            {
+                await client.WriteTypedAsync(targetF32, "F", originalF32);
+            }
+            if (write3Confirmed)
+            {
+                await client.WriteTypedAsync(targetU32, "D", originalU32);
+            }
+            if (write2Confirmed)
+            {
+                await client.WriteTypedAsync(targetI16, "S", originalI16);
+            }
+            if (write1Confirmed)
+            {
+                await client.WriteTypedAsync(targetU16, "U", originalU16);
+            }
+            if (write1Confirmed || write2Confirmed || write3Confirmed || write4Confirmed)
+            {
+                Console.WriteLine("Restored confirmed test writes.");
+            }
+        }
     }
 }
 else

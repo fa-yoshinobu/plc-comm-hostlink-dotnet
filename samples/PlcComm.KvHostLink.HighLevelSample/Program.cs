@@ -77,6 +77,10 @@ var originalDm100 = (ushort)valU;
 var originalDm200 = (int)valL;
 var originalDm300 = (float)valF;
 
+bool write1Confirmed = false;
+bool write2Confirmed = false;
+bool write3Confirmed = false;
+bool outcomeUnknown1 = false;
 try
 {
     if (allowWrites)
@@ -86,8 +90,11 @@ try
         int testDm200 = (int)Random.Shared.NextInt64(int.MinValue, (long)int.MaxValue + 1);
         float testDm300 = (Random.Shared.NextSingle() * 20_000f) - 10_000f;
         await client.WriteTypedAsync("DM100", "U", testDm100);
+        write1Confirmed = true;
         await client.WriteTypedAsync("DM200", "L", testDm200);
+        write2Confirmed = true;
         await client.WriteTypedAsync("DM300", "F", testDm300);
+        write3Confirmed = true;
         Console.WriteLine(
             $"[WriteTypedAsync] Wrote random test values {testDm100}->DM100, {testDm200}->DM200, {testDm300}->DM300");
     }
@@ -175,13 +182,30 @@ try
 
     Console.WriteLine("Done.");
 }
+catch (HostLinkOutcomeUnknownError)
+{
+    outcomeUnknown1 = true;
+    throw;
+}
 finally
 {
-    if (allowWrites)
+    if (!outcomeUnknown1)
     {
-        await client.WriteTypedAsync("DM100", "U", originalDm100);
-        await client.WriteTypedAsync("DM200", "L", originalDm200);
-        await client.WriteTypedAsync("DM300", "F", originalDm300);
-        Console.WriteLine("[Restore] Restored DM100/DM200/DM300");
+        if (write3Confirmed)
+        {
+            await client.WriteTypedAsync("DM300", "F", originalDm300);
+        }
+        if (write2Confirmed)
+        {
+            await client.WriteTypedAsync("DM200", "L", originalDm200);
+        }
+        if (write1Confirmed)
+        {
+            await client.WriteTypedAsync("DM100", "U", originalDm100);
+        }
+        if (write1Confirmed || write2Confirmed || write3Confirmed)
+        {
+            Console.WriteLine("Restored confirmed test writes.");
+        }
     }
 }

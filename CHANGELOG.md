@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Samples: Restore only confirmed test writes in reverse order; preserve outcome-unknown failures without further writes.
+- Tests: Exercise sample cleanup after rejected writes, readback failures, and uncertain write or restoration outcomes.
+
 ## [4.2.0] - 2026-09-02
 
 - Release: Bumped .NET package metadata to `4.2.0` for the approved Host Link API unification.
