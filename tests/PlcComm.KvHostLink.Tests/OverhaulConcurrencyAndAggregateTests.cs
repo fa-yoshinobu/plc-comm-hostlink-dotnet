@@ -445,12 +445,11 @@ public sealed class OverhaulConcurrencyAndAggregateTests
             }
         });
         await using var client = new KvHostLinkClient(
-            "127.0.0.1", port, HostLinkTransportMode.Tcp, TestProfile)
-        {
-            Timeout = TimeSpan.FromMilliseconds(80),
-        };
+            "127.0.0.1", port, HostLinkTransportMode.Tcp, TestProfile);
         await client.OpenAsync();
 
+        // Connection setup is not part of the transaction deadline under test.
+        client.Timeout = TimeSpan.FromMilliseconds(80);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         await Assert.ThrowsAsync<HostLinkTimeoutError>(() => client.ReadAsync("DM0", ".U"));
         stopwatch.Stop();
